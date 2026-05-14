@@ -1,179 +1,62 @@
-# ─────────────────────────────────────────────────────────────────────────────
-# CI Workflow — eventone
-# ─────────────────────────────────────────────────────────────────────────────
-#
-# PURPOSE:
-#   Automatically validates every Pull Request and push to `main` to ensure:
-#     1. Backend dependencies install cleanly with no errors
-#     2. Frontend builds successfully for production (via Vite)
-#
-# JOBS (run in parallel):
-#   • backend-check  → install deps, run lint if configured (graceful skip if not)
-#   • frontend-check → install deps, run `npm run build` to catch broken imports
-#
-# CONTRIBUTOR NOTE:
-#   If your PR fails CI, click "Details" next to the failing check on GitHub
-#   to see the exact error. See CONTRIBUTING.md for how to run these checks
-#   locally before pushing.
-#
-# ─────────────────────────────────────────────────────────────────────────────
-
-name: CI — eventone
+name: CI Pipeline
 
 on:
-  # ── Trigger on pushes to the main branch ──────────────────────────────────
   push:
-    branches: [main]
-
-  # ── Trigger on all Pull Requests targeting main ───────────────────────────
+    branches:
+      - main
   pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
-
-# ── Cancel any in-progress run for the same branch/PR when a new one starts ─
-# This saves GitHub Actions minutes and avoids stale build feedback.
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches:
+      - main
 
 jobs:
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # JOB 1: Backend Health Check
-  #
-  # Verifies that the backend (Node.js + Express) installs cleanly.
-  # Runs ESLint only if a "lint" script is defined in backend/package.json.
-  # Currently the backend has no lint script, so that step is skipped
-  # automatically — no manual changes needed when lint is added later.
-  # ───────────────────────────────────────────────────────────────────────────
-  backend-check:
-    name: "🔧 Backend — Install & Lint"
+  frontend:
+    name: Frontend Lint & Build
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
     steps:
-      # ── 1. Check out the full repository ────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Set up Node.js 18 ────────────────────────────────────────────────
-      # Node 18 is the LTS version aligned with the project's target runtime.
-      # The `cache` option speeds up runs by reusing node_modules from npm cache.
-      - name: Set up Node.js 18
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
-
-      # ── 3. Install backend dependencies ─────────────────────────────────────
-      # `npm ci` is used instead of `npm install` because:
-      #   - It installs EXACTLY the versions in package-lock.json (reproducible)
-      #   - It fails fast if package-lock.json is out of sync with package.json
-      #   - It's faster in CI environments
-      - name: Install backend dependencies
-        working-directory: backend
-        run: npm ci
-
-      # ── 4. Run ESLint if configured, otherwise skip gracefully ───────────────
-      # This step checks whether a "lint" script exists in backend/package.json.
-      # - If YES → runs `npm run lint`
-      # - If NO  → prints a friendly message and skips (exit 0, job still passes)
-      #
-      # This means: as soon as someone adds ESLint to the backend (Issue #11),
-      # this step will automatically start enforcing it with zero workflow changes.
-      - name: Run ESLint (skip if not configured)
-        working-directory: backend
-        shell: bash
-        run: |
-          # Use Node itself to safely parse package.json and check for lint script
-          HAS_LINT=$(node -e "
-            const pkg = require('./package.json');
-            const hasLint = !!(pkg.scripts && pkg.scripts.lint);
-            console.log(hasLint ? 'yes' : 'no');
-          ")
-
-          if [ "$HAS_LINT" = "yes" ]; then
-            echo "✅ Lint script found in backend/package.json — running ESLint..."
-            npm run lint
-          else
-            echo "⏭️  No 'lint' script in backend/package.json — skipping ESLint."
-            echo "   To enable linting: add eslint config and a lint script to backend/package.json"
-            echo "   See: https://eslint.org/docs/latest/use/getting-started"
-          fi
-
-  # ───────────────────────────────────────────────────────────────────────────
-  # JOB 2: Frontend Production Build
-  #
-  # Verifies that the React + Vite frontend builds successfully for production.
-  # A failed build here means: broken imports, missing components, or syntax
-  # errors that would crash the deployed site.
-  #
-  # Also runs ESLint (the frontend already has eslint configured).
-  # Both lint and build must pass for this job to succeed.
-  # ───────────────────────────────────────────────────────────────────────────
-  frontend-check:
-    name: "⚡ Frontend — Lint & Build (Vite)"
-    runs-on: ubuntu-latest
-
-    steps:
-      # ── 1. Check out the full repository ────────────────────────────────────
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # ── 2. Set up Node.js 18 ────────────────────────────────────────────────
-      - name: Set up Node.js 18
-        uses: actions/setup-node@v4
-        with:
-          node-version: "18"
-          cache: "npm"
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
           cache-dependency-path: Frontendd/package-lock.json
 
-      # ── 3. Install frontend dependencies ────────────────────────────────────
-      - name: Install frontend dependencies
-        working-directory: Frontendd
+      - name: Install dependencies
+        working-directory: ./Frontendd
         run: npm ci
 
-      # ── 4. Run ESLint on the frontend ────────────────────────────────────────
-      # The frontend already has eslint configured (eslint.config.js + scripts.lint).
-      # This catches: React hooks violations, undefined variables, import errors.
-      #
-      # NOTE: The current ESLint config uses 'warn' for no-unused-vars, so
-      # warnings are allowed here — only actual errors will fail this step.
-      # Once the codebase is lint-warning-free, you can enforce strict mode by
-      # adding `-- --max-warnings 0` to the command.
       - name: Run ESLint
-        working-directory: Frontendd
+        working-directory: ./Frontendd
         run: npm run lint
 
-      # ── 5. Build frontend for production ─────────────────────────────────────
-      # Runs `vite build` which:
-      #   - Bundles all JS/CSS/assets into the `dist/` folder
-      #   - Catches: unresolved imports, missing files, env var issues
-      #   - Fails loudly if anything is broken → blocks the PR from merging
-      #
-      # VITE_API_URL is set to empty string because:
-      #   - The Vite proxy handles /api calls in local dev (vite.config.js)
-      #   - In production, the actual URL is injected via deployment env vars
-      #   - An empty string is valid (falls back to same-origin API calls)
-      - name: Build frontend for production
-        working-directory: Frontendd
+      - name: Build Application
+        working-directory: ./Frontendd
         run: npm run build
-        env:
-          VITE_API_URL: ""
 
-      # ── 6. Report build output size (informational — never blocks the PR) ───
-      # Prints the total size of the production bundle.
-      # Useful for tracking bundle size growth over time across PRs.
-      - name: Report build output size
-        if: success()
-        working-directory: Frontendd
-        shell: bash
-        run: |
-          echo ""
-          echo "📦 Production build output:"
-          echo "──────────────────────────"
-          du -sh dist/
-          echo ""
-          echo "Largest JS chunks:"
-          find dist/assets -name "*.js" -exec du -sh {} \; 2>/dev/null | sort -rh | head -5
-          echo ""
+  backend:
+    name: Backend Install & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
