@@ -16,27 +16,27 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: Frontendd/package-lock.json
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: Frontendd/package-lock.json
 
-    - name: Install dependencies
-      working-directory: ./Frontendd
-      run: npm ci
+      - name: Install dependencies
+        working-directory: ./Frontendd
+        run: npm ci
 
-    - name: Run ESLint
-      working-directory: ./Frontendd
-      run: npm run lint
+      - name: Run ESLint
+        working-directory: ./Frontendd
+        run: npm run lint
 
-    - name: Build React App
-      working-directory: ./Frontendd
-      run: npm run build
+      - name: Build React App
+        working-directory: ./Frontendd
+        run: npm run build
 
   backend-checks:
     name: Backend Dependency Installation
@@ -47,16 +47,16 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-        cache-dependency-path: backend/package-lock.json
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
 
-    - name: Install dependencies
-      working-directory: ./backend
-      run: npm ci
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
