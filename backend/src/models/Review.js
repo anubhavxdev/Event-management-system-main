@@ -14,5 +14,3 @@ reviewSchema.index({ user: 1, event: 1 }, { unique: true });
 
 export const Review = mongoose.model('Review', reviewSchema);
 export default Review;
-
-

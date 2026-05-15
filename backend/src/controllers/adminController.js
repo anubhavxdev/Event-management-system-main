@@ -1,10 +1,14 @@
-import { Event, User } from '../models/index.js';
+import Event from '../models/Event.js';
+import User from '../models/User.js';
 
 export const approveEvent = async (req, res) => {
   try {
-    const [count] = await Event.update({ status: 'approved' }, { where: { id: req.params.id } });
-    if (count === 0) return res.status(404).json({ message: 'Not found' });
-    const event = await Event.findByPk(req.params.id);
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved' },
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ message: 'Not found' });
     res.json({ event });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -14,13 +18,16 @@ export const approveEvent = async (req, res) => {
 export const rejectEvent = async (req, res) => {
   try {
     const { rejectionReason } = req.body || {};
-    const updateData = { status: 'rejected' };
-    if (rejectionReason) {
-      updateData.rejectionReason = rejectionReason;
-    }
-    const [count] = await Event.update(updateData, { where: { id: req.params.id } });
-    if (count === 0) return res.status(404).json({ message: 'Not found' });
-    const event = await Event.findByPk(req.params.id);
+    const updateData = {
+      status: 'rejected',
+      rejectionReason: rejectionReason || '',
+    };
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ message: 'Not found' });
     res.json({ message: 'Event rejected', event });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -29,10 +36,7 @@ export const rejectEvent = async (req, res) => {
 
 export const listPendingEvents = async (req, res) => {
   try {
-    const events = await Event.findAll({
-      where: { status: 'pending' },
-      include: [{ model: User, as: 'organizer', attributes: ['name', 'email'] }],
-    });
+    const events = await Event.find({ status: 'pending' }).populate('organizer', 'name email');
     res.json({ events });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -41,9 +45,8 @@ export const listPendingEvents = async (req, res) => {
 
 export const blockUser = async (req, res) => {
   try {
-    const [count] = await User.update({ isBlocked: true }, { where: { id: req.params.id } });
-    if (count === 0) return res.status(404).json({ message: 'Not found' });
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: true }, { new: true });
+    if (!user) return res.status(404).json({ message: 'Not found' });
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -52,9 +55,8 @@ export const blockUser = async (req, res) => {
 
 export const unblockUser = async (req, res) => {
   try {
-    const [count] = await User.update({ isBlocked: false }, { where: { id: req.params.id } });
-    if (count === 0) return res.status(404).json({ message: 'Not found' });
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByIdAndUpdate(req.params.id, { isBlocked: false }, { new: true });
+    if (!user) return res.status(404).json({ message: 'Not found' });
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -63,7 +65,7 @@ export const unblockUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await User.findAll();
+    const users = await User.find({}).select('-password');
     res.json({ users });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -76,9 +78,8 @@ export const updateUserRole = async (req, res) => {
     if (!['customer', 'organizer', 'admin'].includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
     }
-    const [count] = await User.update({ role }, { where: { id: req.params.id } });
-    if (count === 0) return res.status(404).json({ message: 'User not found' });
-    const user = await User.findByPk(req.params.id);
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ user });
   } catch (err) {
     res.status(500).json({ message: err.message });
