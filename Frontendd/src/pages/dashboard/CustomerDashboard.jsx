@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download } from 'lucide-react';
@@ -73,16 +74,16 @@ export default function CustomerDashboard() {
             });
 
             if (res.ok) {
-                alert('Successfully registered!');
+                toast.success('Successfully registered!');
                 // Refresh data
                 setActiveTab('Upcoming Tickets');
             } else {
                 const data = await res.json();
-                alert(data.message || 'Registration failed');
+                toast.error(data.message || 'Registration failed');
             }
         } catch (error) {
             console.error("Registration failed", error);
-            alert('Something went wrong');
+            toast.error('Something went wrong');
         }
     };
 

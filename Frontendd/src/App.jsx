@@ -1,3 +1,4 @@
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import './index.css'
 import Footer from "./components/mvpblocks/footer-standard";
@@ -44,77 +45,80 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <Header2 />
+    <>
+      <Toaster position="top-right" reverseOrder={false} />
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col">
+          {/* Header */}
+          <Header2 />
 
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about-us" element={<About />} />
-            <Route path="/login" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
+          <main className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about-us" element={<About />} />
+              <Route path="/login" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/thank-you" element={<ThankYou />} />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
 
-            {/* Dashboard Routes - Flattened, No Sidebar Layout */}
-            <Route
-              path="/customer/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['customer']}>
-                  <CustomerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organizer/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['organizer']}>
-                  <OrganizerDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organizer/create-event"
-              element={
-                <ProtectedRoute allowedRoles={['organizer']}>
-                  <CreateEvent />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            {/* Alias for admin pending events */}
-            <Route
-              path="/admin/pending-events"
-              element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
+              {/* Dashboard Routes - Flattened, No Sidebar Layout */}
+              <Route
+                path="/customer/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['customer']}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['organizer']}>
+                    <OrganizerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/create-event"
+                element={
+                  <ProtectedRoute allowedRoles={['organizer']}>
+                    <CreateEvent />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Alias for admin pending events */}
+              <Route
+                path="/admin/pending-events"
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-            {/* Fallback to Home or 404 */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div >
-    </BrowserRouter >
+              {/* Fallback to Home or 404 */}
+              <Route path="*" element={<Home />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div >
+      </BrowserRouter >
+    </>
   )
 }
 

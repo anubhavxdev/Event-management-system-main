@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -65,11 +66,11 @@ export default function CreateEvent() {
                 navigate('/organizer/dashboard');
             } else {
                 const err = await res.json();
-                alert(`Error: ${err.message}`);
+                toast.error(`Error: ${err.message}`);
             }
         } catch (error) {
             console.error("Failed to create event", error);
-            alert("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setLoading(false);
         }

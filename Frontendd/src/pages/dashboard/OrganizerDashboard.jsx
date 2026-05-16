@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -126,11 +127,10 @@ export default function OrganizerDashboard() {
                     // Note: Ideally we re-calculate fully, but this is a quick update
                 }));
                 setSelectedEvent(null);
-                alert('Event deleted successfully');
-                // Re-fetch to ensure stats are perfectly synced
+                toast.success('Event deleted successfully');                // Re-fetch to ensure stats are perfectly synced
                 fetchMyEvents();
             } else {
-                alert('Failed to delete event');
+                toast.error('Failed to delete event');
             }
         } catch (error) {
             console.error("Failed to delete event", error);
@@ -180,16 +180,16 @@ export default function OrganizerDashboard() {
                     title: '', description: '', date: '', time: '', location: '',
                     category: 'General', price: '', capacity: '', poster: null
                 });
-                alert('Event Created Successfully!');
+                toast.success('Event Created Successfully!');
                 fetchMyEvents();
                 setActiveTab('My Events'); // Switch back to list view
             } else {
                 const err = await res.json();
-                alert(`Error: ${err.message}`);
+                toast.error(`Error: ${err.message}`);
             }
         } catch (error) {
             console.error("Failed to create event", error);
-            alert("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setCreating(false);
         }
@@ -204,7 +204,7 @@ export default function OrganizerDashboard() {
     }
 
     const handleGenerateCertificate = (event) => {
-        alert(`Request to generate certificates for "${event.title}" received.\n\nNote: Automated certificate generation is coming soon!`);
+        toast.success(`Request to generate certificates for "${event.title}" received.\n\nNote: Automated certificate generation is coming soon!`);
     };
 
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date());

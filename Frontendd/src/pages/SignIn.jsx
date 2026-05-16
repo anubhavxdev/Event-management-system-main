@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -32,11 +33,11 @@ export default function SignIn() {
                 login(data.token, data.user);
                 navigate('/');
             } else {
-                alert(data.message || 'Login failed');
+                toast.error(data.message || 'Login failed');
             }
         } catch (error) {
             console.error("Login error", error);
-            alert("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setIsLoading(false);
         }

@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -36,12 +37,12 @@ export default function SignUp() {
         e.preventDefault();
 
         if (!agreeTerms) {
-            alert("Please agree to the Terms & Conditions");
+            toast.error("Please agree to the Terms & Conditions");
             return;
         }
 
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
 
@@ -70,11 +71,11 @@ export default function SignUp() {
                     default: navigate('/customer/dashboard');
                 }
             } else {
-                alert(data.message || 'Signup failed');
+                toast.error(data.message || 'Signup failed');
             }
         } catch (error) {
             console.error("Signup error", error);
-            alert("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setIsLoading(false);
         }
