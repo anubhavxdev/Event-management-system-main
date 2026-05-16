@@ -1,9 +1,14 @@
 import Event from '../models/Event.js';
 import Registration from '../models/Registration.js';
+import { uploadOnCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 
 export const createEvent = async (req, res) => {
   try {
-    const posterUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+    let posterUrl;
+    if (req.file) {
+      const result = await uploadOnCloudinary(req.file.path);
+      posterUrl = result?.secure_url;
+    }
     const event = await Event.create({ ...req.body, organizer: req.user.id, posterUrl });
     res.status(201).json({ event });
   } catch (err) {
@@ -13,11 +18,33 @@ export const createEvent = async (req, res) => {
 
 export const updateEvent = async (req, res) => {
   try {
-    const posterUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
     const update = { ...req.body };
-    if (posterUrl) update.posterUrl = posterUrl;
-    const event = await Event.findOneAndUpdate({ _id: req.params.id, organizer: req.user.id }, update, { new: true });
-    if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    if (req.file) {
+      // Upload new poster to Cloudinary
+      const result = await uploadOnCloudinary(req.file.path);
+      if (result?.secure_url) {
+        update.posterUrl = result.secure_url;
+      }
+    }
+
+    // Fetch the old event with the organizer constraint to capture the previous poster URL
+    const oldEvent = await Event.findOne(
+      { _id: req.params.id, organizer: req.user.id }
+    ).lean();
+    if (!oldEvent) return res.status(404).json({ message: 'Event not found' });
+
+    const event = await Event.findOneAndUpdate(
+      { _id: req.params.id, organizer: req.user.id },
+      update,
+      { new: true }
+    );
+
+    // Delete the old poster from Cloudinary only after a successful authorized update
+    if (update.posterUrl && oldEvent.posterUrl) {
+      await deleteFromCloudinary(oldEvent.posterUrl);
+    }
+
     res.json({ event });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -28,6 +55,12 @@ export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findOneAndDelete({ _id: req.params.id, organizer: req.user.id });
     if (!event) return res.status(404).json({ message: 'Event not found' });
+
+    // Clean up the poster from Cloudinary
+    if (event.posterUrl) {
+      await deleteFromCloudinary(event.posterUrl);
+    }
+
     res.json({ message: 'Deleted' });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -99,5 +132,3 @@ export const sendEventReminders = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-

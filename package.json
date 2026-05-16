@@ -7,13 +7,24 @@
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd Frontendd && npm run dev",
     "seed": "cd backend && npm run seed",
-    "install:all": "cd backend && npm install && cd ../Frontendd && npm install"
+    "install:all": "cd backend && npm install && cd ../Frontendd && npm install",
+    "contributors:add": "all-contributors add",
+    "contributors:generate": "all-contributors generate"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "compression": "^1.8.1"
   },
-  "keywords": ["events", "gssoc", "open-source", "mern", "socket.io"],
+  "keywords": [
+    "events",
+    "gssoc",
+    "open-source",
+    "mern",
+    "socket.io"
+  ],
   "author": "anubhavxdev",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "all-contributors-cli": "^6.26.1"
+  }
 }

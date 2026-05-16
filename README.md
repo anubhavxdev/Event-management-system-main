@@ -275,6 +275,46 @@ pm2 start src/index.js --name eventmanager-api
 
 <br/>
 
+## ✨ Contributors
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/anubhavxdev"><img src="https://avatars.githubusercontent.com/u/1234567?v=4?s=100" width="100px;" alt="Anubhav"/><br /><sub><b>Anubhav</b></sub></a><br /><a href="https://github.com/anubhavxdev/Event-management-system-main/commits?author=anubhavxdev" title="Code">💻</a> <a href="https://github.com/anubhavxdev/Event-management-system-main/commits?author=anubhavxdev" title="Documentation">📖</a> <a href="#infra-anubhavxdev" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
+
+### Adding a Contributor
+
+To add a new contributor, you can use the npm scripts configured in the project:
+
+1. **Add a contributor:**
+   ```bash
+   npm run contributors:add <username> <contributions>
+   ```
+   *Example:* `npm run contributors:add octocat code,doc,bug`
+
+2. **Generate the updated README:**
+   ```bash
+   npm run contributors:generate
+   ```
+   The `README.md` will be updated automatically with the new avatar and badges!
+
+<br/>
+
 ## 📄 License
 
 Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.

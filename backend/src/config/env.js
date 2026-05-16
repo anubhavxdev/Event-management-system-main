@@ -24,6 +24,11 @@ export const env = {
   smtpPort: Number(process.env.SMTP_PORT || 587),
   smtpUser: process.env.SMTP_USER || '',
   smtpPass: process.env.SMTP_PASS || '',
+  emailFrom: process.env.EMAIL_FROM || 'no-reply@eventone.local',
+  appName: process.env.APP_NAME || 'eventone',
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME || '',
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY || '',
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET || '',
   // EMAIL_FROM can be overridden in .env; default includes the app name for clarity
   emailFrom: (process.env.EMAIL_FROM || `${process.env.APP_NAME || 'eventone'} <no-reply@eventone.local>`).toString(),
   // Sanitize APP_NAME; fallback to 'eventone' if empty or missing
