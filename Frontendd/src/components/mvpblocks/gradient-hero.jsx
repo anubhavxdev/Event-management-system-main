@@ -60,20 +60,22 @@ export default function GradientHero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
           >
-            <Button
-              size="lg"
-              className="group bg-primary text-primary-foreground hover:shadow-primary/30 relative overflow-hidden rounded-full px-6 shadow-lg transition-all duration-300"
+          <Button size="lg" className="group relative overflow-hidden rounded-full px-8 py-6 bg-gray-50 text-black
+              border border-gray-200 shadow-[0_8px_30px_rgba(0,0,0,0.12)]
+              hover:shadow-[0_12px_40px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-300"
               asChild
             >
-              <Link to="/signup">
-                <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
-                <span className="relative z-10 flex items-center">
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                </span>
-                <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
-              </Link>
-            </Button>
+           <Link to="/signup">
+            <span className="absolute inset-0 bg-gradient-to-r from-gray-50 to-gray-100 opacity-0 
+                 transition-opacity duration-300 group-hover:opacity-100"
+            />
+
+            <span className="relative z-10 flex items-center font-semibold">
+               Get Started
+             <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </span>
+           </Link>
+          </Button>
 
             {/* <Button
               variant="outline"
