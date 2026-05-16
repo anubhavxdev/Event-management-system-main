@@ -22,15 +22,60 @@ export default function SignUp() {
         role: 'customer'
     });
 
+    // ── Validation errors state ──────────────────────────────────────────────
+    const [errors, setErrors] = useState({
+        fullName: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+    });
+
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const toggleVisibility = () => setIsVisible(!isVisible);
     const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.id]: e.target.value });
+    // ── Real-time field validation ───────────────────────────────────────────
+    const validateField = (name, value) => {
+        switch (name) {
+            case 'fullName':
+                return value.trim().length < 2 ? 'Name must be at least 2 characters' : '';
+            case 'email':
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? '' : 'Please enter a valid email address';
+            case 'password':
+                return value.length < 6 ? 'Password must be at least 6 characters' : '';
+            case 'confirmPassword':
+                return value !== formData.password ? 'Passwords do not match' : '';
+            default:
+                return '';
+        }
     };
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData({ ...formData, [id]: value });
+
+        // Validate the changed field in real-time
+        setErrors(prev => ({
+            ...prev,
+            [id]: validateField(id, value),
+            // Re-validate confirmPassword whenever password changes
+            ...(id === 'password' && {
+                confirmPassword: formData.confirmPassword
+                    ? formData.confirmPassword !== value ? 'Passwords do not match' : ''
+                    : prev.confirmPassword
+            })
+        }));
+    };
+
+    // ── Check if the form is fully valid to enable submit ────────────────────
+    const isFormValid =
+        formData.fullName.trim().length >= 2 &&
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email) &&
+        formData.password.length >= 6 &&
+        formData.confirmPassword === formData.password &&
+        agreeTerms;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,7 +86,7 @@ export default function SignUp() {
         }
 
         if (formData.password !== formData.confirmPassword) {
-            alert("Passwords do not match");
+            setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
             return;
         }
 
@@ -80,9 +125,13 @@ export default function SignUp() {
         }
     };
 
+    // ── Reusable error message component ─────────────────────────────────────
+    const ErrorMsg = ({ msg }) =>
+        msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
+
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
-            {/* Website Standard Background (Grid) */}
+            {/* Background Grid */}
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:16px_16px] opacity-15 pointer-events-none"></div>
 
             {/* Main Content */}
@@ -94,7 +143,7 @@ export default function SignUp() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="w-full max-w-md z-10"
                 >
-                    {/* Form Container with Dot Pattern */}
+                    {/* Form Container */}
                     <div
                         className="bg-[#0a0a0a] border border-gray-800/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm"
                         style={{
@@ -111,6 +160,7 @@ export default function SignUp() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
+
                             {/* Full Name Field */}
                             <div className="space-y-2 group">
                                 <label className="text-xs font-medium text-gray-400 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="fullName">
@@ -122,9 +172,10 @@ export default function SignUp() {
                                     required
                                     value={formData.fullName}
                                     onChange={handleChange}
-                                    className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base"
+                                    className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base ${errors.fullName ? 'border-red-500' : 'border-gray-700'}`}
                                     placeholder="John Doe"
                                 />
+                                <ErrorMsg msg={errors.fullName} />
                             </div>
 
                             {/* Email Field */}
@@ -138,9 +189,10 @@ export default function SignUp() {
                                     required
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base"
+                                    className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base ${errors.email ? 'border-red-500' : 'border-gray-700'}`}
                                     placeholder="name@example.com"
                                 />
+                                <ErrorMsg msg={errors.email} />
                             </div>
 
                             {/* Password Field */}
@@ -155,7 +207,7 @@ export default function SignUp() {
                                         required
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base"
+                                        className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base ${errors.password ? 'border-red-500' : 'border-gray-700'}`}
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -163,13 +215,10 @@ export default function SignUp() {
                                         type="button"
                                         onClick={toggleVisibility}
                                     >
-                                        {isVisible ? (
-                                            <EyeOff className="h-5 w-5" />
-                                        ) : (
-                                            <Eye className="h-5 w-5" />
-                                        )}
+                                        {isVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>
                                 </div>
+                                <ErrorMsg msg={errors.password} />
                             </div>
 
                             {/* Confirm Password Field */}
@@ -184,7 +233,7 @@ export default function SignUp() {
                                         required
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base"
+                                        className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base ${errors.confirmPassword ? 'border-red-500' : 'border-gray-700'}`}
                                         placeholder="••••••••"
                                     />
                                     <button
@@ -192,16 +241,13 @@ export default function SignUp() {
                                         type="button"
                                         onClick={toggleConfirmVisibility}
                                     >
-                                        {isConfirmVisible ? (
-                                            <EyeOff className="h-5 w-5" />
-                                        ) : (
-                                            <Eye className="h-5 w-5" />
-                                        )}
+                                        {isConfirmVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                                     </button>
                                 </div>
+                                <ErrorMsg msg={errors.confirmPassword} />
                             </div>
 
-                            {/* Terms & Conditions Checkbox */}
+                            {/* Terms & Conditions */}
                             <div className="flex items-center space-x-3 pt-2">
                                 <input
                                     type="checkbox"
@@ -225,10 +271,10 @@ export default function SignUp() {
                                 </label>
                             </div>
 
-                            {/* Sign Up Button */}
+                            {/* Submit Button — disabled until form is valid */}
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={!isFormValid || isLoading}
                                 className="w-full mt-8 py-3.5 px-4 bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-600/20 hover:shadow-red-600/30 transform hover:-translate-y-0.5"
                             >
                                 {isLoading ? (
@@ -241,9 +287,6 @@ export default function SignUp() {
                                 )}
                             </button>
                         </form>
-
-                        {/* Divider */}
-
 
                         {/* Sign In Link */}
                         <div className="mt-8 text-center text-sm relative z-10">

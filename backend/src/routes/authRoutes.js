@@ -2,8 +2,10 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { signup, login, me, updateProfile } from '../controllers/authController.js';
 import { authenticate } from '../middleware/auth.js';
+import { authRateLimiter } from "../middleware/rateLimiters.js";
 
 const router = Router();
+<<<<<<< HEAD
 const parsedAuthWindowMs = Number.parseInt(
   process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? '',
   10
@@ -34,6 +36,8 @@ const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+=======
+>>>>>>> 9fcd2db (feat: apply strict rate limiting to auth endpoints)
 router.post('/signup', authRateLimiter, signup);
 router.post('/login', authRateLimiter, login);
 router.get('/me', authenticate, me);

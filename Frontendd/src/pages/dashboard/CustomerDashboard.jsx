@@ -5,8 +5,9 @@ import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
-import jsPDF from 'jspdf';
+import { generateCertificate } from '../../utils/generateCertificate';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function CustomerDashboard() {
     const { user } = useAuth();
@@ -153,8 +154,21 @@ export default function CustomerDashboard() {
 };
 
     // Filter registrations based on date
-    const upcomingEvents = registrations.filter(reg => reg.event && new Date(reg.event.date) >= new Date());
-    const pastEvents = registrations.filter(reg => reg.event && new Date(reg.event.date) < new Date());
+   const upcomingEvents = [];
+
+const pastEvents = [
+  {
+    _id: "abc12345678",
+    status: "attended",
+    event: {
+      title: "AI Innovation Summit",
+      description: "A tech conference on AI and innovation.",
+      date: "2025-04-10",
+      location: "Mumbai",
+      category: "Technology",
+    },
+  },
+];
 
     if (loading) {
         return (
@@ -381,22 +395,50 @@ export default function CustomerDashboard() {
                                                         )}
                                                     </div>
 
-                                                    <div className="flex-1 flex flex-col justify-center">
-                                                        <div className="flex justify-between items-start">
-                                                            <h3 className="text-base font-semibold text-foreground">
-                                                                {reg.event?.title}
-                                                            </h3>
-                                                            <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${reg.status === 'attended'
-                                                                ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                                                : 'bg-secondary text-muted-foreground'
-                                                                }`}>
-                                                                {reg.status === 'attended' ? 'Attended' : 'Completed'}
-                                                            </span>
-                                                        </div>
-                                                        <p className="text-muted-foreground text-xs mt-1">
-                                                            {reg.event?.date ? new Date(reg.event.date).toLocaleDateString() : 'TBA'} • {reg.event?.location}
-                                                        </p>
-                                                    </div>
+                                                    
+                                                        <div className="flex-1 flex flex-col justify-center">
+    <div className="flex justify-between items-start">
+        <h3 className="text-base font-semibold text-foreground">
+            {reg.event?.title}
+        </h3>
+
+        <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${
+            reg.status === 'attended'
+                ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+                : 'bg-secondary text-muted-foreground'
+        }`}>
+            {reg.status === 'attended' ? 'Attended' : 'Completed'}
+        </span>
+    </div>
+
+    <p className="text-muted-foreground text-xs mt-1">
+        {reg.event?.date
+            ? new Date(reg.event.date).toLocaleDateString()
+            : 'TBA'} • {reg.event?.location}
+    </p>
+
+    {reg.status === 'attended' && (
+        <div className="mt-4">
+            <Button
+                onClick={() =>
+                    generateCertificate({
+                        attendeeName: user?.name || 'Participant',
+                        eventTitle: reg.event?.title || 'Event',
+                        eventDate: reg.event?.date
+                            ? new Date(reg.event.date).toLocaleDateString()
+                            : 'TBA',
+                        organizerName: 'eventOne',
+                        registrationId: reg._id,
+                    })
+                }
+                className="bg-green-600 hover:bg-green-700 text-white text-xs h-8"
+            >
+                <Download className="w-3 h-3 mr-2" />
+                Download Certificate
+            </Button>
+        </div>
+    )}
+</div>
                                                 </div>
                                             </motion.div>
                                         ))}
