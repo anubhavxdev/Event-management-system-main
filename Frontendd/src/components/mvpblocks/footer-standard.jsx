@@ -267,8 +267,7 @@ export default function FooterStandard() {
     </div>
   </div>
 
-  {/* Background Glow */}
-  <div className="absolute bottom-0 left-1/2 h-[400px] w-[400px] -translate-x-1/2 rounded-full bg-pink-500/10 blur-[140px]" />
+ 
 </footer>
   );
 }
