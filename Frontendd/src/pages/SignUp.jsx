@@ -19,7 +19,7 @@ export default function SignUp() {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'customer'
+        role: 'attendee'
     });
 
     // ── Validation errors state ──────────────────────────────────────────────
@@ -108,12 +108,7 @@ export default function SignUp() {
             const data = await res.json();
 
             if (res.ok) {
-                login(data.token, data.user);
-                switch (data.user.role) {
-                    case 'admin': navigate('/admin/dashboard'); break;
-                    case 'organizer': navigate('/organizer/dashboard'); break;
-                    default: navigate('/customer/dashboard');
-                }
+                navigate('/verify-email');
             } else {
                 alert(data.message || 'Signup failed');
             }

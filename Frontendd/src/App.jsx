@@ -17,6 +17,7 @@ import CreateEvent from './pages/dashboard/CreateEvent';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ThankYou from './pages/ThankYou';
 import { useAuth } from './context/AuthContext';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -59,6 +60,8 @@ const App = () => {
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/verify-email" element={<VerifyEmail />} /> 
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
