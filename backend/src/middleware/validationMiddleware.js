@@ -22,10 +22,9 @@ export const signupValidation = [
     .withMessage('Password must be at least 6 characters long'),
 
   body('role')
-    .notEmpty()
-    .withMessage('Role is required')
-    .isIn(['customer', 'organizer'])
-    .withMessage('Role must be either customer or organizer'),
+  .optional()
+  .isIn(['attendee', 'organizer', 'admin'])
+  .withMessage('Role must be either attendee, organizer, or admin')
 ];
 
 export const loginValidation = [

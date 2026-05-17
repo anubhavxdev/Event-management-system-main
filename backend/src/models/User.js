@@ -12,6 +12,9 @@ const userSchema = new mongoose.Schema(
     interests: [{ type: String }],
     avatarUrl: { type: String },
     phoneNumber: { type: String, trim: true },
+    isVerified: { type: Boolean, default: false },
+    emailVerificationToken: { type: String },
+    emailVerificationExpires: { type: Date },
   },
   { timestamps: true }
 );

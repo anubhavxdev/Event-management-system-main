@@ -3,6 +3,7 @@ import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { registrationRateLimiter } from '../middleware/rateLimiters.js';
 import { registerForEvent, myRegistrations, participantsForEvent, checkInParticipant, exportParticipantsCsv, checkRegistrationStatus } from '../controllers/registrationController.js';
+import { checkEmailVerified } from '../middleware/auth.js'; 
 
 const router = Router();
 
@@ -10,6 +11,7 @@ router.post(
   '/:id/register',
   registrationRateLimiter,
   authenticate,
+  checkEmailVerified,
   authorizeRoles('attendee', 'organizer', 'admin'),
   registerForEvent
 );

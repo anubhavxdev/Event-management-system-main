@@ -38,6 +38,7 @@ async function run() {
       status: 'approved',
       posterUrl: '/uploads/poster-1.jpg',
       tags: ['mern', 'javascript'],
+      isEmailVerified: true
     },
     {
       title: 'Inter-College Football Meet',
@@ -50,6 +51,7 @@ async function run() {
       status: 'approved',
       posterUrl: '/uploads/poster-2.jpg',
       tags: ['outdoor'],
+      isEmailVerified: true,
     },
     {
       title: 'Photography Basics Workshop',
@@ -62,6 +64,7 @@ async function run() {
       status: 'pending',
       posterUrl: '/uploads/poster-3.jpg',
       tags: ['creative'],
+      isEmailVerified: true,
     },
     {
       title: 'Cultural Night 2025',
@@ -74,6 +77,7 @@ async function run() {
       status: 'approved',
       posterUrl: '/uploads/poster-5.jpg',
       tags: ['fest'],
+      isEmailVerified: true,
     },
     {
       title: 'Hackathon: Build for Campus',
@@ -86,6 +90,7 @@ async function run() {
       status: 'approved',
       posterUrl: '/uploads/poster-6.jpg',
       tags: ['hackathon'],
+      isEmailVerified: true,
     },
     {
       title: 'Wellness Yoga Morning',
@@ -98,6 +103,7 @@ async function run() {
       status: 'approved',
       posterUrl: '/uploads/poster-7.jpg',
       tags: ['health'],
+      isEmailVerified: true,
     },
   ]);
 
