@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2 } from 'lucide-react';
+import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2, MessageSquare, AlertTriangle } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
 
@@ -15,6 +15,8 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('Pending Reviews');
     const [allEvents, setAllEvents] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [rejectTarget, setRejectTarget] = useState(null);
+    const [rejectionReason, setRejectionReason] = useState('');
 
     useEffect(() => {
         if (activeTab === 'Pending Reviews') {
@@ -84,13 +86,19 @@ export default function AdminDashboard() {
         }
     };
 
-    const handleAction = async (eventId, action) => {
+    const handleAction = async (eventId, action, reason) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/${action}`, {
+            const fetchOptions = {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` }
-            });
+            };
+            // Send rejection reason in body if rejecting
+            if (action === 'reject' && reason) {
+                fetchOptions.headers['Content-Type'] = 'application/json';
+                fetchOptions.body = JSON.stringify({ rejectionReason: reason });
+            }
+            const res = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}/${action}`, fetchOptions);
             if (res.ok) {
                 // Remove from pending
                 setPendingEvents(prev => prev.filter(e => e._id !== eventId));
@@ -102,6 +110,14 @@ export default function AdminDashboard() {
         } catch (error) {
             console.error(`Failed to ${action} event`, error);
         }
+    };
+
+    const submitReject = () => {
+        if (!rejectTarget) return;
+        handleAction(rejectTarget, 'reject', rejectionReason);
+        setRejectTarget(null);
+        setRejectionReason('');
+        setSelectedEvent(null);
     };
 
     const handleUserAction = async (userId, action) => {
@@ -330,7 +346,7 @@ export default function AdminDashboard() {
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
-                                                                onClick={() => handleAction(event._id, 'reject')}
+                                                                onClick={() => setRejectTarget(event._id)}
                                                                 className="text-red-500 hover:text-red-600 hover:bg-red-500/10 h-9"
                                                             >
                                                                 Reject
@@ -389,9 +405,16 @@ export default function AdminDashboard() {
                                                     {new Date(event.date).toLocaleDateString()}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${event.status === 'approved' ? 'bg-green-500/10 text-green-500' : event.status === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
-                                                        {event.status}
-                                                    </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className={`text-xs px-2 py-0.5 rounded-full capitalize w-fit ${event.status === 'approved' ? 'bg-green-500/10 text-green-500' : event.status === 'rejected' ? 'bg-red-500/10 text-red-500' : 'bg-yellow-500/10 text-yellow-500'}`}>
+                                                            {event.status}
+                                                        </span>
+                                                        {event.status === 'rejected' && event.rejectionReason && (
+                                                            <span className="text-[11px] text-red-400/80 italic truncate max-w-[200px]" title={event.rejectionReason}>
+                                                                "{event.rejectionReason}"
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <Button size="sm" variant="secondary" onClick={() => setSelectedEvent(event)} className="h-8 hover:bg-purple-500/10 hover:text-purple-500 transition-colors">
@@ -516,15 +539,63 @@ export default function AdminDashboard() {
                                         Download Participants CSV
                                     </Button>
                                     <Button
-                                        onClick={() => {
-                                            handleAction(selectedEvent._id, 'reject');
-                                            setSelectedEvent(null);
-                                        }}
+                                        onClick={() => setRejectTarget(selectedEvent._id)}
                                         variant="destructive"
                                         className="w-full justify-center bg-red-600 hover:bg-red-700"
                                     >
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete Event Permanently
+                                        <AlertTriangle className="w-4 h-4 mr-2" />
+                                        Reject Event
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Rejection Reason Modal */}
+            <AnimatePresence>
+                {rejectTarget && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white text-zinc-950 w-full max-w-md rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="p-2 bg-red-100 rounded-full">
+                                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold text-zinc-900">Reject Event</h3>
+                                </div>
+                                <p className="text-sm text-zinc-500 mb-4">
+                                    Are you sure you want to reject this event? You can provide an optional reason for the organizer.
+                                </p>
+                                <div className="mb-6">
+                                    <label className="block text-sm font-medium text-zinc-700 mb-1.5">Rejection Reason (optional)</label>
+                                    <textarea
+                                        value={rejectionReason}
+                                        onChange={(e) => setRejectionReason(e.target.value)}
+                                        placeholder="e.g., Incomplete event details, violates community guidelines..."
+                                        className="w-full rounded-lg border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-800 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-red-500/40 focus:border-red-400 min-h-[80px] resize-none"
+                                    />
+                                </div>
+                                <div className="flex gap-3 justify-end">
+                                    <Button
+                                        variant="ghost"
+                                        onClick={() => { setRejectTarget(null); setRejectionReason(''); }}
+                                        className="text-zinc-500 hover:text-zinc-700"
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={submitReject}
+                                        className="bg-red-600 text-white hover:bg-red-700 border-none"
+                                    >
+                                        <AlertTriangle className="w-4 h-4 mr-2" />
+                                        Confirm Rejection
                                     </Button>
                                 </div>
                             </div>

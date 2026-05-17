@@ -30,6 +30,9 @@ router.post("/login", authRateLimiter, login);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerification);
 
+router.post('/signup', authRateLimiter, signup);
+router.post('/login', authRateLimiter, login);
+
 router.get("/me", authenticate, me);
 router.put("/profile", authenticate, updateProfile);
 

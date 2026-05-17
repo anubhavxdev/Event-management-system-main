@@ -3,7 +3,11 @@ import User from '../models/User.js';
 
 export const approveEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved' },
+      { new: true }
+    );
     if (!event) return res.status(404).json({ message: 'Not found' });
     res.json({ event });
   } catch (err) {
@@ -13,9 +17,18 @@ export const approveEvent = async (req, res) => {
 
 export const rejectEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const { rejectionReason } = req.body || {};
+    const updateData = {
+      status: 'rejected',
+      rejectionReason: rejectionReason || '',
+    };
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
     if (!event) return res.status(404).json({ message: 'Not found' });
-    res.json({ message: 'Event rejected and removed', eventId: req.params.id });
+    res.json({ message: 'Event rejected', event });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

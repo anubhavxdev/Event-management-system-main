@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Backend API for eventone — an open-source event management platform",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -17,7 +18,6 @@
   ],
   "author": "anubhavxdev",
   "license": "MIT",
-  "type": "module",
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",

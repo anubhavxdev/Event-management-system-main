@@ -60,7 +60,7 @@ export default function OrganizerDashboard() {
                 // Filter events where the organizer matches the current user
                 // Adjust logic based on how your backend returns data (populated organizer object vs id)
                 const myEvents = (data.events || []).filter(
-                    e => e.organizer?._id === user?.id || e.organizer === user?.id
+                    e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
                 );
 
                 setEvents(myEvents);
@@ -382,6 +382,19 @@ export default function OrganizerDashboard() {
                                                                     {event.price > 0 ? `₹${event.price}` : 'Free'}
                                                                 </span>
                                                             </div>
+                                                            {event.status === 'rejected' && (
+                                                                <div className="mt-3 flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                                                                    <div>
+                                                                        <p className="text-sm font-medium text-red-500">Event Rejected</p>
+                                                                        {event.rejectionReason ? (
+                                                                            <p className="text-xs text-red-400/80 mt-0.5">Reason: {event.rejectionReason}</p>
+                                                                        ) : (
+                                                                            <p className="text-xs text-red-400/80 mt-0.5">No specific reason was provided. Please contact the admin for more details.</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Management Actions */}
@@ -676,7 +689,7 @@ export default function OrganizerDashboard() {
                                 animate={{ opacity: 1 }}
                                 className="space-y-8"
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                                     <div className="bg-card border border-border rounded-xl p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-medium text-muted-foreground">Total Events</h3>
@@ -697,6 +710,13 @@ export default function OrganizerDashboard() {
                                             <Clock className="w-4 h-4 text-yellow-500" />
                                         </div>
                                         <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
+                                    </div>
+                                    <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-medium text-muted-foreground">Rejected</h3>
+                                            <XCircle className="w-4 h-4 text-red-500" />
+                                        </div>
+                                        <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
                                     </div>
                                     <div className="bg-card border border-border rounded-xl p-6">
                                         <div className="flex items-center justify-between mb-4">

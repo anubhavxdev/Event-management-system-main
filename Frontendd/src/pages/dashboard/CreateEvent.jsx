@@ -106,17 +106,28 @@ export default function CreateEvent() {
                         </div>
 
                         <div>
-                            <Label htmlFor="description">Description</Label>
-                            <Textarea
-                                id="description"
-                                name="description"
-                                className="mt-2"
-                                placeholder="Tell people what your event is about..."
-                                rows={5}
-                                required
-                                onChange={handleChange}
-                            />
-                        </div>
+    <Label htmlFor="description">Description</Label>
+    <Textarea
+        id="description"
+        name="description"
+        className="mt-2"
+        placeholder="Tell people what your event is about..."
+        rows={5}
+        required
+        maxLength={500}
+        onChange={handleChange}
+    />
+    <div className="flex justify-end mt-1">
+        <span className={`text-xs font-medium ${
+            formData.description.length > 450
+                ? 'text-red-500'
+                : 'text-muted-foreground'
+        }`}>
+            {formData.description.length} / 500
+            {formData.description.length > 450 ? ' ❌' : ' ✅'}
+        </span>
+    </div>
+</div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -201,9 +212,13 @@ export default function CreateEvent() {
                     </div>
 
                     <div className="flex justify-end pt-6">
-                        <Button type="submit" className="bg-rose-500 hover:bg-rose-600 text-white min-w-[150px]" disabled={loading}>
-                            {loading ? 'Creating...' : 'Create Event'}
-                        </Button>
+                        <Button 
+    type="submit" 
+    className="bg-rose-500 hover:bg-rose-600 text-white min-w-[150px]" 
+    disabled={loading || formData.description.length > 500}
+>
+    {loading ? 'Creating...' : 'Create Event'}
+</Button>
                     </div>
                 </motion.form>
             </div>
