@@ -1,8 +1,8 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ArrowRight, ChevronRight, Github } from 'lucide-react';
-import { Button } from '../ui/button.jsx';
-import { Link } from 'react-router-dom';
+import React from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, ChevronRight, Github } from "lucide-react";
+import { Button } from "../ui/button.jsx";
+import { Link } from "react-router-dom";
 
 export default function GradientHero() {
   return (
@@ -24,7 +24,6 @@ export default function GradientHero() {
             className="mx-auto mb-6 flex justify-center"
           >
             <div className="border-border bg-background/80 inline-flex items-center rounded-full border px-3 py-1 text-sm backdrop-blur-sm shadow-lg">
-
               <span className="text-muted-foreground">
                 Powering communities & organizations to host events effortlessly
               </span>
@@ -39,7 +38,7 @@ export default function GradientHero() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="bg-gradient-to-b from-black via-zinc-800 to-zinc-500 bg-clip-text text-center text-4xl tracking-tighter text-balance text-transparent sm:text-5xl md:text-6xl lg:text-7xl"
           >
-           Powering Communities to Run Events Smarter
+            Powering Communities to Run Events Smarter
           </motion.h1>
 
           {/* Description */}
@@ -49,8 +48,10 @@ export default function GradientHero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-muted-foreground mx-auto mt-6 max-w-2xl text-center text-lg"
           >
-            A modern event management platform designed to help organizations plan, manage, and host impactful events with ease. 
-            Trusted by communities like GDG Jalandhar, AWS Cloud Clubs, Coding Ninjas, and more.
+            A modern event management platform designed to help organizations
+            plan, manage, and host impactful events with ease. Trusted by
+            communities like GDG Jalandhar, AWS Cloud Clubs, Coding Ninjas, and
+            more.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -62,16 +63,15 @@ export default function GradientHero() {
           >
             <Button
               size="lg"
-              className="group bg-primary text-primary-foreground hover:shadow-primary/30 relative overflow-hidden rounded-full px-6 shadow-lg transition-all duration-300"
+              className="group relative overflow-hidden rounded-full px-6 shadow-lg shadow-primary/30 ring-2 ring-primary/20 ring-offset-2 ring-offset-background bg-primary text-primary-foreground transition-all duration-300 hover:shadow-primary/40 hover:ring-primary/40"
               asChild
             >
               <Link to="/signup">
-                <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+                <span className="from-primary/80 via-primary to-primary/90 absolute inset-0 z-0 bg-gradient-to-r opacity-40 transition-opacity duration-300 group-hover:opacity-70"></span>
                 <span className="relative z-10 flex items-center">
                   Get Started
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </span>
-                <span className="from-primary via-primary/90 to-primary/80 absolute inset-0 z-0 bg-gradient-to-r opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
               </Link>
             </Button>
 
@@ -92,7 +92,7 @@ export default function GradientHero() {
             transition={{
               duration: 0.8,
               delay: 0.5,
-              type: 'spring',
+              type: "spring",
               stiffness: 50,
             }}
             className="relative mx-auto mt-16 max-w-4xl"

@@ -89,69 +89,69 @@ export default function CustomerDashboard() {
 
 
     const handleDownloadTicket = async () => {
-    try {
-        if (!ticketRef.current || !selectedTicket) return;
+        try {
+            if (!ticketRef.current || !selectedTicket) return;
 
-        const canvas = await html2canvas(ticketRef.current, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-        });
+            const canvas = await html2canvas(ticketRef.current, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#ffffff',
+            });
 
-        const imgData = canvas.toDataURL('image/png');
+            const imgData = canvas.toDataURL('image/png');
 
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-        });
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+            });
 
-        const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfWidth = pdf.internal.pageSize.getWidth();
 
-        const imgProps = pdf.getImageProperties(imgData);
+            const imgProps = pdf.getImageProperties(imgData);
 
-        const pdfHeight =
-            (imgProps.height * (pdfWidth - 20)) / imgProps.width;
+            const pdfHeight =
+                (imgProps.height * (pdfWidth - 20)) / imgProps.width;
 
-        // Branding
-        pdf.setFontSize(20);
-        pdf.setTextColor(244, 63, 94);
-        pdf.text('EventOne Ticket', 15, 15);
+            // Branding
+            pdf.setFontSize(20);
+            pdf.setTextColor(244, 63, 94);
+            pdf.text('EventOne Ticket', 15, 15);
 
-        // Ticket image
-       const maxHeight = 250;
+            // Ticket image
+            const maxHeight = 250;
 
-        let finalWidth = pdfWidth - 20;
-        let finalHeight = pdfHeight;
-        
-        if (pdfHeight > maxHeight) {
-            const scaleFactor = maxHeight / pdfHeight;
-        
-            finalHeight = maxHeight;
-            finalWidth = finalWidth * scaleFactor;
+            let finalWidth = pdfWidth - 20;
+            let finalHeight = pdfHeight;
+
+            if (pdfHeight > maxHeight) {
+                const scaleFactor = maxHeight / pdfHeight;
+
+                finalHeight = maxHeight;
+                finalWidth = finalWidth * scaleFactor;
+            }
+
+            pdf.addImage(
+                imgData,
+                'PNG',
+                10,
+                25,
+                finalWidth,
+                finalHeight
+            );
+
+            const safeEventName = selectedTicket.event?.title
+                ?.replace(/\s+/g, '-')
+                ?.replace(/[^a-zA-Z0-9-_]/g, '')
+                ?.toUpperCase();
+
+            const fileName = `ticket-${safeEventName || 'EVENT'}-${selectedTicket._id.slice(-6).toUpperCase()}.pdf`;
+
+            pdf.save(fileName);
+        } catch (error) {
+            console.error('PDF generation failed:', error);
         }
-        
-        pdf.addImage(
-            imgData,
-            'PNG',
-            10,
-            25,
-            finalWidth,
-            finalHeight
-        );
-
-        const safeEventName = selectedTicket.event?.title
-            ?.replace(/\s+/g, '-')
-            ?.replace(/[^a-zA-Z0-9-_]/g, '')
-            ?.toUpperCase();
-
-        const fileName = `ticket-${safeEventName || 'EVENT'}-${selectedTicket._id.slice(-6).toUpperCase()}.pdf`;
-
-        pdf.save(fileName);
-    } catch (error) {
-        console.error('PDF generation failed:', error);
-    }
-};
+    };
 
     // Filter registrations based on date
    const upcomingEvents = [];
@@ -467,6 +467,10 @@ const pastEvents = [
                                     <div className="grid grid-cols-1 gap-6">
                                         {availableEvents.map((evt, idx) => {
                                             const isRegistered = registrations.some(r => r.event?._id === evt._id);
+                                            let isEventFullBooked = false;
+                                            if (evt.registeredCount === evt.capacity) {
+                                                isEventFullBooked = true;
+                                            }
                                             return (
                                                 <motion.div
                                                     key={evt._id}
@@ -522,8 +526,12 @@ const pastEvents = [
 
                                                             <div className="flex justify-end pt-4 md:pt-0">
                                                                 {isRegistered ? (
+                                                                    <Button disabled variant="success" className="text-xs h-8 bg-green-600 text-white opacity-75">
+                                                                        Registered
+                                                                    </Button>
+                                                                ) : isEventFullBooked ? (
                                                                     <Button disabled variant="secondary" className="text-xs h-8">
-                                                                        Already Registered
+                                                                        Fully Booked
                                                                     </Button>
                                                                 ) : (
                                                                     <Button
@@ -569,59 +577,59 @@ const pastEvents = [
 
                             <div className="p-6 bg-white">
                                 <div ref={ticketRef}>
-                                <div className="text-center mb-6">
-                                    <h3 className="text-xl font-bold mb-1 text-rose-600">
-                                        EventOne Ticket
-                                    </h3>
-                                    <p className="text-xs text-zinc-500 uppercase tracking-widest">Admit One</p>
-                                </div>
+                                    <div className="text-center mb-6">
+                                        <h3 className="text-xl font-bold mb-1 text-rose-600">
+                                            EventOne Ticket
+                                        </h3>
+                                        <p className="text-xs text-zinc-500 uppercase tracking-widest">Admit One</p>
+                                    </div>
 
-                                {/* Event Info */}
-                                <div className="space-y-4 mb-6">
-                                    <div className="flex items-start gap-4 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
-                                        <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
-                                            {selectedTicket.event?.posterUrl && (
-                                                <img src={selectedTicket.event.posterUrl} alt="" className="w-full h-full object-cover" />
-                                            )}
+                                    {/* Event Info */}
+                                    <div className="space-y-4 mb-6">
+                                        <div className="flex items-start gap-4 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
+                                            <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
+                                                {selectedTicket.event?.posterUrl && (
+                                                    <img src={selectedTicket.event.posterUrl} alt="" className="w-full h-full object-cover" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-sm line-clamp-1">{selectedTicket.event?.title}</h4>
+                                                <p className="text-xs text-zinc-500 mt-1 flex items-center">
+                                                    <Calendar className="w-3 h-3 mr-1" />
+                                                    {selectedTicket.event?.date ? new Date(selectedTicket.event.date).toLocaleDateString() : 'TBA'}
+                                                </p>
+                                                <p className="text-xs text-zinc-500 mt-0.5 flex items-center">
+                                                    <MapPin className="w-3 h-3 mr-1" />
+                                                    {selectedTicket.event?.location || 'TBA'}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 className="font-semibold text-sm line-clamp-1">{selectedTicket.event?.title}</h4>
-                                            <p className="text-xs text-zinc-500 mt-1 flex items-center">
-                                                <Calendar className="w-3 h-3 mr-1" />
-                                                {selectedTicket.event?.date ? new Date(selectedTicket.event.date).toLocaleDateString() : 'TBA'}
-                                            </p>
-                                            <p className="text-xs text-zinc-500 mt-0.5 flex items-center">
-                                                <MapPin className="w-3 h-3 mr-1" />
-                                                {selectedTicket.event?.location || 'TBA'}
-                                            </p>
+
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                                                <span className="text-xs text-zinc-500 block mb-1">Attendee</span>
+                                                <div className="font-medium truncate">{user?.name}</div>
+                                            </div>
+                                            <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                                                <span className="text-xs text-zinc-500 block mb-1">Ticket ID</span>
+                                                <div className="font-medium font-mono text-xs">{selectedTicket._id.slice(-8).toUpperCase()}</div>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-                                            <span className="text-xs text-zinc-500 block mb-1">Attendee</span>
-                                            <div className="font-medium truncate">{user?.name}</div>
-                                        </div>
-                                        <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-                                            <span className="text-xs text-zinc-500 block mb-1">Ticket ID</span>
-                                            <div className="font-medium font-mono text-xs">{selectedTicket._id.slice(-8).toUpperCase()}</div>
-                                        </div>
+                                    {/* QR Code Area */}
+                                    <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-dashed border-zinc-300 mb-6 relative">
+                                        <div className="absolute top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,transparent_50%,#000_50%)] bg-[size:10px_10px]" />
+
+                                        {selectedTicket.qrCodeDataUrl ? (
+                                            <img src={selectedTicket.qrCodeDataUrl} alt="Ticket QR Code" className="w-48 h-48 object-contain" />
+                                        ) : (
+                                            <div className="w-48 h-48 flex items-center justify-center bg-zinc-100 text-zinc-400 text-xs">
+                                                QR Code Unavailable
+                                            </div>
+                                        )}
+                                        <p className="text-[10px] text-zinc-500 mt-2 font-mono">SCAN AT ENTRANCE</p>
                                     </div>
-                                </div>
-
-                                {/* QR Code Area */}
-                                <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-dashed border-zinc-300 mb-6 relative">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,transparent_50%,#000_50%)] bg-[size:10px_10px]" />
-
-                                    {selectedTicket.qrCodeDataUrl ? (
-                                        <img src={selectedTicket.qrCodeDataUrl} alt="Ticket QR Code" className="w-48 h-48 object-contain" />
-                                    ) : (
-                                        <div className="w-48 h-48 flex items-center justify-center bg-zinc-100 text-zinc-400 text-xs">
-                                            QR Code Unavailable
-                                        </div>
-                                    )}
-                                    <p className="text-[10px] text-zinc-500 mt-2 font-mono">SCAN AT ENTRANCE</p>
-                                </div>
                                 </div>
                                 <Button onClick={handleDownloadTicket} className="w-full bg-rose-600 hover:bg-rose-700 text-white">
                                     <Download className="w-4 h-4 mr-2" />

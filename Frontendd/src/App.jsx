@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './index.css'
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2"
@@ -17,7 +17,6 @@ import CreateEvent from './pages/dashboard/CreateEvent';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ThankYou from './pages/ThankYou';
 import { useAuth } from './context/AuthContext';
-import VerifyEmail from './pages/VerifyEmail';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
