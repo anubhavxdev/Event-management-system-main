@@ -46,6 +46,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "postcss": "^8.4.47",
-    "vite": "^6.0.0"
+    "vite": "^6.0.0",
+    "vite-plugin-compression": "^0.5.1"
   }
 }

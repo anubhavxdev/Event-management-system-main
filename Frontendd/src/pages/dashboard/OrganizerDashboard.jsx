@@ -19,7 +19,6 @@ export default function OrganizerDashboard() {
     const [creating, setCreating] = useState(false);
     const [activeTab, setActiveTab] = useState('My Events');
     const [selectedEvent, setSelectedEvent] = useState(null);
-    const [editingEventId, setEditingEventId] = useState(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -147,36 +146,6 @@ export default function OrganizerDashboard() {
         }
     };
 
-    const resetForm = () => {
-        setFormData({
-            title: '', description: '', date: '', time: '', location: '',
-            category: 'General', price: '', capacity: '', poster: null
-        });
-        setEditingEventId(null);
-    };
-
-    const handleEditResubmit = (event) => {
-        const eventDate = new Date(event.date);
-        const isoString = Number.isNaN(eventDate.getTime())
-            ? ''
-            : new Date(eventDate.getTime() - eventDate.getTimezoneOffset() * 60000).toISOString();
-
-        setFormData({
-            title: event.title || '',
-            description: event.description || '',
-            date: isoString ? isoString.slice(0, 10) : '',
-            time: isoString ? isoString.slice(11, 16) : '',
-            location: event.location || '',
-            category: event.category || 'General',
-            price: event.price ?? '',
-            capacity: event.capacity ?? '',
-            poster: null
-        });
-        setEditingEventId(event._id);
-        setSelectedEvent(null);
-        setActiveTab('Create New Event');
-    };
-
     const handleCreateSubmit = async (e) => {
         e.preventDefault();
         setCreating(true);
@@ -198,13 +167,8 @@ export default function OrganizerDashboard() {
             }
 
             const token = localStorage.getItem('token');
-            const isEditing = !!editingEventId;
-            const res = await fetch(
-                isEditing
-                    ? `${API_BASE_URL}/api/events/${editingEventId}`
-                    : `${API_BASE_URL}/api/events`,
-                {
-                method: isEditing ? 'PUT' : 'POST',
+            const res = await fetch(`${API_BASE_URL}/api/events`, {
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
@@ -212,8 +176,11 @@ export default function OrganizerDashboard() {
             });
 
             if (res.ok) {
-                resetForm();
-                alert(isEditing ? 'Event resubmitted successfully!' : 'Event Created Successfully!');
+                setFormData({
+                    title: '', description: '', date: '', time: '', location: '',
+                    category: 'General', price: '', capacity: '', poster: null
+                });
+                alert('Event Created Successfully!');
                 fetchMyEvents();
                 setActiveTab('My Events'); // Switch back to list view
             } else {
@@ -366,6 +333,8 @@ export default function OrganizerDashboard() {
                                                                     e.target.src = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000';
                                                                 }}
                                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                                loading="lazy"
+                                                                decoding="async"
                                                             />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -397,11 +366,6 @@ export default function OrganizerDashboard() {
                                                             <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
                                                                 {event.description}
                                                             </p>
-                                                            {event.status === 'rejected' && event.rejectionReason && (
-                                                                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-600">
-                                                                    Reason: {event.rejectionReason}
-                                                                </div>
-                                                            )}
                                                             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                                                                 <span className="flex items-center">
                                                                     <Calendar className="w-3 h-3 mr-1.5" />
@@ -434,32 +398,9 @@ export default function OrganizerDashboard() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        {event.tags?.length > 0 && (
-                                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                                {event.tags.map((tag) => (
-                                                                    <button
-                                                                        key={tag}
-                                                                        type="button"
-                                                                        onClick={() => navigate(`/?tags=${tag}`)}
-                                                                        className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
-                                                                    >
-                                                                        #{tag}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        )}
 
                                                         {/* Management Actions */}
                                                         <div className="flex justify-end mt-4 pt-4 border-t border-border/50">
-                                                            {event.status === 'rejected' && (
-                                                                <Button
-                                                                    size="sm"
-                                                                    className="mr-3 bg-red-600 text-white hover:bg-red-700"
-                                                                    onClick={() => handleEditResubmit(event)}
-                                                                >
-                                                                    Edit & Resubmit
-                                                                </Button>
-                                                            )}
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
@@ -515,6 +456,8 @@ export default function OrganizerDashboard() {
                                                                     e.target.src = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000';
                                                                 }}
                                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                                loading="lazy"
+                                                                decoding="async"
                                                             />
                                                         ) : (
                                                             <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -554,20 +497,6 @@ export default function OrganizerDashboard() {
                                                                 </span>
                                                             </div>
                                                         </div>
-                                                        {event.tags?.length > 0 && (
-                                                            <div className="flex flex-wrap gap-2 mt-3">
-                                                                {event.tags.map((tag) => (
-                                                                    <button
-                                                                        key={tag}
-                                                                        type="button"
-                                                                        onClick={() => navigate(`/?tags=${tag}`)}
-                                                                        className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
-                                                                    >
-                                                                        #{tag}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        )}
 
                                                         {/* Past Actions */}
                                                         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
@@ -602,22 +531,6 @@ export default function OrganizerDashboard() {
                                 className="max-w-3xl mx-auto"
                             >
                                 <form onSubmit={handleCreateSubmit} className="space-y-8">
-                                    {editingEventId && (
-                                        <div className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3">
-                                            <div>
-                                                <div className="text-sm font-semibold text-red-600">Editing rejected event</div>
-                                                <div className="text-xs text-red-500/80">Save changes to resubmit this event for admin review.</div>
-                                            </div>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                className="border-red-500/30 text-red-600 hover:bg-red-500/10"
-                                                onClick={resetForm}
-                                            >
-                                                Cancel Edit
-                                            </Button>
-                                        </div>
-                                    )}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
                                             <div className="space-y-2">
@@ -764,7 +677,7 @@ export default function OrganizerDashboard() {
                                             ) : (
                                                 <>
                                                     <Plus className="w-4 h-4 mr-2" />
-                                                    {editingEventId ? 'Resubmit Event' : 'Publish Event'}
+                                                    Publish Event
                                                 </>
                                             )}
                                         </Button>
@@ -878,6 +791,8 @@ export default function OrganizerDashboard() {
                                             e.target.src = 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&q=80&w=1000';
                                         }}
                                         className="w-full h-full object-cover opacity-80"
+                                        loading="lazy"
+                                        decoding="async"
                                     />
                                 ) : (
                                     <div className="flex items-center justify-center h-full bg-secondary">
