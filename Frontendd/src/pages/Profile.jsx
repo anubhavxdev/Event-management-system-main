@@ -11,7 +11,11 @@ const Profile = () => {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phoneNumber: user?.phoneNumber || '',
+        showAttendance: user?.privacySettings?.showAttendanceToFriends ?? true,
     });
+    const [activeTab, setActiveTab] = useState('details');
+    const [friends, setFriends] = useState([]);
+    const [newFriendId, setNewFriendId] = useState('');
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState(''); // 'success' or 'error'
     const [phoneError, setPhoneError] = useState('');
@@ -77,7 +81,11 @@ const Profile = () => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({
+                    name: formData.name,
+                    phoneNumber: formData.phoneNumber,
+                    privacySettings: { showAttendanceToFriends: formData.showAttendance }
+                })
             });
 
             const data = await response.json();
@@ -101,9 +109,79 @@ const Profile = () => {
         }
     };
 
-    if (!user) {
         return <div className="p-8 text-center">Please log in to view your profile.</div>;
     }
+
+    const fetchFriends = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/friends`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setFriends(data);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    React.useEffect(() => {
+        if (activeTab === 'friends') {
+            fetchFriends();
+        }
+    }, [activeTab]);
+
+    const handleAcceptRequest = async (requestId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/friends/accept/${requestId}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchFriends();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleRemoveFriend = async (friendId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/friends/${friendId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) fetchFriends();
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const handleSendRequest = async (e) => {
+        e.preventDefault();
+        if (!newFriendId) return;
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/friends/request/${newFriendId}`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setMessageType('success');
+                setMessage('Friend request sent!');
+                setNewFriendId('');
+                fetchFriends();
+            } else {
+                setMessageType('error');
+                setMessage(data.message || 'Failed to send request');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
 
     return (
         <div className="min-h-screen pt-24 px-4 bg-background text-foreground">
@@ -134,6 +212,22 @@ const Profile = () => {
                     </div>
                 )}
 
+                <div className="flex border-b border-border mb-6">
+                    <button 
+                        className={`px-4 py-2 font-medium text-sm ${activeTab === 'details' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => setActiveTab('details')}
+                    >
+                        Profile Details
+                    </button>
+                    <button 
+                        className={`px-4 py-2 font-medium text-sm ${activeTab === 'friends' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                        onClick={() => setActiveTab('friends')}
+                    >
+                        Friends
+                    </button>
+                </div>
+
+                {activeTab === 'details' ? (
                 <div className="space-y-6">
                     <div className="grid gap-4">
                         <div className="grid gap-2">
@@ -197,6 +291,20 @@ const Profile = () => {
                                 />
                             </div>
                         </div>
+                        <div className="grid gap-2">
+                            <label className="text-sm font-medium leading-none">Privacy</label>
+                            <div className="flex items-center gap-2 mt-2">
+                                <input
+                                    type="checkbox"
+                                    name="showAttendance"
+                                    checked={isEditing ? formData.showAttendance : (user?.privacySettings?.showAttendanceToFriends ?? true)}
+                                    onChange={(e) => setFormData({ ...formData, showAttendance: e.target.checked })}
+                                    disabled={!isEditing}
+                                    className="h-4 w-4 rounded border-gray-300"
+                                />
+                                <span className="text-sm">Show my event attendance to friends</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-4 pt-4 border-t border-border">
@@ -216,6 +324,49 @@ const Profile = () => {
                         )}
                     </div>
                 </div>
+                ) : (
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <h2 className="text-xl font-bold">Your Friends</h2>
+                        <form onSubmit={handleSendRequest} className="flex gap-2 w-full md:w-auto">
+                            <input
+                                className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring w-full md:w-64"
+                                placeholder="Enter User ID to add friend"
+                                value={newFriendId}
+                                onChange={(e) => setNewFriendId(e.target.value)}
+                            />
+                            <Button type="submit">Add Friend</Button>
+                        </form>
+                    </div>
+                    {friends.length === 0 ? (
+                        <p className="text-muted-foreground">You don't have any friends yet.</p>
+                    ) : (
+                        <div className="grid gap-4">
+                            {friends.map(friend => (
+                                <div key={friend.id} className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-border">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                                            {friend.user?.name?.charAt(0) || '?'}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-sm">{friend.user?.name}</p>
+                                            <p className="text-xs text-muted-foreground">{friend.status === 'pending' ? (friend.isSender ? 'Request Sent' : 'Pending Request') : 'Friend'}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
+                                        {friend.status === 'pending' && !friend.isSender && (
+                                            <Button size="sm" onClick={() => handleAcceptRequest(friend.id)}>Accept</Button>
+                                        )}
+                                        <Button size="sm" variant="outline" className="text-red-500 border-red-500/30 hover:bg-red-500/10" onClick={() => handleRemoveFriend(friend.id)}>
+                                            {friend.status === 'accepted' ? 'Remove' : (friend.isSender ? 'Cancel' : 'Reject')}
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                )}
             </div>
         </div>
     );

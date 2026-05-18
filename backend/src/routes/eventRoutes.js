@@ -11,12 +11,15 @@ import {
   sendEventReminders,
   getPopularTags,
 } from '../controllers/eventController.js';
+import { getFriendsAttending, getBatchFriendsAttending } from '../controllers/friendController.js';
 
 const router = Router();
 
 router.get('/', listEvents);
 router.get('/tags/popular', getPopularTags);
+router.get('/batch/friends-attending', authenticate, getBatchFriendsAttending);
 router.get('/:id', getEvent);
+router.get('/:id/friends-attending', authenticate, getFriendsAttending);
 router.post('/', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), createEvent);
 router.post('/:id/remind', authenticate, authorizeRoles('organizer'), sendEventReminders);
 router.put('/:id', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), updateEvent);

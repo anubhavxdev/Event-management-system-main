@@ -8,7 +8,7 @@ export const signup = async (req, res) => {
     if (existing) return res.status(400).json({ message: 'Email already in use' });
     const user = await User.create({ name, email, password, role });
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
-    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, privacySettings: user.privacySettings } });
   } catch (err) {
   console.error('ERROR:', err);
   res.status(500).json({ message: err.message });
@@ -24,7 +24,7 @@ export const login = async (req, res) => {
     const valid = await user.comparePassword(password);
     if (!valid) return res.status(400).json({ message: 'Invalid credentials' });
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, privacySettings: user.privacySettings } });
   } catch (err) {
   console.error('ERROR:', err);
   res.status(500).json({ message: err.message });
@@ -35,7 +35,7 @@ export const me = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).lean();
     if (!user) return res.status(404).json({ message: 'Not found' });
-    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, points: user.points, phoneNumber: user.phoneNumber, avatarUrl: user.avatarUrl } });
+    res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, points: user.points, phoneNumber: user.phoneNumber, avatarUrl: user.avatarUrl, privacySettings: user.privacySettings } });
   } catch (err) {
   console.error('ERROR:', err);
   res.status(500).json({ message: err.message });
@@ -44,12 +44,13 @@ export const me = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { name, email, phoneNumber, avatarUrl } = req.body;
+    const { name, email, phoneNumber, avatarUrl, privacySettings } = req.body;
     const updates = {};
     if (name) updates.name = name;
     if (email) updates.email = email;
     if (phoneNumber) updates.phoneNumber = phoneNumber;
     if (avatarUrl) updates.avatarUrl = avatarUrl;
+    if (privacySettings) updates.privacySettings = privacySettings;
 
     // Prevent duplicate email if email is being changed
     if (email) {
@@ -69,7 +70,8 @@ export const updateProfile = async (req, res) => {
         role: user.role,
         points: user.points,
         phoneNumber: user.phoneNumber,
-        avatarUrl: user.avatarUrl
+        avatarUrl: user.avatarUrl,
+        privacySettings: user.privacySettings
       }
     });
   } catch (err) {
