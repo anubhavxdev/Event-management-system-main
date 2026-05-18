@@ -3,7 +3,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
 } from "react-router-dom";
 import "./index.css";
 import Footer from "./components/mvpblocks/footer-standard";
@@ -73,6 +72,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const App = () => {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <Header2 />

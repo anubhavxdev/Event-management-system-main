@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LegalModal } from "../ui/legal-modal";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { legalContent } from "../../data/legalContent";
 import {
   Github,
@@ -213,16 +215,17 @@ export default function FooterStandard() {
                 <ul className="space-y-2">
                   {data().navigation[section].map((item) => (
                     <li key={item.name}>
-                     <Link
-                        to={item.href}
-                        onClick={(e) => {
-                          if (section === 'legal') {
-                            handleLegalClick(e, item.href);
-                          }
-                        }}
-                        className="text-xs text-slate-600 hover:text-rose-600 transition-colors cursor-pointer">
-                        {item.name}
-                      </a>
+                    <Link
+  to={item.href}
+  onClick={(e) => {
+    if (section === "legal") {
+      handleLegalClick(e, item.href);
+    }
+  }}
+  className="text-xs text-slate-600 hover:text-rose-600 transition-colors cursor-pointer"
+>
+  {item.name}
+</Link>
                     </li>
                   ))}
                 </ul>
@@ -240,10 +243,7 @@ export default function FooterStandard() {
           <p>
             &copy; {currentYear} Eventone | All rights reserved
           </p>
-
-          <div className="flex items-center gap-4">
-
-            {data().bottomLinks.map(({ href, label }) => (
+        </div>
 
         {/* Divider */}
         <div className="h-px bg-slate-200 my-10"></div>

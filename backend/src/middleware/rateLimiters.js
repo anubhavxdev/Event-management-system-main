@@ -1,9 +1,9 @@
 import rateLimit from "express-rate-limit";
 
 export const authRateLimiter = rateLimit({
-  windowMs: process.env.AUTH_RATE_LIMIT_WINDOW_MS || 15 * 60 * 1000,
+  windowMs: Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
 
-  max: process.env.AUTH_RATE_LIMIT_MAX || 10,
+max: Number(process.env.AUTH_RATE_LIMIT_MAX) || 10,
 
   message: {
     success: false,
@@ -16,9 +16,9 @@ export const authRateLimiter = rateLimit({
 
 export const registrationRateLimiter = rateLimit({
   windowMs:
-    process.env.REGISTRATION_RATE_LIMIT_WINDOW_MS || 60 * 1000,
+    Number(process.env.REGISTRATION_RATE_LIMIT_WINDOW_MS) || 60 * 1000,
 
-  max: process.env.REGISTRATION_RATE_LIMIT_MAX || 5,
+max: Number(process.env.REGISTRATION_RATE_LIMIT_MAX) || 5,
 
   message: {
     success: false,

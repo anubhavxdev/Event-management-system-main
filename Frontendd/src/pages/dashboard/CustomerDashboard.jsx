@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
+import ConfirmationModal from "../../components/ui/confirmation-modal";
+
 import { generateCertificate } from '../../utils/generateCertificate';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -16,8 +18,12 @@ export default function CustomerDashboard() {
     const [activeTab, setActiveTab] = useState('Upcoming Tickets');
     const [selectedTicket, setSelectedTicket] = useState(null);
     const ticketRef = useRef(null);
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const [availableEvents, setAvailableEvents] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
 
     useEffect(() => {
         if (activeTab === 'Browse Events') {
@@ -25,12 +31,19 @@ export default function CustomerDashboard() {
         } else {
             fetchRegistrations();
         }
-    }, [activeTab]);
+    }, [activeTab, searchParams]);
 
     const fetchAvailableEvents = async () => {
+        const tags = searchParams.get('tags');
         try {
             setLoading(true);
-            const res = await fetch(`${API_BASE_URL}/api/events?status=approved`);
+            let url = `${API_BASE_URL}/api/events?status=approved`;
+
+            if (tags) {
+                url += `&tags=${tags}`;
+            }
+
+    const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 // Filter events that are in the future
@@ -83,6 +96,54 @@ export default function CustomerDashboard() {
             }
         } catch (error) {
             console.error("Registration failed", error);
+            alert('Something went wrong');
+        }
+    };
+
+    const handleCancelRegistration = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${API_BASE_URL}/api/registrations/${selectedRegistrationId}/cancel`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Failed to cancel registration"
+                );
+            }
+
+            
+
+            // Update UI instantly
+            setRegistrations((prev) =>
+                prev.map((reg) =>
+                    reg._id === selectedRegistrationId
+                        ?
+                        // console.log(reg._id)
+                        {
+                            ...reg,
+                            status: "cancelled",
+                        }
+                        : reg
+                )
+            );
+
+            setIsModalOpen(false);
+            setSelectedRegistrationId(null);
+            console.log("Cancelled")
+
+        } catch (error) {
+            console.error(error);
             alert('Something went wrong');
         }
     };
@@ -238,7 +299,7 @@ const pastEvents = [
                         </h2>
                         {activeTab === 'Upcoming Tickets' && (
                             <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-xs font-medium rounded-full border border-rose-500/20">
-                                {upcomingEvents.length} Active
+                                {upcomingEvents.filter(event => event.status!="cancelled").length} Active
                             </span>
                         )}
                         {activeTab === 'Past Events' && (
@@ -305,16 +366,28 @@ const pastEvents = [
                                                     <div className="flex-1 flex flex-col justify-between">
                                                         <div>
                                                             <div className="flex justify-between items-start">
+                                                                {/* Event title */}
                                                                 <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
                                                                     {reg.event?.title || 'Unknown Event'}
                                                                 </h3>
-                                                                <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${reg.status === 'attended'
-                                                                    ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                                                    : 'bg-green-500/10 text-green-500 border-green-500/20'
-                                                                    }`}>
-                                                                    {reg.status === 'attended' ? 'Attended' : 'Confirmed'}
+                                                                {/* Event status */}
+                                                                <span
+                                                                    className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${reg.status === "attended"
+                                                                        ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                                                                        : reg.status === "cancelled"
+                                                                            ? "bg-red-500/10 text-red-500 border-red-500/20"
+                                                                            : "bg-green-500/10 text-green-500 border-green-500/20"
+                                                                        }`}
+                                                                >
+                                                                    {reg.status === "attended"
+                                                                        ? "Attended"
+                                                                        : reg.status === "cancelled"
+                                                                            ? "Cancelled"
+                                                                            : "Confirmed"}
                                                                 </span>
                                                             </div>
+
+                                                            {/* Event description */}
                                                             <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
                                                                 {reg.event?.description}
                                                             </p>
@@ -333,15 +406,53 @@ const pastEvents = [
                                                                 </span>
                                                             </div>
                                                         </div>
+                                                        {evt.tags?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {evt.tags.map((tag) => (
+                                                                    <button
+                                                                        key={tag}
+                                                                        type="button"
+                                                                        onClick={() => navigate(`?tags=${tag}`)}
+                                                                        className="text-xs bg-rose-500/10 text-rose-500 px-2 py-1 rounded-full hover:bg-rose-500/20 transition"
+                                                                    >
+                                                                        #{tag}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
 
-                                                        <div className="flex justify-end pt-4 md:pt-0">
-                                                            <Button
-                                                                variant="outline"
-                                                                className="text-xs h-8 border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
-                                                                onClick={() => setSelectedTicket(reg)}
-                                                            >
-                                                                View Details
-                                                            </Button>
+                                                        <div className="flex justify-between pt-4 md:pt-0 gap-2">
+
+
+                                                            {/* Cancel Registration */}
+                                                            {
+                                                                reg.status === "cancelled" ? (
+                                                                    null
+                                                                ) : (
+                                                                    <>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className="text-xs h-8 border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
+                                                                            onClick={() => setSelectedTicket(reg)}
+                                                                        >
+                                                                            View Details
+                                                                        </Button>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            className="text-xs h-8 bg-rose-600 border-rose-500/30 text-white hover:bg-red-400"
+                                                                            onClick={() => {
+                                                                                setSelectedRegistrationId(
+                                                                                    reg._id
+                                                                                );
+                                                                                setIsModalOpen(true);
+                                                                            }}
+                                                                        >
+                                                                            Cancel Registration
+                                                                        </Button>
+                                                                    </>
+
+                                                                )
+                                                            }
                                                         </div>
                                                     </div>
                                                 </div>
@@ -466,7 +577,7 @@ const pastEvents = [
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6">
                                         {availableEvents.map((evt, idx) => {
-                                            const isRegistered = registrations.some(r => r.event?._id === evt._id);
+                                            const isRegistered = registrations.some(r => r.status==="registered" && r.event?._id === evt._id);
                                             let isEventFullBooked = false;
                                             if (evt.registeredCount === evt.capacity) {
                                                 isEventFullBooked = true;
@@ -640,6 +751,19 @@ const pastEvents = [
                     </div>
                 )}
             </AnimatePresence>
+
+            <ConfirmationModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedRegistrationId(null);
+                }}
+                onConfirm={handleCancelRegistration}
+                title="Cancel Registration"
+                message="Are you sure you want to cancel your registration? This action cannot be undone."
+            />
         </div>
+
+
     );
 }
