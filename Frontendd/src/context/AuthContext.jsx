@@ -49,10 +49,10 @@ export const AuthProvider = ({ children }) => {
     const logout = (navigate) => {
         localStorage.removeItem('token');
         setUser(null);
-        if (navigate) {
-        navigate('/');
+        if (navigate && typeof navigate === 'function') {
+            navigate('/login', { replace: true });
         } else {
-        window.location.href = '/';
+            window.location.href = '/login';
         }
     };
 

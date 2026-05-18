@@ -19,7 +19,14 @@ import statsRoutes from './routes/statsRoutes.js';
 const app = express();
 
 // Security & utils
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'img-src': ["'self'", 'data:', 'https://lh3.googleusercontent.com', 'https://res.cloudinary.com', 'blob:'],
+    },
+  },
+}));
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));

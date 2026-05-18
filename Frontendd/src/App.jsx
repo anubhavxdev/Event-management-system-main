@@ -10,6 +10,7 @@ import About from './pages/About';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Profile from './pages/Profile';
+import GoogleCallback from './pages/auth/GoogleCallback';
 import DashboardLayout from './components/DashboardLayout';
 import CustomerDashboard from './pages/dashboard/CustomerDashboard';
 import OrganizerDashboard from './pages/dashboard/OrganizerDashboard';
@@ -43,6 +44,8 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const App = () => {
+  const { user } = useAuth();
+  
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
@@ -56,9 +59,11 @@ const App = () => {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about-us" element={<About />} />
-            <Route path="/login" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={user ? <Navigate to="/" replace /> : <SignIn />} />
+            <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            {/* Google OAuth callback handler */}
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />

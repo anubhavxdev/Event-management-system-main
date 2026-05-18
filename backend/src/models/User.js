@@ -5,7 +5,8 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6 },
+    password: { type: String, minlength: 6, select: false },
+    googleId: { type: String, unique: true, sparse: true },
     role: { type: String, enum: ['attendee', 'organizer', 'admin'], default: 'attendee' },
     isBlocked: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
@@ -17,7 +18,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
+  if (!this.password || !this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
