@@ -100,12 +100,25 @@ export default function SignUp() {
                 role: formData.role
             };
 
-            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+            let res, data;
+            try {
+                res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                data = await res.json();
+            } catch (networkErr) {
+                // fetch() itself threw — the backend is not reachable
+                alert(
+                    "Cannot connect to the server.\n\n" +
+                    "Make sure the backend is running:\n" +
+                    "  cd backend\n" +
+                    "  npm run dev\n\n" +
+                    "(Expected at http://localhost:5050)"
+                );
+                return;
+            }
 
             if (res.ok) {
                 login(data.token, data.user);
@@ -114,12 +127,31 @@ export default function SignUp() {
                     case 'organizer': navigate('/organizer/dashboard'); break;
                     default: navigate('/customer/dashboard');
                 }
+            } else if (res.status === 422 && data.errors) {
+                // Backend validation failed — show field-level messages
+                const fieldErrors = {};
+                const generalErrors = [];
+                data.errors.forEach(({ field, message }) => {
+                    if (field && field in errors) {
+                        fieldErrors[field] = message;
+                    } else {
+                        generalErrors.push(message);
+                    }
+                });
+                if (Object.keys(fieldErrors).length > 0) {
+                    setErrors(prev => ({ ...prev, ...fieldErrors }));
+                }
+                if (generalErrors.length > 0) {
+                    alert(generalErrors.join('\n'));
+                }
             } else {
-                alert(data.message || 'Signup failed');
+                // Server returned a proper error message
+                alert(data.message || `Signup failed (${res.status}). Please try again.`);
             }
         } catch (error) {
-            console.error("Signup error", error);
-            alert("Something went wrong");
+            // Unexpected JS error (not a network/server issue)
+            console.error("Unexpected signup error:", error);
+            alert(`An unexpected error occurred: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
