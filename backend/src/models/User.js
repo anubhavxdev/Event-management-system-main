@@ -17,6 +17,10 @@ const userSchema = new mongoose.Schema(
     interests: [{ type: String }],
     avatarUrl: { type: String },
     phoneNumber: { type: String, trim: true },
+    privacySettings: {
+      showAttendanceToFriends: { type: Boolean, default: true },
+      allowFriendRequestsFrom: { type: String, enum: ['everyone', 'friends_of_friends', 'nobody'], default: 'everyone' }
+    }
   },
   { timestamps: true }
 );

@@ -13,6 +13,7 @@ export default function CustomerDashboard() {
   const { user } = useAuth();
   const [registrations, setRegistrations] = useState([]);
   const [availableEvents, setAvailableEvents] = useState([]);
+  const [friendsAttending, setFriendsAttending] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Upcoming Tickets');
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -36,6 +37,18 @@ export default function CustomerDashboard() {
         const data = await res.json();
         const upcoming = (data.events || []).filter((e) => new Date(e.date) >= new Date());
         setAvailableEvents(upcoming);
+
+        // Fetch friends attending for these events
+        const eventIds = upcoming.map(e => e._id).join(',');
+        if (eventIds && localStorage.getItem('token')) {
+          const fRes = await fetch(`${API_BASE_URL}/api/events/batch/friends-attending?eventIds=${eventIds}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (fRes.ok) {
+            const fData = await fRes.json();
+            setFriendsAttending(prev => ({ ...prev, ...fData }));
+          }
+        }
       }
     } catch (err) {
       console.error(err);
@@ -51,7 +64,19 @@ export default function CustomerDashboard() {
       const res = await fetch(`${API_BASE_URL}/api/registrations/me`, { headers: { Authorization: `Bearer ${token}` } });
       if (res.ok && mountedRef.current) {
         const data = await res.json();
-        setRegistrations(data.registrations || []);
+        const regs = data.registrations || [];
+        setRegistrations(regs);
+
+        const eventIds = regs.filter(r => r.event).map(r => r.event._id).join(',');
+        if (eventIds && localStorage.getItem('token')) {
+          const fRes = await fetch(`${API_BASE_URL}/api/events/batch/friends-attending?eventIds=${eventIds}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (fRes.ok) {
+            const fData = await fRes.json();
+            setFriendsAttending(prev => ({ ...prev, ...fData }));
+          }
+        }
       }
     } catch (err) {
       console.error(err);
@@ -211,6 +236,24 @@ export default function CustomerDashboard() {
                                 <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${reg.status === 'attended' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' : reg.status === 'cancelled' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-green-500/10 text-green-500 border-green-500/20'}`}>{reg.status === 'attended' ? 'Attended' : reg.status === 'cancelled' ? 'Cancelled' : 'Confirmed'}</span>
                               </div>
 
+                              {friendsAttending[reg.event?._id]?.length > 0 && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="flex -space-x-2">
+                                    {friendsAttending[reg.event._id].slice(0, 3).map((f, i) => (
+                                      <div key={i} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[10px] font-bold text-primary">
+                                        {f.name?.charAt(0)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {friendsAttending[reg.event._id].length} friends going
+                                  </span>
+                                  {friendsAttending[reg.event._id].length >= 5 && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-1.5 py-0.5 rounded ml-1">🔥 Popular</span>
+                                  )}
+                                </div>
+                              )}
+
                               <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">{reg.event?.description}</p>
                               <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                                 <span className="flex items-center"><Calendar className="w-3 h-3 mr-1.5" />{reg.event?.date ? new Date(reg.event.date).toLocaleDateString() : 'TBA'}</span>
@@ -285,6 +328,25 @@ export default function CustomerDashboard() {
                           <div className="flex-1 flex flex-col justify-between">
                             <div>
                               <div className="flex justify-between items-start"><h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">{evt.title}</h3><span className="inline-flex items-center text-xs px-2 py-1 rounded-full border bg-blue-500/10 text-blue-500 border-blue-500/20">{evt.capacity ? `${evt.capacity} Spots` : 'Open'}</span></div>
+                              
+                              {friendsAttending[evt._id]?.length > 0 && (
+                                <div className="mt-2 flex items-center gap-2">
+                                  <div className="flex -space-x-2">
+                                    {friendsAttending[evt._id].slice(0, 3).map((f, i) => (
+                                      <div key={i} className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-[10px] font-bold text-primary">
+                                        {f.name?.charAt(0)}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {friendsAttending[evt._id].length} friends going
+                                  </span>
+                                  {friendsAttending[evt._id].length >= 5 && (
+                                    <span className="text-xs bg-orange-500/10 text-orange-500 px-1.5 py-0.5 rounded ml-1">🔥 Popular</span>
+                                  )}
+                                </div>
+                              )}
+
                               <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">{evt.description}</p>
                               <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground"><span className="flex items-center"><Calendar className="w-3 h-3 mr-1.5" />{new Date(evt.date).toLocaleDateString()}</span><span className="flex items-center"><MapPin className="w-3 h-3 mr-1.5" />{evt.location}</span></div>
                             </div>

@@ -120,13 +120,29 @@ export const deleteEvent = async (req, res) => {
 
 export const listEvents = async (req, res) => {
   try {
-<<<<<<< HEAD
-    const { q, category, status, organizer } = req.query;
+    const { q, category, status, organizer, tags } = req.query;
     const filter = {};
+    
+    // Add default status or override if provided
+    if (status) filter.status = status;
+
     if (q) filter.title = { $regex: q, $options: 'i' };
     if (category) filter.category = category;
-    if (status) filter.status = status;
     if (organizer) filter.organizer = organizer;
+    
+    if (tags) {
+      const tagArray = tags
+        .split(',')
+        .map((tag) => tag.toLowerCase().trim())
+        .filter(Boolean);
+
+      if (tagArray.length > 0) {
+        filter.tags = {
+          $all: tagArray,
+        };
+      }
+    }
+
     const events = await Event.find(filter).populate('organizer', 'name').sort({ date: 1 });
 
     const eventsWithCount = await Promise.all(
@@ -140,55 +156,6 @@ export const listEvents = async (req, res) => {
     );
 
     res.json({ events: eventsWithCount });
-=======
-    const { q, category, status, organizer, tags } = req.query;
-
-    const filter = {
-      status: 'approved',
-    };
-
-    // Search by title
-    if (q) {
-      filter.title = {
-        $regex: q,
-        $options: 'i',
-      };
-    }
-
-    // Filter by category
-    if (category) {
-      filter.category = category;
-    }
-
-    // Filter by status
-    if (status) {
-      filter.status = status;
-    }
-
-    // Filter by organizer
-    if (organizer) {
-      filter.organizer = organizer;
-    }
-
-    // Filter by tags (AND logic)
-    if (tags) {
-      const tagArray = tags
-        .split(',')
-        .map((tag) => tag.toLowerCase().trim())
-        .filter(Boolean);
-
-      filter.tags = {
-        $all: tagArray,
-      };
-    }
-
-    const events = await Event.find(filter)
-      .populate('organizer', 'name')
-      .sort({ date: 1 });
-
-    res.json({ events });
-
->>>>>>> 5ea7ed8e455e42aeeefa33a5d759b561e34030ab
   } catch (err) {
     res.status(500).json({
       message: err.message,
