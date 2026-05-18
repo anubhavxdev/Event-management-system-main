@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LegalModal } from "../ui/legal-modal";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { legalContent } from "../../data/legalContent";
 import {
   Github,
