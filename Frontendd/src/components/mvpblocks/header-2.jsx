@@ -13,7 +13,7 @@ const navItems = [
   { name: "About", href: "/about-us" },
   { name: "Contact", href: "/contact" },
 ];
-export default function Header2({ darkMode, setDarkMode}) {
+export default function Header2() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);

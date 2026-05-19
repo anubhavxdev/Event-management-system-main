@@ -229,8 +229,7 @@ export default function FooterStandard() {
             ))}
           </div>
         </div>
-        </div>  {/* Close grid container from line 263 */}
-      </div>    {/* Close bottom section from line 238 */}
+      </div>
 
       {/* Legal Modal */}
       <LegalModal
@@ -239,7 +238,6 @@ export default function FooterStandard() {
         title={activeModal ? legalContent[activeModal].title : ""}
         content={activeModal ? legalContent[activeModal].content : ""}
       />
-    </footer>
 
       {/* Animation Styles */}
       <style>{`

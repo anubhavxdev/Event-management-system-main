@@ -315,20 +315,17 @@ export default function SignUp() {
                         </form>
 
                         {/* Divider */}
-                        <div className="relative mt-8 mb-6 z-10">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-700/50"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-[#0a0a0a] text-gray-500">Or continue with</span>
-                            </div>
+                        <div className="flex items-center gap-3 mt-8 mb-6 z-10 text-sm text-gray-500">
+                            <div className="flex-1 border-t border-gray-300" />
+                            <span>Or continue with</span>
+                            <div className="flex-1 border-t border-gray-300" />
                         </div>
 
                         {/* Google Button */}
                         <button
                             type="button"
                             onClick={() => window.location.href = `${API_BASE_URL}/api/auth/google`}
-                            className="w-full relative z-10 flex items-center justify-center space-x-3 py-3.5 px-4 bg-zinc-900/50 hover:bg-zinc-800 border border-gray-700 hover:border-gray-600 text-white font-medium rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-black/20"
+                            className="w-full relative z-10 flex items-center justify-center space-x-3 py-3.5 px-4 bg-black hover:bg-gray-900 border border-black hover:border-gray-800 text-white font-medium rounded-lg transition-all duration-300 transform hover:-translate-y-0.5 shadow-lg shadow-black/20"
                         >
                             <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

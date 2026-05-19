@@ -26,6 +26,7 @@ import OrganizerDashboard from './pages/dashboard/OrganizerDashboard';
 import CreateEvent from './pages/dashboard/CreateEvent';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ThankYou from './pages/ThankYou';
+import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './context/AuthContext';
 
 // Protected Route Component
@@ -89,7 +90,7 @@ const App = () => {
 
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
+        <Header2 />  
 
         <main className="flex-grow">
           <Routes>
