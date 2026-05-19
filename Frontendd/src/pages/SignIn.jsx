@@ -78,6 +78,13 @@ const handleSubmit = async (e) => {
                             backgroundSize: '24px 24px'
                         }}
                     >
+                      {/* Close Button */}
+                        <button
+                           onClick={() => navigate(-1)}
+                           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 hover:text-white transition-all duration-200 z-20"
+                           type="button">
+                           ✕
+                        </button>
                         {/* Title */}
                         <div className="text-center mb-10 relative z-10">
                             <h1 className="text-3xl font-bold text-gray-900 tracking-tight">

@@ -1,8 +1,22 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, easeInOut } from "framer-motion";
-import { Menu, X, ArrowRight, Zap, Search, User, LogOut, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
+import {
+  Menu,
+  X,
+  ArrowRight,
+  Zap,
+  Search,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings,
+  ChevronDown,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { useTheme } from "next-themes";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -21,13 +35,18 @@ export default function Header2({ darkMode, setDarkMode}) {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
+  const isDark = theme === "dark";
 
   const getDashboardLink = () => {
     if (!user) return "/";
     switch (user.role) {
-      case 'admin': return '/admin/dashboard';
-      case 'organizer': return '/organizer/dashboard';
-      default: return '/customer/dashboard';
+      case "admin":
+        return "/admin/dashboard";
+      case "organizer":
+        return "/organizer/dashboard";
+      default:
+        return "/customer/dashboard";
     }
   };
   useEffect(() => {
@@ -78,6 +97,17 @@ export default function Header2({ darkMode, setDarkMode}) {
   return (
     <>
       <motion.header
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 ${
+          isScrolled
+            ? "border-border/50 bg-background/80 border-b shadow-sm backdrop-blur-md"
+            : "bg-transparent"
+        }`}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex h-16 items-center justify-between">
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 px-4 sm:px-6 lg:px-8 pt-4`}
         variants={containerVariants}
         initial="hidden"
@@ -90,10 +120,9 @@ export default function Header2({ darkMode, setDarkMode}) {
               className="flex items-center space-x-3"
               variants={itemVariants}
               whileHover={{ scale: 1.02 }}
-              transition={{ type: "spring", stiffness: 400, damping: 25 }}>
-              <Link
-                to="/"
-                className="flex items-center space-x-3">
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            >
+              <Link to="/" className="flex items-center space-x-3">
                 <div className="relative">
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/20">
                     <Zap className="h-5 w-5 text-white" />
@@ -115,9 +144,12 @@ export default function Header2({ darkMode, setDarkMode}) {
                   variants={itemVariants}
                   className="relative"
                   onMouseEnter={() => setHoveredItem(item.name)}
-                  onMouseLeave={() => setHoveredItem(null)}>
+                  onMouseLeave={() => setHoveredItem(null)}
+                >
                   <Link
                     to={item.href}
+                    className="text-foreground/80 hover:text-foreground relative rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200"
+                  >
                     className="text-foreground/70 hover:text-foreground relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200">
                     {hoveredItem === item.name && (
                       <motion.div
@@ -141,6 +173,29 @@ export default function Header2({ darkMode, setDarkMode}) {
 
             <motion.div
               className="hidden items-center space-x-3 lg:flex"
+              variants={itemVariants}
+            >
+              <motion.button
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                aria-label="Toggle dark mode"
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </motion.button>
+              <motion.button
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Search className="h-5 w-5" />
+              </motion.button>
               variants={itemVariants}>
               {/* Search icon removed */}
 
@@ -154,13 +209,19 @@ export default function Header2({ darkMode, setDarkMode}) {
                   >
                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center border border-indigo-200 overflow-hidden">
                       {user.avatarUrl ? (
-                        <img src={user.avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                        <img
+                          src={user.avatarUrl}
+                          alt="Profile"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <User className="h-4 w-4 text-indigo-600" />
                       )}
                     </div>
                     <span>Account</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${isProfileMenuOpen ? "rotate-180" : ""}`}
+                    />
                   </motion.button>
 
                   <AnimatePresence>
@@ -170,12 +231,17 @@ export default function Header2({ darkMode, setDarkMode}) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
+                        className="absolute -right-12 mt-2 w-56 rounded-xl border border-border/50 bg-background/95 shadow-xl overflow-hidden z-50 backdrop-blur"
                         className="absolute -right-12 mt-2 w-56 rounded-xl bg-white dark: bg-black border border-border/50 shadow-xl overflow-hidden z-50"
                       >
                         <div className="p-2 space-y-1">
                           <div className="px-3 py-2 border-b border-border/50 mb-1">
-                            <p className="text-sm font-semibold text-foreground truncate">{user.name || 'User'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                            <p className="text-sm font-semibold text-foreground truncate">
+                              {user.name || "User"}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {user.email}
+                            </p>
                           </div>
 
                           <Link
@@ -218,7 +284,8 @@ export default function Header2({ darkMode, setDarkMode}) {
                 <>
                   <Link
                     to="/login"
-                    className="text-foreground/80 hover:text-foreground px-4 py-2 text-sm font-medium transition-colors duration-200">
+                    className="text-foreground/80 hover:text-foreground px-4 py-2 text-sm font-medium transition-colors duration-200"
+                  >
                     Sign In
                   </Link>
 
@@ -231,10 +298,12 @@ export default function Header2({ darkMode, setDarkMode}) {
 
                   <motion.div
                     whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}>
+                    whileTap={{ scale: 0.98 }}
+                  >
                     <Link
                       to="/signup"
-                      className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center space-x-2 rounded-lg px-5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200">
+                      className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center space-x-2 rounded-lg px-5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200"
+                    >
                       <span>Get Started</span>
                       <ArrowRight className="h-4 w-4" />
                     </Link>
@@ -248,7 +317,8 @@ export default function Header2({ darkMode, setDarkMode}) {
               className="text-foreground hover:bg-muted rounded-lg p-2 transition-colors duration-200 lg:hidden"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               variants={itemVariants}
-              whileTap={{ scale: 0.95 }}>
+              whileTap={{ scale: 0.95 }}
+            >
               {isMobileMenuOpen ? (
                 <X className="h-6 w-6" />
               ) : (
@@ -274,13 +344,17 @@ export default function Header2({ darkMode, setDarkMode}) {
               variants={mobileMenuVariants}
               initial="closed"
               animate="open"
-              exit="closed">
+              exit="closed"
+            >
               <div className="space-y-6 p-6">
                 <div className="space-y-1">
                   {navItems.map((item) => (
                     <motion.div key={item.name} variants={mobileItemVariants}>
                       <Link
                         to={item.href}
+                        className="text-foreground hover:bg-muted block rounded-lg px-4 py-3 font-medium transition-colors duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         className="text-foreground/90 hover:bg-white/40 hover:text-foreground block rounded-xl px-4 py-3 font-medium transition-all duration-200 active:scale-[0.98]"
                         onClick={() => setIsMobileMenuOpen(false)}>
                         {item.name}
@@ -289,14 +363,33 @@ export default function Header2({ darkMode, setDarkMode}) {
                   ))}
                 </div>
 
+                <motion.button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="border-border text-foreground hover:bg-muted flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm font-medium transition-colors duration-200"
+                  variants={mobileItemVariants}
+                >
+                  <span>{isDark ? "Light mode" : "Dark mode"}</span>
+                  {isDark ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </motion.button>
+
                 <motion.div
                   className="border-border space-y-3 border-t pt-6"
-                  variants={mobileItemVariants}>
+                  variants={mobileItemVariants}
+                >
                   {user ? (
                     <div className="space-y-1">
                       <div className="px-4 py-2 mb-2">
-                        <p className="text-sm font-semibold text-foreground">{user.name || 'User'}</p>
-                        <p className="text-xs text-muted-foreground">{user.email}</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {user.name || "User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
                       <Link
                         to="/profile"
@@ -326,6 +419,22 @@ export default function Header2({ darkMode, setDarkMode}) {
                       </button>
                     </div>
                   ) : (
+                    <>
+                      <Link
+                        to="/login"
+                        className="text-foreground hover:bg-muted block w-full rounded-lg py-3 text-center font-medium transition-colors duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Get Started
+                      </Link>
+                    </>
                     <Link
                       to="/login"
                       className="flex items-center justify-center space-x-2 text-foreground hover:bg-muted w-full rounded-lg py-3 font-medium transition-colors duration-200"

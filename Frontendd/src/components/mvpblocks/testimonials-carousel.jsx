@@ -7,42 +7,48 @@ import { motion } from "framer-motion";
 const defaultTestimonials = [
   {
     text: "Eventone revolutionized how we organize our tech conferences. The ticketing and scheduling features are flawless.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D4D03AQEAy6a-_JjNsA/profile-displayphoto-shrink_200_200/B4DZeMFLFjGgAg-/0/1750401857954?e=1767830400&v=beta&t=cbfAn8Dwtw61jTRGdOUqJ3ccUdOvvPTGNmXv-RPe7YE",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D4D03AQEAy6a-_JjNsA/profile-displayphoto-shrink_200_200/B4DZeMFLFjGgAg-/0/1750401857954?e=1767830400&v=beta&t=cbfAn8Dwtw61jTRGdOUqJ3ccUdOvvPTGNmXv-RPe7YE",
     name: "Gurjot Singh",
     username: "@gurjot_singh",
     role: "Event Organizer",
   },
   {
     text: "Finally an event platform that doesn't feel clunky. Eventone is sleek, fast, and our attendees loved the check-in process.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D5603AQE87KyOtsDTOA/profile-displayphoto-shrink_200_200/B56ZZJzooaH0Ac-/0/1744994995178?e=1767830400&v=beta&t=ohsn9TVm4Rqjd6wBRC_Fju6dbli7cjHEhnBeHvR_dBk",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D5603AQE87KyOtsDTOA/profile-displayphoto-shrink_200_200/B56ZZJzooaH0Ac-/0/1744994995178?e=1767830400&v=beta&t=ohsn9TVm4Rqjd6wBRC_Fju6dbli7cjHEhnBeHvR_dBk",
     name: "Amanpreet Kaur",
     username: "@amanpreet_kaur",
     role: "Community Manager",
   },
   {
     text: "We managed 500+ attendees with zero hiccups. Eventone's dashboard gave us real-time insights that saved the day.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D5603AQEujuCOBChvzg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1726612370449?e=1767830400&v=beta&t=hT8d78EaEsfMy7fcLSqwae7s8eGfrlD7Ai138AWLOh0",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D5603AQEujuCOBChvzg/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1726612370449?e=1767830400&v=beta&t=hT8d78EaEsfMy7fcLSqwae7s8eGfrlD7Ai138AWLOh0",
     name: "Simar Preet Singh",
     username: "@simar_preet_singh",
     role: "Conference Director",
   },
   {
     text: "Setting up our annual summit took minutes instead of days. Eventone handles everything from registration to post-event feedback.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D4E03AQEVsn2bajk1sw/profile-displayphoto-scale_200_200/B4EZlx7LLZKoAY-/0/1758552962331?e=1767830400&v=beta&t=fN6wqGrwwehwUizroEvwW9TuINV8P9wiHoNXz-SB2KU",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D4E03AQEVsn2bajk1sw/profile-displayphoto-scale_200_200/B4EZlx7LLZKoAY-/0/1758552962331?e=1767830400&v=beta&t=fN6wqGrwwehwUizroEvwW9TuINV8P9wiHoNXz-SB2KU",
     name: "Tracy (Cui Wang) Wang",
     username: "@tracy_wang",
     role: "Meetup Host",
   },
   {
     text: "The best investment for our community meetups. Eventone makes it incredibly easy to manage RSVPs and communicate with members.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D4D03AQFg23agDGqOSQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714443215504?e=1767830400&v=beta&t=1QIXvAm_A-c_pX0QOJx-0B4YZDkZuRfWKnMTLGmuH-g",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D4D03AQFg23agDGqOSQ/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1714443215504?e=1767830400&v=beta&t=1QIXvAm_A-c_pX0QOJx-0B4YZDkZuRfWKnMTLGmuH-g",
     name: "Vedant Gaidhanne",
     username: "@vedant_gaidhanne",
     role: "Event Planner",
   },
   {
     text: "Design is important to us, and Eventone looks beautiful out of the box. It matches our brand perfectly.",
-    imageSrc: "https://media.licdn.com/dms/image/v2/D5603AQHRc9HyVl41QA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1727866807803?e=1767830400&v=beta&t=2WQrCIKOupXZvVCb5fSPtWHeRCaLrMTF073OhZsCxBk",
+    imageSrc:
+      "https://media.licdn.com/dms/image/v2/D5603AQHRc9HyVl41QA/profile-displayphoto-shrink_200_200/profile-displayphoto-shrink_200_200/0/1727866807803?e=1767830400&v=beta&t=2WQrCIKOupXZvVCb5fSPtWHeRCaLrMTF073OhZsCxBk",
     name: "Suraj Mani",
     username: "@suraj_mani",
     role: "Marketing Lead",
@@ -61,6 +67,13 @@ export default function TestimonialsCarousel({
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 
   return (
+    <section
+      className={cn("relative overflow-hidden py-16 md:py-24", className)}
+    >
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.2),transparent_60%)]" />
+        <div className="bg-primary/5 absolute top-1/4 left-1/4 h-32 w-32 rounded-full blur-3xl" />
+        <div className="bg-primary/10 absolute right-1/4 bottom-1/4 h-40 w-40 rounded-full blur-3xl" />
     <section className={cn("relative py-24 bg-black border-t border-zinc-800 overflow-hidden", className)}>
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -91,6 +104,19 @@ export default function TestimonialsCarousel({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
+          className="relative mb-12 text-center md:mb-16"
+        >
+          <h1 className="text-foreground mb-4 text-3xl font-bold md:text-5xl lg:text-6xl">
+            {title}
+          </h1>
+
+          <motion.p
+            className="text-muted-foreground mx-auto max-w-2xl text-base md:text-lg"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
           className="mb-16 text-center"
         >
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">

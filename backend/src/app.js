@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import { secureUploads } from './middleware/secureUploads.js';
 
 import { env } from './config/env.js';
 
@@ -34,7 +35,11 @@ app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.use(
+  '/uploads',
+  secureUploads,
+  express.static(path.join(process.cwd(), 'uploads'))
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
