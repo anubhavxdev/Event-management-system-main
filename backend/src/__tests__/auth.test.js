@@ -10,7 +10,7 @@ describe('Auth API', () => {
           name: 'Test User',
           email: 'test@example.com',
           password: 'password123',
-          role: 'attendee'
+          role: 'customer'
         });
 
       expect(res.statusCode).toBe(201);
@@ -25,7 +25,7 @@ describe('Auth API', () => {
         name: 'Test User',
         email: 'duplicate@example.com',
         password: 'password123',
-        role: 'attendee'
+        role: 'customer'
       };
 
       await request(app)
@@ -48,7 +48,7 @@ describe('Auth API', () => {
         name: 'Login User',
         email: 'login@example.com',
         password: 'password123',
-        role: 'attendee'
+        role: 'customer'
       };
 
       await request(app)

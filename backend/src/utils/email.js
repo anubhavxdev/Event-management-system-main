@@ -13,6 +13,15 @@ const transporter = nodemailer.createTransport({
   auth: authConfig,
 });
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Verify connection configuration
 if (process.env.NODE_ENV !== 'test') {
   transporter.verify(function (error, success) {
@@ -111,4 +120,38 @@ export async function sendTicketEmail(to, event, registrationId, qrCodeBuffer) {
   return sendEmail({ to, subject, html, attachments });
 }
 
+export async function sendEventRejectionEmail(to, event, reason) {
+  const subject = `Your event ${event.title} requires changes`;
+  const organizerDashboardUrl = env.clientUrl
+    ? `${env.clientUrl.replace(/\/$/, '')}/organizer/dashboard`
+    : null;
+  const safeEventTitle = escapeHtml(event.title);
+  const safeReason = escapeHtml(reason);
+  const safeOrganizerDashboardUrl = organizerDashboardUrl
+    ? escapeHtml(organizerDashboardUrl)
+    : null;
 
+  const dashboardInstruction = organizerDashboardUrl
+    ? `<p style="margin: 0 0 16px; color: #334155;">Open your organizer dashboard here to edit and resubmit your event:</p>
+       <p style="margin: 0 0 20px;"><a href="${safeOrganizerDashboardUrl}" style="color: #dc2626; font-weight: 600;">${safeOrganizerDashboardUrl}</a></p>`
+    : `<p style="margin: 0 0 20px; color: #334155;">Open your organizer dashboard, update the event details, and resubmit it for review.</p>`;
+
+  const html = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fff7f7; border: 1px solid #fecaca; border-radius: 16px; overflow: hidden;">
+    <div style="background: #dc2626; padding: 24px; text-align: center;">
+      <h1 style="margin: 0; color: #ffffff; font-size: 24px;">Event Review Update</h1>
+    </div>
+    <div style="padding: 28px; background: #ffffff;">
+      <p style="margin: 0 0 12px; color: #0f172a;">Your event <strong>${safeEventTitle}</strong> requires changes before it can be approved.</p>
+      <div style="margin: 20px 0; padding: 16px; border-radius: 12px; background: #fef2f2; border: 1px solid #fecaca;">
+        <div style="margin-bottom: 8px; color: #991b1b; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;">Reason for rejection</div>
+        <div style="color: #7f1d1d; line-height: 1.6;">${safeReason}</div>
+      </div>
+      ${dashboardInstruction}
+      <p style="margin: 0; color: #334155;">Once you have made the requested changes, save the event again to resubmit it for admin review.</p>
+    </div>
+  </div>
+  `;
+
+  return sendEmail({ to, subject, html });
+}

@@ -10,19 +10,8 @@ export const signup = async (req, res) => {
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
     res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
-  console.error(err);
-
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email already exists',
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong. Please try again later.',
-  });
+  console.error('ERROR:', err);
+  res.status(500).json({ message: err.message });
 }
 };
 
@@ -37,19 +26,8 @@ export const login = async (req, res) => {
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
     res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
-  console.error(err);
-
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email already exists',
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong. Please try again later.',
-  });
+  console.error('ERROR:', err);
+  res.status(500).json({ message: err.message });
 }
 };
 
@@ -59,19 +37,8 @@ export const me = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'Not found' });
     res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, points: user.points, phoneNumber: user.phoneNumber, avatarUrl: user.avatarUrl } });
   } catch (err) {
-  console.error(err);
-
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email already exists',
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong. Please try again later.',
-  });
+  console.error('ERROR:', err);
+  res.status(500).json({ message: err.message });
 }
 };
 
@@ -106,20 +73,7 @@ export const updateProfile = async (req, res) => {
       }
     });
   } catch (err) {
-  console.error(err);
-
-  if (err.code === 11000) {
-    return res.status(409).json({
-      success: false,
-      message: 'Email already exists',
-    });
-  }
-
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong. Please try again later.',
-  });
+  console.error('ERROR:', err);
+  res.status(500).json({ message: err.message });
 }
 };
-
-

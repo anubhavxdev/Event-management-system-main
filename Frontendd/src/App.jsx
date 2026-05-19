@@ -1,5 +1,14 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import './index.css'
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
+import "./index.css";
+
+import { Toaster } from "react-hot-toast";
+
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2"
 import Home from './pages/Home';
@@ -23,21 +32,23 @@ import { useAuth } from './context/AuthContext';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
-        <p className="text-sm text-muted-foreground">Loading...</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />; // Or unauthorized page
+    return <Navigate to="/" replace />;
   }
 
   return children;
@@ -48,12 +59,41 @@ const App = () => {
   
   return (
     <BrowserRouter>
+      <ScrollToTop />
+
+      {/* Global Toast Notification System */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#1f2937",
+            color: "#ffffff",
+            border: "1px solid #374151",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10b981",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#ffffff",
+            },
+          },
+        }}
+      />
+
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <Header2 />
+        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
 
         <main className="flex-grow">
           <Routes>
+            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -70,58 +110,76 @@ const App = () => {
               </ProtectedRoute>
             } />
 
-            {/* Dashboard Routes - Flattened, No Sidebar Layout */}
+            {/* Protected Profile Route */}
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Customer Dashboard */}
             <Route
               path="/customer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['customer']}>
+                <ProtectedRoute allowedRoles={["customer"]}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               }
             />
+
+            {/* Organizer Dashboard */}
             <Route
               path="/organizer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['organizer']}>
+                <ProtectedRoute allowedRoles={["organizer"]}>
                   <OrganizerDashboard />
                 </ProtectedRoute>
               }
             />
+
+            {/* Create Event */}
             <Route
               path="/organizer/create-event"
               element={
-                <ProtectedRoute allowedRoles={['organizer']}>
+                <ProtectedRoute allowedRoles={["organizer"]}>
                   <CreateEvent />
                 </ProtectedRoute>
               }
             />
+
+            {/* Admin Dashboard */}
             <Route
               path="/admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
             />
-            {/* Alias for admin pending events */}
+
+            {/* Pending Events Alias */}
             <Route
               path="/admin/pending-events"
               element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
             />
 
-            {/* Fallback to Home or 404 */}
+            {/* Fallback Route */}
             <Route path="*" element={<Home />} />
           </Routes>
         </main>
+
+        {/* Footer */}
         <Footer />
-      </div >
-    </BrowserRouter >
-  )
-}
+      </div>
+    </BrowserRouter>
+  );
+};
 
-export default App
-
+export default App;

@@ -14,7 +14,7 @@ describe('Registrations API', () => {
     name: 'Duplicate User',
     email: 'duplicate@example.com',
     password: 'password123',
-    role: 'attendee'
+    role: 'customer'
   });
 
   const organizer = await User.create({
@@ -59,7 +59,7 @@ describe('Registrations API', () => {
         name: 'Test User',
         email: 'user@example.com',
         password: 'password123',
-        role: 'attendee'
+        role: 'customer'
       });
 
       const loginRes = await request(app)
@@ -110,14 +110,14 @@ describe('Registrations API', () => {
         name: 'User One',
         email: 'user1@example.com',
         password: 'password123',
-        role: 'attendee'
+        role: 'customer'
       });
 
       const user2 = await User.create({
         name: 'User Two',
         email: 'user2@example.com',
         password: 'password123',
-        role: 'attendee'
+        role: 'customer'
       });
 
       const login1 = await request(app)
