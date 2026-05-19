@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, minlength: 6, select: false },
     googleId: { type: String, unique: true, sparse: true },
-    role: { type: String, enum: ['attendee', 'organizer', 'admin'], default: 'attendee' },
+    role: { type: String, enum: ['customer', 'organizer', 'admin'], default: 'customer' },
     isBlocked: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     interests: [{ type: String }],

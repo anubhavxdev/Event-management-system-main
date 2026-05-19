@@ -36,7 +36,7 @@ if (isGoogleOAuthEnabled) {
             email,
             googleId: profile.id,
             avatarUrl,
-            role: 'attendee',
+            role: 'customer',
           });
 
           return done(null, user);

@@ -21,7 +21,7 @@ export default function GoogleCallback() {
       id: params.get("id"),
       name: decodeURIComponent(params.get("name") || ""),
       email: decodeURIComponent(params.get("email") || ""),
-      role: params.get("role") || "attendee",
+      role: params.get("role") || "customer",
       avatarUrl: params.get("avatar") ? decodeURIComponent(params.get("avatar")) : null,
     };
 
