@@ -22,15 +22,13 @@ export default function GradientHero() {
   }, []);
 
   return (
-    <div className="bg-background relative w-full overflow-hidden">
-      {/* Dynamic Background */}
-      <div className="absolute inset-0 z-0 overflow-hidden bg-background">
-        {/* Glow dots */}
-        <div className="absolute top-[-10%] left-[-10%] h-[40rem] w-[40rem] rounded-full bg-indigo-500/20 blur-[120px] dark:bg-indigo-500/30"></div>
-        <div className="absolute top-[20%] right-[-10%] h-[40rem] w-[40rem] rounded-full bg-purple-500/20 blur-[120px] dark:bg-purple-500/30"></div>
 
-        {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+    <div className="bg-background text-foreground relative w-full overflow-hidden transition-colors duration-300">
+      {/* Background gradient */}
+      <div className="absolute inset-0 z-0">
+        <div className="from-primary/20 via-background to-background absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))]"></div>
+        <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-[1000px] w-[1000px] -translate-x-1/2 rounded-full blur-3xl"></div>
+
       </div>
 
       <div className="relative z-10 container mx-auto px-4 pt-36 pb-24 sm:px-6 lg:px-8 lg:pt-48 lg:pb-32">
@@ -41,8 +39,10 @@ export default function GradientHero() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.1, ease: "easeOut" }}
-            className="text-center text-5xl font-extrabold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl"
+
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-center text-4xl tracking-tight sm:text-6xl lg:text-7xl"
+ 
           >
             <span className="text-foreground">Run Events </span>
             <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Smarter</span>

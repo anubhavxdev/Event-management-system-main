@@ -6,11 +6,11 @@ import {
   signup,
   login,
   me,
-  updateProfile,
+  updateProfile
 } from '../controllers/authController.js';
 
 import { authenticate } from '../middleware/auth.js';
-
+import { authRateLimiter } from '../middleware/rateLimiters.js';
 import {
   signupValidation,
   loginValidation,
@@ -28,8 +28,6 @@ import {
   resendVerification,
 } from "../controllers/authController.js";
 
-
-
 const router = Router();
 router.post("/signup", signupValidation, validate, signup);
 const parsedAuthWindowMs = Number.parseInt(
@@ -43,8 +41,10 @@ router.post("/login", authRateLimiter, login);
 router.get("/verify-email/:token", verifyEmail);
 router.post("/resend-verification", resendVerification);
 
+// Auth Routes
 router.post(
   '/signup',
+  authRateLimiter,
   signupValidation,
   validate,
   signup
@@ -52,15 +52,14 @@ router.post(
 
 router.post(
   '/login',
+  authRateLimiter,
   loginValidation,
   validate,
   login
 );
 
-router.get("/me", authenticate, me);
-router.put("/profile", authenticate, updateProfile);
+// User Routes
 router.get('/me', authenticate, me);
-
 router.put('/profile', authenticate, updateProfile);
 
 export default router;

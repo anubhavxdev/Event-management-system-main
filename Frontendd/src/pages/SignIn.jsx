@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 import { API_BASE_URL } from "../config";
 
@@ -16,31 +17,44 @@ export default function SignIn() {
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+    const loadingToast = toast.loading("Signing in...");
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            login(data.token, data.user);
+
+            toast.success("Login successful!", {
+                id: loadingToast,
             });
-            const data = await res.json();
 
-            if (res.ok) {
-                login(data.token, data.user);
-                navigate('/');
-            } else {
-                alert(data.message || 'Login failed');
-            }
-        } catch (error) {
-            console.error("Login error", error);
-            alert("Something went wrong");
-        } finally {
-            setIsLoading(false);
+            navigate('/');
+        } else {
+            toast.error(data.message || 'Login failed', {
+                id: loadingToast,
+            });
         }
-    };
+    } catch (error) {
+        console.error("Login error", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">

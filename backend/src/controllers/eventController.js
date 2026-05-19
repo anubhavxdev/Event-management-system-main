@@ -120,53 +120,25 @@ export const deleteEvent = async (req, res) => {
 
 export const listEvents = async (req, res) => {
   try {
-    const { q, category, status, organizer, tags } = req.query;
+    const { q, category, status, organizer } = req.query;
+    const filter = {};
+    if (q) filter.title = { $regex: q, $options: 'i' };
+    if (category) filter.category = category;
+    if (status) filter.status = status;
+    if (organizer) filter.organizer = organizer;
+    const events = await Event.find(filter).populate('organizer', 'name').sort({ date: 1 });
 
-    const filter = {
-      status: 'approved',
-    };
+    const eventsWithCount = await Promise.all(
+      events.map(async (event) => {
+        const registeredCount = await Registration.countDocuments({
+          event: event._id,
+          status: 'registered',
+        });
+        return { ...event.toObject(), registeredCount };
+      })
+    );
 
-    // Search by title
-    if (q) {
-      filter.title = {
-        $regex: q,
-        $options: 'i',
-      };
-    }
-
-    // Filter by category
-    if (category) {
-      filter.category = category;
-    }
-
-    // Filter by status
-    if (status) {
-      filter.status = status;
-    }
-
-    // Filter by organizer
-    if (organizer) {
-      filter.organizer = organizer;
-    }
-
-    // Filter by tags (AND logic)
-    if (tags) {
-      const tagArray = tags
-        .split(',')
-        .map((tag) => tag.toLowerCase().trim())
-        .filter(Boolean);
-
-      filter.tags = {
-        $all: tagArray,
-      };
-    }
-
-    const events = await Event.find(filter)
-      .populate('organizer', 'name')
-      .sort({ date: 1 });
-
-    res.json({ events });
-
+    res.json({ events: eventsWithCount });
   } catch (err) {
     res.status(500).json({
       message: err.message,

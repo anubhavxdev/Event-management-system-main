@@ -3,10 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 import { LegalModal } from "../components/ui/legal-modal";
 import { legalContent } from "../data/legalContent";
 
 import { API_BASE_URL } from "../config";
+
+// ── Reusable error message component ─────────────────────────────────────
+const ErrorMsg = ({ msg }) =>
+    msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
 
 export default function SignUp() {
     const [isVisible, setIsVisible] = useState(false);
@@ -78,32 +83,48 @@ export default function SignUp() {
         agreeTerms;
 
     const handleSubmit = async (e) => {
-        e.preventDefault();
+    e.preventDefault();
 
-        if (!agreeTerms) {
-            alert("Please agree to the Terms & Conditions");
-            return;
-        }
+    if (!agreeTerms) {
+        toast.error("Please agree to the Terms & Conditions");
+        return;
+    }
 
-        if (formData.password !== formData.confirmPassword) {
-            setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
-            return;
-        }
+    if (formData.password !== formData.confirmPassword) {
+        setErrors(prev => ({
+            ...prev,
+            confirmPassword: 'Passwords do not match'
+        }));
 
-        setIsLoading(true);
+        toast.error("Passwords do not match");
+        return;
+    }
 
-        try {
-            const payload = {
-                name: formData.fullName.trim(),
-                email: formData.email,
-                password: formData.password,
-                role: formData.role
-            };
+    setIsLoading(true);
 
-            const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+    const loadingToast = toast.loading("Creating account...");
+
+    try {
+        const payload = {
+            name: formData.fullName.trim(),
+            email: formData.email,
+            password: formData.password,
+            role: formData.role
+        };
+
+        const res = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            login(data.token, data.user);
+
+            toast.success("Account created successfully!", {
+                id: loadingToast,
             });
             const data = await res.json();
 
@@ -111,18 +132,34 @@ export default function SignUp() {
                 navigate('/verify-email');
             } else {
                 alert(data.message || 'Signup failed');
-            }
-        } catch (error) {
-            console.error("Signup error", error);
-            alert("Something went wrong");
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
-    // ── Reusable error message component ─────────────────────────────────────
-    const ErrorMsg = ({ msg }) =>
-        msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
+            switch (data.user.role) {
+                case 'admin':
+                    navigate('/admin/dashboard');
+                    break;
+
+                case 'organizer':
+                    navigate('/organizer/dashboard');
+                    break;
+
+                default:
+                    navigate('/customer/dashboard');
+            }
+        } else {
+            toast.error(data.message || 'Signup failed', {
+                id: loadingToast,
+            });
+        }
+    } catch (error) {
+        console.error("Signup error", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">

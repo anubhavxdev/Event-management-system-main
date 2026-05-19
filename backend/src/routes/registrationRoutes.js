@@ -10,22 +10,21 @@ const router = Router();
 
 router.post(
   '/:id/register',
-  registrationRateLimiter,
+  registrationLimiter,
   authenticate,
   checkEmailVerified,
   authorizeRoles('attendee', 'organizer', 'admin'),
   authorizeRoles('customer', 'organizer', 'admin'),
   registerForEvent
 );
+
 router.get('/me', authenticate, myRegistrations);
 router.get('/:id/status', authenticate, checkRegistrationStatus);
-router.get('/:id/participants', authenticate, authorizeRoles('organizer', 'admin'), participantsForEvent);
-router.post('/:id/checkin', authenticate, authorizeRoles('organizer', 'admin'), checkInParticipant);
-router.get('/:id/participants.csv', authenticate, authorizeRoles('organizer', 'admin'), exportParticipantsCsv);
+router.get('/:id/participants', authenticate, authorizeRoles('customer', 'organizer', 'admin'), participantsForEvent);
+router.post('/:id/checkin', authenticate, authorizeRoles('customer', 'organizer', 'admin'), checkInParticipant);
+router.get('/:id/participants.csv', authenticate, authorizeRoles('customer', 'organizer', 'admin'), exportParticipantsCsv);
 
 // End point to cancel registration
-router.delete("/:id/cancel",authenticate,cancelRegistration);
+router.delete('/:id/cancel', authenticate, cancelRegistration);
 
 export default router;
-
-

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, easeInOut } from "framer-motion";
 import { Menu, X, ArrowRight, Zap, Search, User, LogOut, LayoutDashboard, Settings, ChevronDown } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "next-themes";
 import { Link, useNavigate } from "react-router-dom";
 
 const navItems = [
@@ -12,12 +13,13 @@ const navItems = [
   { name: "About", href: "/about-us" },
   { name: "Contact", href: "/contact" },
 ];
-export default function Header2() {
+export default function Header2({ darkMode, setDarkMode}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const getDashboardLink = () => {
@@ -106,7 +108,7 @@ export default function Header2() {
               </Link>
             </motion.div>
 
-            <nav className="hidden items-center space-x-1 lg:flex">
+            <nav className="hidden items-center gap-3 lg:flex">
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}
@@ -168,7 +170,7 @@ export default function Header2() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute -right-12 mt-2 w-56 rounded-xl bg-white border border-border/50 shadow-xl overflow-hidden z-50"
+                        className="absolute -right-12 mt-2 w-56 rounded-xl bg-white dark: bg-black border border-border/50 shadow-xl overflow-hidden z-50"
                       >
                         <div className="p-2 space-y-1">
                           <div className="px-3 py-2 border-b border-border/50 mb-1">
@@ -212,13 +214,33 @@ export default function Header2() {
                   </AnimatePresence>
                 </div>
               ) : (
-                <Link
-                  to="/login"
-                  className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 text-gray-900 hover:bg-gray-200 transition-all duration-200 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-                  aria-label="Sign In"
-                >
-                  <User className="h-5 w-5" />
-                </Link>
+
+                <>
+                  <Link
+                    to="/login"
+                    className="text-foreground/80 hover:text-foreground px-4 py-2 text-sm font-medium transition-colors duration-200">
+                    Sign In
+                  </Link>
+
+                  <button
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className="p-2 rounded-lg border border-gray-300 dark:border-gray-800 transition"
+                  >
+                    {theme === "dark" ? "☀️" : "🌙"}
+                  </button>
+
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}>
+                    <Link
+                      to="/signup"
+                      className="bg-foreground text-background hover:bg-foreground/90 inline-flex items-center space-x-2 rounded-lg px-5 py-2.5 text-sm font-medium shadow-sm transition-all duration-200">
+                      <span>Get Started</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </motion.div>
+                </>
+
               )}
             </motion.div>
 

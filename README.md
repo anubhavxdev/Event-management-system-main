@@ -33,7 +33,6 @@
 ---
 
 </div>
-
 ## 🤝 Contributors
 
 Thanks to all the amazing people who have contributed to **EventOne**! 🎉
@@ -67,9 +66,60 @@ Thanks to all the amazing people who have contributed to **EventOne**! 🎉
         <br/>💻 🔒 ⚡
       </td>
       <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/sunnyrawal">
+          <img src="https://github.com/sunnyrawal.png" width="80px;" style="border-radius:50%" alt="sunnyrawal"/>
+          <br/><sub><b>sunnyrawal</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+      <td align="center" valign="top" width="14.28%">
         <a href="https://github.com/SatyamPrakash09">
           <img src="https://github.com/SatyamPrakash09.png" width="80px;" style="border-radius:50%" alt="SatyamPrakash09"/>
           <br/><sub><b>SatyamPrakash09</b></sub>
+        </a>
+        <br/>💻 🎨
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/vaibhuujoshi">
+          <img src="https://github.com/vaibhuujoshi.png" width="80px;" style="border-radius:50%" alt="vaibhuujoshi"/>
+          <br/><sub><b>vaibhuujoshi</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/jasmeetc27">
+          <img src="https://github.com/jasmeetc27.png" width="80px;" style="border-radius:50%" alt="jasmeetc27"/>
+          <br/><sub><b>jasmeetc27</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Shruti20156">
+          <img src="https://github.com/Shruti20156.png" width="80px;" style="border-radius:50%" alt="Shruti20156"/>
+          <br/><sub><b>Shruti20156</b></sub>
+        </a>
+        <br/>💻
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/G4uravXDev">
+          <img src="https://github.com/G4uravXDev.png" width="80px;" style="border-radius:50%" alt="G4uravXDev"/>
+          <br/><sub><b>G4uravXDev</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/princee07">
+          <img src="https://github.com/princee07.png" width="80px;" style="border-radius:50%" alt="princee07"/>
+          <br/><sub><b>princee07</b></sub>
+        </a>
+        <br/>💻 🎨
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/SaiPranav-77">
+          <img src="https://github.com/SaiPranav-77.png" width="80px;" style="border-radius:50%" alt="SaiPranav-77"/>
+          <br/><sub><b>SaiPranav-77</b></sub>
         </a>
         <br/>💻 🎨
       </td>
@@ -81,9 +131,60 @@ Thanks to all the amazing people who have contributed to **EventOne**! 🎉
         <br/>💻
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/Shruti20156">
-          <img src="https://github.com/Shruti20156.png" width="80px;" style="border-radius:50%" alt="Shruti20156"/>
-          <br/><sub><b>Shruti20156</b></sub>
+        <a href="https://github.com/sarthakshruti999-code">
+          <img src="https://github.com/sarthakshruti999-code.png" width="80px;" style="border-radius:50%" alt="sarthakshruti999-code"/>
+          <br/><sub><b>sarthakshruti999-code</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/khattrishubh">
+          <img src="https://github.com/khattrishubh.png" width="80px;" style="border-radius:50%" alt="khattrishubh"/>
+          <br/><sub><b>khattrishubh</b></sub>
+        </a>
+        <br/>💻 🐛
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Jerusha547">
+          <img src="https://github.com/Jerusha547.png" width="80px;" style="border-radius:50%" alt="Jerusha547"/>
+          <br/><sub><b>Jerusha547</b></sub>
+        </a>
+        <br/>💻
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Vamshavardhan50">
+          <img src="https://github.com/Vamshavardhan50.png" width="80px;" style="border-radius:50%" alt="Vamshavardhan50"/>
+          <br/><sub><b>Vamshavardhan50</b></sub>
+        </a>
+        <br/>💻 🎨
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/SigmaSharmaG">
+          <img src="https://github.com/SigmaSharmaG.png" width="80px;" style="border-radius:50%" alt="SigmaSharmaG"/>
+          <br/><sub><b>SigmaSharmaG</b></sub>
+        </a>
+        <br/>💻
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Nitya-003">
+          <img src="https://github.com/Nitya-003.png" width="80px;" style="border-radius:50%" alt="Nitya-003"/>
+          <br/><sub><b>Nitya-003</b></sub>
+        </a>
+        <br/>💻 👀
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/Jiya3177">
+          <img src="https://github.com/Jiya3177.png" width="80px;" style="border-radius:50%" alt="Jiya3177"/>
+          <br/><sub><b>Jiya3177</b></sub>
+        </a>
+        <br/>💻
+      </td>
+      <td align="center" valign="top" width="14.28%">
+        <a href="https://github.com/hema7392">
+          <img src="https://github.com/hema7392.png" width="80px;" style="border-radius:50%" alt="hema7392"/>
+          <br/><sub><b>hema7392</b></sub>
         </a>
         <br/>💻
       </td>
@@ -97,62 +198,32 @@ Thanks to all the amazing people who have contributed to **EventOne**! 🎉
     </tr>
     <tr>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/jasmeetc27">
-          <img src="https://github.com/jasmeetc27.png" width="80px;" style="border-radius:50%" alt="jasmeetc27"/>
-          <br/><sub><b>jasmeetc27</b></sub>
-        </a>
-        <br/>💻 🐛
-      </td>
-      <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/vaibhuujoshi">
-          <img src="https://github.com/vaibhuujoshi.png" width="80px;" style="border-radius:50%" alt="vaibhuujoshi"/>
-          <br/><sub><b>vaibhuujoshi</b></sub>
-        </a>
-        <br/>💻 🐛
-      </td>
-      <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/Vamshavardhan50">
-          <img src="https://github.com/Vamshavardhan50.png" width="80px;" style="border-radius:50%" alt="Vamshavardhan50"/>
-          <br/><sub><b>Vamshavardhan50</b></sub>
+        <a href="https://github.com/pfldivyanshsingh">
+          <img src="https://github.com/pfldivyanshsingh.png" width="80px;" style="border-radius:50%" alt="pfldivyanshsingh"/>
+          <br/><sub><b>pfldivyanshsingh</b></sub>
         </a>
         <br/>💻 🎨
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/khattrishubh">
-          <img src="https://github.com/khattrishubh.png" width="80px;" style="border-radius:50%" alt="khattrishubh"/>
-          <br/><sub><b>khattrishubh</b></sub>
+        <a href="https://github.com/Souhridya-Patra">
+          <img src="https://github.com/Souhridya-Patra.png" width="80px;" style="border-radius:50%" alt="Souhridya-Patra"/>
+          <br/><sub><b>Souhridya-Patra</b></sub>
         </a>
         <br/>💻 🐛
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/hema7392">
-          <img src="https://github.com/hema7392.png" width="80px;" style="border-radius:50%" alt="hema7392"/>
-          <br/><sub><b>hema7392</b></sub>
+        <a href="https://github.com/pragya0129">
+          <img src="https://github.com/pragya0129.png" width="80px;" style="border-radius:50%" alt="pragya0129"/>
+          <br/><sub><b>pragya0129</b></sub>
         </a>
-        <br/>💻
+        <br/>💻 ♿
       </td>
       <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/Jerusha547">
-          <img src="https://github.com/Jerusha547.png" width="80px;" style="border-radius:50%" alt="Jerusha547"/>
-          <br/><sub><b>Jerusha547</b></sub>
+        <a href="https://github.com/devPrince07">
+          <img src="https://github.com/devPrince07.png" width="80px;" style="border-radius:50%" alt="devPrince07"/>
+          <br/><sub><b>devPrince07</b></sub>
         </a>
-        <br/>💻
-      </td>
-      <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/sarthakshruti999-code">
-          <img src="https://github.com/sarthakshruti999-code.png" width="80px;" style="border-radius:50%" alt="sarthakshruti999-code"/>
-          <br/><sub><b>sarthakshruti999-code</b></sub>
-        </a>
-        <br/>💻 🐛
-      </td>
-    </tr>
-    <tr>
-      <td align="center" valign="top" width="14.28%">
-        <a href="https://github.com/princee07">
-          <img src="https://github.com/princee07.png" width="80px;" style="border-radius:50%" alt="princee07"/>
-          <br/><sub><b>princee07</b></sub>
-        </a>
-        <br/>💻 🐛
+        <br/>💻 👀
       </td>
     </tr>
   </tbody>
@@ -160,6 +231,9 @@ Thanks to all the amazing people who have contributed to **EventOne**! 🎉
 
 </div>
 
+<br/>
+
+> 💻 Code &nbsp;·&nbsp; 🐛 Bug fix &nbsp;·&nbsp; 🧪 Tests &nbsp;·&nbsp; 🔒 Security &nbsp;·&nbsp; ⚡ Performance &nbsp;·&nbsp; 🎨 Design &nbsp;·&nbsp; 📖 Docs &nbsp;·&nbsp; 🚇 Infrastructure &nbsp;·&nbsp; ♿ Accessibility &nbsp;·&nbsp; 👀 Review
 <br/>
 
 > 💻 Code · 🐛 Bug fix · 🧪 Tests · 🔒 Security · ⚡ Performance · 🎨 Design · 📖 Docs · 🚇 Infrastructure
