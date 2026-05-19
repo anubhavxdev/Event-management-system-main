@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Mail } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Badge } from "../ui/badge";
+import { useNavigate } from "react-router-dom";
 function FAQItem({ question, answer, index }) {
   const [isOpen, setIsOpen] = useState(false);
   return (
@@ -100,6 +101,8 @@ function FAQItem({ question, answer, index }) {
   );
 }
 export default function Faq3() {
+
+  const navigate = useNavigate();
   const faqs = [
     {
   question: "What makes EventOne unique?",
@@ -136,23 +139,52 @@ export default function Faq3() {
 
       <div className="relative container mx-auto max-w-6xl px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto mb-12 max-w-2xl text-center">
-          <Badge
-            variant="outline"
-            className="border-primary mb-4 px-3 py-1 text-xs font-medium tracking-wider uppercase">
-            FAQs
-          </Badge>
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.6 }}
+  className="mx-auto mb-16 max-w-3xl text-center">
 
-          <h2 className="from-primary mb-3 bg-gradient-to-r to-rose-400 bg-clip-text text-3xl font-bold text-transparent">
-            Frequently Asked Questions
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Everything you need to know about Eventone
-          </p>
-        </motion.div>
+  <Badge
+    variant="outline"
+    className={cn(
+      "border-primary/30 bg-primary/5 text-primary",
+      "mb-5 px-4 py-1.5",
+      "rounded-full text-xs font-semibold tracking-[0.2em]",
+      "uppercase shadow-sm backdrop-blur-sm"
+    )}>
+    Frequently Asked Questions
+  </Badge>
+
+  <h2
+    className={cn(
+  "text-4xl md:text-5xl font-extrabold tracking-tight",
+  "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500",
+  "bg-clip-text text-transparent",
+  "drop-shadow-sm"
+)}>
+    Got Questions?
+  </h2>
+
+  <h3
+    className={cn(
+      "mt-3 text-2xl md:text-3xl font-bold",
+      "text-foreground"
+    )}>
+    We’ve Got Answers.
+  </h3>
+
+  <p
+    className={cn(
+      "text-muted-foreground",
+      "mx-auto mt-5 max-w-2xl",
+      "text-base md:text-lg leading-relaxed"
+    )}>
+    Learn everything about EventOne — from event management
+    and registrations to certificates, dashboards, and support.
+  </p>
+
+  <div className="bg-primary/20 mx-auto mt-8 h-1 w-24 rounded-full" />
+</motion.div>
 
         <div className="mx-auto max-w-2xl space-y-2">
           {faqs.map((faq, index) => (
@@ -176,6 +208,7 @@ export default function Faq3() {
           </p>
           <button
             type="button"
+            onClick={() => navigate("/support")}
             className={cn(
               "rounded-md px-4 py-2 text-sm",
               "bg-primary text-primary-foreground",

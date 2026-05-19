@@ -10,7 +10,6 @@ import "./index.css";
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import { useAuth } from "./context/AuthContext";
-import ScrollToTop from "./components/ui/ScrollToTop";
 
 // Lazy-loaded pages
 const Home = lazy(() => import("./pages/Home"));
@@ -32,6 +31,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading)
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
@@ -40,24 +40,34 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
         </div>
       </div>
     );
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />; // Or unauthorized page
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
 const App = () => {
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if(darkMode){
+      document.documentElement.classList.add("dark");
+    }else{
+      document.documentElement.classList.remove("dark");
+    } 
+  },[darkMode]);
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <Header2 />
+        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
 
         <main className="flex-grow">
           <Suspense fallback={
@@ -137,10 +147,13 @@ const App = () => {
             <ScrollToTop />
           </>
         </main>
+
+        {/* Footer */}
         <Footer />
       </div>
     </BrowserRouter>
   );
 };
 
+export default App;
 export default App;

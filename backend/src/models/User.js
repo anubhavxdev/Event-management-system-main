@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
       select: false
     },
-    role: { type: String, enum: ['customer', 'organizer', 'admin'], default: 'customer' },
+    role: { type: String, enum: ['customer', 'organizer', 'admin', 'attendee'], default: 'customer' },
     isBlocked: { type: Boolean, default: false },
     points: { type: Number, default: 0 },
     interests: [{ type: String }],

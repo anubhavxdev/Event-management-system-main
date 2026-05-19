@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
+import toast from "react-hot-toast";
 
 
 import { API_BASE_URL } from '../../config';
@@ -41,37 +42,13 @@ export default function OrganizerDashboard() {
         byCategory: {}
     });
 
+    const mountedRef = useRef(true);
+
     useEffect(() => {
-        document.title = 'Organizer Dashboard | Event.One';
-        if (user) {
-            fetchMyEvents();
-        }
-    }, [user]);
-
-    const fetchMyEvents = async () => {
-        try {
-            const token = localStorage.getItem('token');
-
-            const res = await fetch(`${API_BASE_URL}/api/events`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                // Filter events where the organizer matches the current user
-                // Adjust logic based on how your backend returns data (populated organizer object vs id)
-                const myEvents = (data.events || []).filter(
-                    e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
-                );
-
-                setEvents(myEvents);
-                calculateStats(myEvents);
-            }
-        } catch (error) {
-            console.error("Failed to fetch events", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
     const calculateStats = (events) => {
         const newStats = {
@@ -86,8 +63,46 @@ export default function OrganizerDashboard() {
             const cat = e.category || 'Uncategorized';
             newStats.byCategory[cat] = (newStats.byCategory[cat] || 0) + 1;
         });
-        setStats(newStats);
+        if (mountedRef.current) {
+            setStats(newStats);
+        }
     };
+
+    const fetchMyEvents = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            const res = await fetch(`${API_BASE_URL}/api/events`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok && mountedRef.current) {
+                const data = await res.json();
+                // Filter events where the organizer matches the current user
+                // Adjust logic based on how your backend returns data (populated organizer object vs id)
+                const myEvents = (data.events || []).filter(
+                    e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
+                );
+
+                setEvents(myEvents);
+                calculateStats(myEvents);
+            }
+        } catch (error) {
+            console.error("Failed to fetch events", error);
+        } finally {
+            if (mountedRef.current) {
+                setLoading(false);
+            }
+        }
+    }, [user]);
+
+    useEffect(() => {
+        document.title = 'Organizer Dashboard | Event.One';
+        if (user) {
+            (async () => {
+                await fetchMyEvents();
+            })();
+        }
+    }, [user, fetchMyEvents]);
 
     const handleDownloadCSV = (eventId) => {
         const token = localStorage.getItem('token');
@@ -107,34 +122,77 @@ export default function OrganizerDashboard() {
             .catch(err => console.error("Failed to download CSV", err));
     };
 
-    const handleDeleteEvent = async (eventId) => {
-        if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
+const handleDeleteEvent = async (eventId) => {
+    const confirmDelete = window.confirm(
+        'Are you sure you want to delete this event? This action cannot be undone.'
+    );
 
-        try {
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
+    if (!confirmDelete) return;
+
+    const loadingToast = toast.loading("Deleting event...");
+
+    try {
+        const token = localStorage.getItem('token');
+
+        const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            setEvents(prev => prev.filter(e => e._id !== eventId));
+
+            setStats(curr => ({
+                ...curr,
+                totalEvents: curr.totalEvents - 1,
+            }));
+
+            setSelectedEvent(null);
+
+            toast.success('Event deleted successfully', {
+                id: loadingToast,
             });
 
-            if (res.ok) {
-                setEvents(prev => prev.filter(e => e._id !== eventId));
-                // Update stats locally
-                setStats(curr => ({
-                    ...curr,
-                    totalEvents: curr.totalEvents - 1,
-                    // Note: Ideally we re-calculate fully, but this is a quick update
-                }));
-                setSelectedEvent(null);
-                alert('Event deleted successfully');
-                // Re-fetch to ensure stats are perfectly synced
-                fetchMyEvents();
-            } else {
-                alert('Failed to delete event');
-            }
-        } catch (error) {
-            console.error("Failed to delete event", error);
+            fetchMyEvents();
+        } else {
+            toast.error('Failed to delete event', {
+                id: loadingToast,
+            });
         }
+    } catch (error) {
+        console.error("Failed to delete event", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    }
+};
+
+    const handleCreateSubmit = async (e) => {
+        e.preventDefault();
+        setCreating(true);
+    const resetForm = () => {
+        setEditingEventId(null);
+        setFormData({
+            title: '', description: '', date: '', time: '',
+            location: '', category: '', price: '', capacity: '', poster: null
+        });
+    };
+
+    const handleEditResubmit = (event) => {
+        setEditingEventId(event._id);
+        const eventDate = new Date(event.date);
+        setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            date: eventDate.toISOString().split('T')[0],
+            time: eventDate.toTimeString().slice(0, 5),
+            location: event.location || '',
+            category: event.category || '',
+            price: event.price || '',
+            capacity: event.capacity || '',
+            poster: null,
+        });
     };
 
     const handleInputChange = (e) => {
@@ -146,25 +204,8 @@ export default function OrganizerDashboard() {
         }
     };
 
-    const handleCreateSubmit = async (e) => {
-        e.preventDefault();
-        setCreating(true);
-
-        try {
-            const data = new FormData();
-            // Combine date and time
-            const fullDate = new Date(`${formData.date}T${formData.time}`);
-
-            data.append('title', formData.title);
-            data.append('description', formData.description);
-            data.append('date', fullDate.toISOString());
-            data.append('location', formData.location);
-            data.append('category', formData.category);
-            data.append('price', formData.price);
-            data.append('capacity', formData.capacity);
-            if (formData.poster) {
-                data.append('poster', formData.poster);
-            }
+const handleCreateSubmit = async (e) => {
+    e.preventDefault();
 
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_BASE_URL}/api/events`, {
@@ -192,8 +233,74 @@ export default function OrganizerDashboard() {
             alert("Something went wrong");
         } finally {
             setCreating(false);
+    setCreating(true);
+
+    const loadingToast = toast.loading("Creating event...");
+
+    try {
+        const data = new FormData();
+
+        const fullDate = new Date(`${formData.date}T${formData.time}`);
+
+        data.append('title', formData.title);
+        data.append('description', formData.description);
+        data.append('date', fullDate.toISOString());
+        data.append('location', formData.location);
+        data.append('category', formData.category);
+        data.append('price', formData.price);
+        data.append('capacity', formData.capacity);
+
+        if (formData.poster) {
+            data.append('poster', formData.poster);
         }
-    };
+
+        const token = localStorage.getItem('token');
+
+        const res = await fetch(`${API_BASE_URL}/api/events`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            body: data
+        });
+
+        if (res.ok) {
+            setFormData({
+                title: '',
+                description: '',
+                date: '',
+                time: '',
+                location: '',
+                category: 'General',
+                price: '',
+                capacity: '',
+                poster: null
+            });
+
+            toast.success('Event created successfully!', {
+                id: loadingToast,
+            });
+
+            fetchMyEvents();
+
+            setActiveTab('My Events');
+        } else {
+            const err = await res.json();
+
+            toast.error(err.message || 'Failed to create event', {
+                id: loadingToast,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to create event", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    } finally {
+        setCreating(false);
+    }
+};
 
     if (loading) {
         return (
@@ -204,8 +311,14 @@ export default function OrganizerDashboard() {
     }
 
     const handleGenerateCertificate = (event) => {
-        alert(`Request to generate certificates for "${event.title}" received.\n\nNote: Automated certificate generation is coming soon!`);
-    };
+    toast.success(
+        `Certificate generation request received for "${event.title}"`
+    );
+
+    toast(
+        "Automated certificate generation feature coming soon!"
+    );
+};
 
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date());
     const pastEvents = events.filter(e => new Date(e.date) < new Date());

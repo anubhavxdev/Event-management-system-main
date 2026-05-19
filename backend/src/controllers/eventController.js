@@ -75,7 +75,6 @@ export const updateEvent = async (req, res) => {
       { new: true }
     );
 
-    // Delete old poster after successful update
     if (update.posterUrl && oldEvent.posterUrl) {
       await deleteFromCloudinary(oldEvent.posterUrl);
     }
@@ -102,7 +101,6 @@ export const deleteEvent = async (req, res) => {
       });
     }
 
-    // Clean up poster
     if (event.posterUrl) {
       await deleteFromCloudinary(event.posterUrl);
     }
@@ -117,63 +115,77 @@ export const deleteEvent = async (req, res) => {
     });
   }
 };
-
 export const listEvents = async (req, res) => {
   try {
-    const { q, category, status, organizer, tags } = req.query;
+    const {
+      q,
+      category,
+      status,
+      organizer,
+      tags,
+      page = 1,
+      limit = 12,
+    } = req.query;
 
     const filter = {
       status: 'approved',
     };
 
-    // Search by title
+    // Search title + description
     if (q) {
-      filter.title = {
-        $regex: q,
-        $options: 'i',
-      };
+      filter.$or = [
+        { title: { $regex: q, $options: 'i' } },
+        { description: { $regex: q, $options: 'i' } },
+      ];
     }
 
-    // Filter by category
-    if (category) {
-      filter.category = category;
-    }
+    if (category) filter.category = category;
+    if (status) filter.status = status;
+    if (organizer) filter.organizer = organizer;
 
-    // Filter by status
-    if (status) {
-      filter.status = status;
-    }
-
-    // Filter by organizer
-    if (organizer) {
-      filter.organizer = organizer;
-    }
-
-    // Filter by tags (AND logic)
     if (tags) {
       const tagArray = tags
         .split(',')
         .map((tag) => tag.toLowerCase().trim())
         .filter(Boolean);
 
-      filter.tags = {
-        $all: tagArray,
-      };
+      filter.tags = { $all: tagArray };
     }
 
-    const events = await Event.find(filter)
-      .populate('organizer', 'name')
-      .sort({ date: 1 });
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
 
-    res.json({ events });
+    const limitNum = Math.min(
+      50,
+      Math.max(1, parseInt(limit, 10) || 12)
+    );
 
+    const skip = (pageNum - 1) * limitNum;
+
+    const [events, total] = await Promise.all([
+      Event.find(filter)
+        .populate('organizer', 'name')
+        .sort({ date: 1 })
+        .skip(skip)
+        .limit(limitNum),
+
+      Event.countDocuments(filter),
+    ]);
+
+    res.json({
+      events,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
   } catch (err) {
     res.status(500).json({
       message: err.message,
     });
   }
 };
-
 export const getPopularTags = async (req, res) => {
   try {
     const tags = await Event.aggregate([
@@ -182,38 +194,28 @@ export const getPopularTags = async (req, res) => {
           status: 'approved',
         },
       },
-
       {
         $unwind: '$tags',
       },
-
       {
         $group: {
           _id: '$tags',
           count: { $sum: 1 },
         },
       },
-
       {
         $sort: {
           count: -1,
         },
       },
-
       {
         $limit: 20,
       },
-
-      {
-        $project: {
-          _id: 0,
-          tag: '$_id',
-          count: 1,
-        },
-      },
     ]);
 
-    res.json({ tags });
+    res.json({
+      tags,
+    });
 
   } catch (err) {
     res.status(500).json({

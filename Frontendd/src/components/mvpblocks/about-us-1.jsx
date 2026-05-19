@@ -96,7 +96,9 @@ export default function AboutUs1() {
         <div ref={missionRef} className="relative mx-auto mb-24 max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
-            animate={missionInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+            animate={
+              missionInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }
+            }
             transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
             className="relative z-10 grid gap-12 md:grid-cols-2"
           >
@@ -104,7 +106,11 @@ export default function AboutUs1() {
               whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
               className="group border-border/40 relative block overflow-hidden rounded-2xl border bg-gradient-to-br p-10 backdrop-blur-3xl"
             >
-              <BorderBeam duration={8} size={300} className="via-primary/40 from-transparent to-transparent" />
+              <BorderBeam
+                duration={8}
+                size={300}
+                className="via-primary/40 from-transparent to-transparent"
+              />
               <div className="from-primary/20 to-primary/5 mb-6 inline-flex aspect-square h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br backdrop-blur-sm">
                 <Rocket className="text-primary h-8 w-8" />
               </div>
@@ -120,7 +126,12 @@ export default function AboutUs1() {
               whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
               className="group border-border/40 relative block overflow-hidden rounded-2xl border bg-gradient-to-br p-10 backdrop-blur-3xl"
             >
-              <BorderBeam duration={8} size={300} className="from-transparent via-blue-500/40 to-transparent" reverse />
+              <BorderBeam
+                duration={8}
+                size={300}
+                className="from-transparent via-blue-500/40 to-transparent"
+                reverse
+              />
               <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 backdrop-blur-sm">
                 <Target className="h-8 w-8 text-blue-500" />
               </div>
@@ -137,7 +148,9 @@ export default function AboutUs1() {
         <div ref={valuesRef} className="mb-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={valuesInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+            animate={
+              valuesInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+            }
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="mb-12 text-center"
           >
@@ -145,26 +158,42 @@ export default function AboutUs1() {
               Our Core Values
             </h2>
             <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
-              The principles that guide everything we do and every decision we make.
+              The principles that guide everything we do and every decision we
+              make.
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 text-black">
+          <div className="text-foreground grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 text-foreground">
             {aboutData.values.map((value, index) => {
               const IconComponent = iconComponents[value.icon];
               return (
                 <motion.div
                   key={value.title}
                   initial={{ opacity: 0, y: 30 }}
-                  animate={valuesInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 + 0.2, ease: "easeOut" }}
+                  animate={
+                    valuesInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
+                  }
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.1 + 0.2,
+                    ease: "easeOut",
+                  }}
                   whileHover={{ y: -5, scale: 1.02 }}
                 >
                   <CardHoverEffect
                     icon={<IconComponent className="h-6 w-6" />}
                     title={value.title}
                     description={value.description}
-                    variant={index === 0 ? "purple" : index === 1 ? "blue" : index === 2 ? "amber" : "rose"}
+                    variant={
+                      index === 0
+                        ? "purple"
+                        : index === 1
+                          ? "blue"
+                          : index === 2
+                            ? "amber"
+                            : "rose"
+                    }
                     glowEffect
                     size="lg"
                   />

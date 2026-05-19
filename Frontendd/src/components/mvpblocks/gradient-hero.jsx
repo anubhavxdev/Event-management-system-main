@@ -7,10 +7,13 @@ import { Link } from "react-router-dom";
 export default function GradientHero() {
   return (
     <div className="bg-background relative w-full overflow-hidden">
+
+    <div className="bg-background text-foreground relative w-full overflow-hidden transition-colors duration-300">
       {/* Background gradient */}
       <div className="absolute inset-0 z-0">
         <div className="from-primary/20 via-background to-background absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))]"></div>
         <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-[1000px] w-[1000px] -translate-x-1/2 rounded-full blur-3xl"></div>
+
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:16px_16px] opacity-15"></div>
 
@@ -37,6 +40,10 @@ export default function GradientHero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
             className="bg-gradient-to-b from-black via-zinc-800 to-zinc-500 bg-clip-text text-center text-4xl tracking-tighter text-balance text-transparent sm:text-5xl md:text-6xl lg:text-7xl"
+
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-center text-4xl tracking-tight sm:text-6xl lg:text-7xl"
+ 
           >
             Powering Communities to Run Events Smarter
           </motion.h1>
