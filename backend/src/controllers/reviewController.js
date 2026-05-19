@@ -1,5 +1,6 @@
 import Review from '../models/Review.js';
 import Event from '../models/Event.js';
+import User from '../models/User.js';
 
 export const addReview = async (req, res) => {
   try {
@@ -12,6 +13,9 @@ export const addReview = async (req, res) => {
     }
     
     const review = await Review.create({ user: req.user.id, event: req.params.id, rating, comment });
+
+    await User.findByIdAndUpdate(req.user.id, { $inc: { points: 3 } });
+
     // Update event average rating
     const agg = await Review.aggregate([
       { $match: { event: review.event } },

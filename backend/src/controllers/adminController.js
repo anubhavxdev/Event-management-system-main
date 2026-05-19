@@ -4,11 +4,18 @@ import { sendEventRejectionEmail } from '../utils/email.js';
 
 export const approveEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(
-      req.params.id,
-      { status: 'approved' },
-      { new: true }
-    );
+    const event = await Event.findById(req.params.id);
+
+    if (!event) return res.status(404).json({ message: 'Not found' });
+
+    const wasApproved = event.status === 'approved';
+    event.status = 'approved';
+    await event.save();
+
+    if (!wasApproved && event.organizer) {
+      await User.findByIdAndUpdate(event.organizer, { $inc: { points: 20 } });
+    }
+
     if (!event) return res.status(404).json({ message: 'Not found' });
     res.json({ event });
   } catch (err) {

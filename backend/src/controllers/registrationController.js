@@ -1,5 +1,6 @@
 import Event from '../models/Event.js';
 import Registration from '../models/Registration.js';
+import User from '../models/User.js';
 import { generateQRCodeDataUrl } from '../utils/qrcode.js';
 import { sendEmail } from '../utils/email.js';
 import path from 'path';
@@ -70,6 +71,8 @@ export const registerForEvent = async (req, res) => {
         throw dupErr;
       }
     }
+
+    await User.findByIdAndUpdate(req.user.id, { $inc: { points: 5 } });
 
     // Send email
     try {
@@ -171,6 +174,11 @@ export const checkInParticipant = async (req, res) => {
     }
 
     // Perform atomic update
+    const existingRegistration = await Registration.findOne({
+      user: req.body.userId,
+      event: req.params.id,
+    });
+
     const reg = await Registration.findOneAndUpdate(
       { user: req.body.userId, event: req.params.id },
       { status, checkedInAt: status === 'attended' ? new Date() : undefined },
@@ -179,6 +187,10 @@ export const checkInParticipant = async (req, res) => {
 
     if (!reg) {
       return res.status(404).json({ message: 'Registration not found' });
+    }
+
+    if (status === 'attended' && existingRegistration?.status !== 'attended') {
+      await User.findByIdAndUpdate(reg.user, { $inc: { points: 10 } });
     }
 
     // Promote waitlisted user when someone cancels

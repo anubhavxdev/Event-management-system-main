@@ -26,6 +26,7 @@ import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
+import Leaderboard from "./pages/Leaderboard";
 
 import { useAuth } from "./context/AuthContext";
 
@@ -112,6 +113,7 @@ const App = () => {
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
 
             {/* Protected Profile Route */}
             <Route

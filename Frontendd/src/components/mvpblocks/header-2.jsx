@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 const navItems = [
   { name: "Home", href: "/" },
   { name: "Features", href: "/features" },
+  { name: "Leaderboard", href: "/leaderboard" },
   { name: "Pricing", href: "#pricing" },
   { name: "About", href: "/about-us" },
   { name: "Contact", href: "/contact" },
