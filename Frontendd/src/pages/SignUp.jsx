@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
@@ -35,7 +35,7 @@ export default function SignUp() {
         confirmPassword: '',
     });
 
-    const { login, user } = useAuth();
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     const toggleVisibility = () => setIsVisible(!isVisible);

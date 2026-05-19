@@ -12,20 +12,21 @@ export default function SignIn() {
     const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [googleError, setGoogleError] = useState(false);
-    const { login, user } = useAuth();
+    const [googleErrorDismissed, setGoogleErrorDismissed] = useState(false);
+    const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Detect and clean ?error=google_failed or state.googleError
+    const showGoogleError = !googleErrorDismissed && (
+        new URLSearchParams(location.search).get('error') === 'google_failed' ||
+        location.state?.googleError
+    );
+
     useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        if (params.get('error') === 'google_failed' || location.state?.googleError) {
-            setGoogleError(true);
-            // Clean the URL without reloading
+        if (new URLSearchParams(location.search).get('error') === 'google_failed') {
             window.history.replaceState({}, '', '/login');
         }
-    }, [location]);
+    }, [location.search]);
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -91,11 +92,11 @@ const handleSubmit = async (e) => {
                         }}
                     >
                         {/* Google Error Banner */}
-                        {googleError && (
+                        {showGoogleError && (
                             <div className="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 relative z-10">
                                 <svg className="w-4 h-4 text-red-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 <p className="text-red-400 text-sm">Google sign-in failed. Please try again or use email.</p>
-                                <button onClick={() => setGoogleError(false)} className="ml-auto text-red-400 hover:text-white transition-colors">✕</button>
+                                <button onClick={() => setGoogleErrorDismissed(true)} className="ml-auto text-red-400 hover:text-white transition-colors">✕</button>
                             </div>
                         )}
 
