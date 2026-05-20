@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -9,6 +9,8 @@ import { generateCertificate } from '../../utils/generateCertificate';
 import ConfirmationModal from '../../components/ui/confirmation-modal';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+
+const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Music', 'Other'];
 
 export default function CustomerDashboard() {
     const { user } = useAuth();
@@ -458,15 +460,26 @@ export default function CustomerDashboard() {
                                     </div>
                                 )}
                             </div>
-                        )}
 
-                        {activeTab === 'Browse Events' && (
-                            <div className="space-y-6">
-                                {availableEvents.length === 0 ? (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className="w-full h-80 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center p-6"
+                            {/* Category filter pills — active one is highlighted */}
+                            <div className="flex flex-wrap gap-2">
+                                <button
+                                    onClick={() => setSelectedCategory('')}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === ''
+                                        ? 'bg-rose-500 text-white border-rose-500'
+                                        : 'bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50'
+                                        }`}
+                                >
+                                    All
+                                </button>
+                                {CATEGORIES.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedCategory === cat
+                                            ? 'bg-rose-500 text-white border-rose-500'
+                                            : 'bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50'
+                                            }`}
                                     >
                                         <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
                                             <Calendar className="w-8 h-8 text-muted-foreground" />
@@ -510,30 +523,33 @@ export default function CustomerDashboard() {
                                                             </span>
                                                         </div>
 
-                                                        <div className="flex-1 flex flex-col justify-between">
-                                                            <div>
-                                                                <div className="flex justify-between items-start">
-                                                                    <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
-                                                                        {evt.title}
-                                                                    </h3>
-                                                                    <span className="inline-flex items-center text-xs px-2 py-1 rounded-full border bg-blue-500/10 text-blue-500 border-blue-500/20">
-                                                                        {evt.capacity ? `${evt.capacity} Spots` : 'Open'}
-                                                                    </span>
-                                                                </div>
-                                                                <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
-                                                                    {evt.description}
-                                                                </p>
-                                                                <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
-                                                                    <span className="flex items-center">
-                                                                        <Calendar className="w-3 h-3 mr-1.5" />
-                                                                        {new Date(evt.date).toLocaleDateString()}
-                                                                    </span>
-                                                                    <span className="flex items-center">
-                                                                        <MapPin className="w-3 h-3 mr-1.5" />
-                                                                        {evt.location}
-                                                                    </span>
-                                                                </div>
+                                        return (
+                                            <motion.div
+                                                key={evt._id}
+                                                layout
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.05 }}
+                                                className="group relative bg-card border border-border rounded-2xl p-4 hover:border-rose-500/50 transition-colors shadow-sm"
+                                            >
+                                                <div className="flex flex-col md:flex-row gap-6">
+                                                    <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden shrink-0 bg-muted relative">
+                                                        {evt.posterUrl ? (
+                                                            <img
+                                                                src={evt.posterUrl}
+                                                                alt={evt.title}
+                                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                            />
+                                                        ) : (
+                                                            <div className="flex items-center justify-center h-full text-muted-foreground">
+                                                                <Calendar className="w-8 h-8" />
                                                             </div>
+                                                        )}
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                                                        <span className="absolute bottom-2 left-2 text-xs text-white/90 font-medium px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded">
+                                                            {evt.category}
+                                                        </span>
+                                                    </div>
 
                                                             <div className="flex justify-end pt-4 md:pt-0">
                                                                 {isRegistered ? (
@@ -553,6 +569,25 @@ export default function CustomerDashboard() {
                                                                     </Button>
                                                                 )}
                                                             </div>
+                                                        </div>
+
+                                                        <div className="flex justify-end pt-4 md:pt-0">
+                                                            {isRegistered ? (
+                                                                <Button disabled variant="success" className="text-xs h-8 bg-green-600 text-white opacity-75">
+                                                                    Registered
+                                                                </Button>
+                                                            ) : isEventFullBooked ? (
+                                                                <Button disabled variant="secondary" className="text-xs h-8">
+                                                                    Fully Booked
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    className="text-xs h-8 bg-rose-600 hover:bg-rose-700 text-white"
+                                                                    onClick={() => handleRegister(evt._id)}
+                                                                >
+                                                                    Register Now
+                                                                </Button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </motion.div>

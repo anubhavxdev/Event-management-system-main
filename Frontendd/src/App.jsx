@@ -3,6 +3,12 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
+} from "react-router-dom";
+import "./index.css";
+import Footer from "./components/mvpblocks/footer-standard";
+import Header2 from "./components/mvpblocks/header-2";
+import Home from "./pages/Home";
 } from "react-router-dom";
 
 import "./index.css";
@@ -33,6 +39,7 @@ import { useAuth } from './context/AuthContext';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
+  if (loading)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -99,6 +106,7 @@ const App = () => {
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/about-us" element={<About />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <SignIn />} />
             <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
@@ -171,6 +179,10 @@ const App = () => {
               }
             />
 
+            {/* Fallback to 404 */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </main>
             {/* Fallback Route */}
             <Route path="*" element={<Home />} />
           </Routes>
@@ -183,4 +195,5 @@ const App = () => {
   );
 };
 
+export default App;
 export default App;
