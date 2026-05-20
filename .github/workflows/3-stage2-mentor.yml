@@ -1,0 +1,177 @@
+name: Stage 2 — Mentor Assignment
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  # ── FIRES WHEN stage-1-approved LABEL IS ADDED ──
+  assign-mentors:
+    name: 👥 Assign Mentors for Review
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'stage-1-approved'
+
+    steps:
+      - name: Assign 2 Random Mentors & Post Stage 2 Comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            // ── EVENTONE MENTOR POOL ──
+            const ALL_MENTORS = [
+              'topshe23',
+              'Ajayrazz',
+              'Nitya-003',
+              'srinadhtadikonda',
+              'the-matrixneo',
+            ];
+
+            // Don't assign the PR author as their own mentor
+            const eligible = ALL_MENTORS.filter(m => m.toLowerCase() !== author.toLowerCase());
+
+            // Pick 2 random mentors
+            const shuffled = eligible.sort(() => Math.random() - 0.5);
+            const assigned = shuffled.slice(0, 2);
+
+            // ── REQUEST REVIEW ──
+            try {
+              await github.rest.pulls.requestReviewers({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                reviewers: assigned,
+              });
+            } catch (e) {
+              console.log('Reviewer assignment note:', e.message);
+            }
+
+            // ── ADD LABEL ──
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['mentor-review-requested'],
+            });
+
+            // ── POST STAGE 2 COMMENT ──
+            const mentorList = assigned.map(m => `- @${m}`).join('\n');
+
+            const comment = `## 👥 Stage 2 — Mentor Review
+
+            Two GSSoC mentors have been assigned and requested to review this PR:
+
+            ${mentorList}
+
+            At least **1 mentor approval** is required to proceed to Stage 3.
+
+            Mentors: please review the code and approve if the contribution meets quality standards.
+
+            ---
+
+            ### 🔄 Pipeline Status
+            | Stage | Status |
+            |-------|--------|
+            | Stage 1 — Automated Checks | ✅ All checks passed |
+            | Stage 2 — Mentor Review | ⏳ Awaiting mentor approval |
+            | Stage 3 — Admin Final Gate | 🔒 Blocked until Stage 2 passes |
+
+            *Last updated: ${new Date().toUTCString()}*
+
+            *EventOne × GSSoC Pipeline*`;
+
+            // Update or create pipeline comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Stage 2 — Mentor Review')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: comment,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: comment,
+              });
+            }
+
+  # ── FIRES WHEN mentor-approved LABEL IS ADDED BY ADMIN ──
+  mentor-approved:
+    name: 🔓 Unlock Stage 3
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'mentor-approved'
+
+    steps:
+      - name: Update Pipeline & Notify Admin
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Add stage-3-ready label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              labels: ['stage-3-ready'],
+            });
+
+            // Update pipeline comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+
+            const pipelineComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('Stage 2 — Mentor Review')
+            );
+
+            const updatedBody = `## ✅ Stage 2 — Mentor Approved
+
+            A GSSoC mentor has approved this PR. Proceeding to Stage 3.
+
+            ---
+
+            ### 🔄 Pipeline Status
+            | Stage | Status |
+            |-------|--------|
+            | Stage 1 — Automated Checks | ✅ Passed |
+            | Stage 2 — Mentor Review | ✅ Mentor approved |
+            | Stage 3 — Admin Final Gate | 🔑 Ready for @anubhavxdev review |
+
+            @anubhavxdev — this PR is ready for your final review and merge decision.
+            Please apply the GSSoC scoring labels before merging.
+
+            *Last updated: ${new Date().toUTCString()}*
+
+            *EventOne × GSSoC Pipeline*`;
+
+            if (pipelineComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: pipelineComment.id,
+                body: updatedBody,
+              });
+            }

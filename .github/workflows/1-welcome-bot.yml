@@ -1,0 +1,59 @@
+name: Welcome Bot
+
+on:
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  welcome:
+    name: 👋 Welcome New PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post Welcome Comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+
+            const comment = `## 👋 Thanks for opening a PR, @${author}!
+
+            Your PR has entered the 🎯 **EventOne GSSoC PR Review Pipeline**.
+
+            > 🟢 GSSoC PR detected — your PR will be routed to an approved GSSoC mentor for Stage 2 review.
+
+            ### What happens next
+
+            | Stage | Reviewer | Checks |
+            |-------|----------|--------|
+            | Stage 1 — Automated Validation | 🤖 Bot | Title format · Issue link · AI Slop · Branch check |
+            | Stage 2 — Mentor Review | 🧑‍🏫 GSSoC Mentor | Code + Quality Review |
+            | Stage 3 — Admin Final Gate | 🔑 @anubhavxdev | Label check + Final Merge Decision |
+
+            A **pipeline status comment** will appear below and update automatically as your PR progresses.
+
+            ---
+
+            ### While you wait
+            - Sign all commits using \`git commit -s\`
+            - Link your issue with \`Closes #123\`
+            - Use a feature branch — **not** \`main\`
+            - Avoid unrelated changes in the same PR
+            - Write your own description — no AI-generated content
+
+            _This comment is posted only once._
+
+            *EventOne × GSSoC Automated Pipeline*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+              body: comment,
+            });

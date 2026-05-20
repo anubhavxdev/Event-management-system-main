@@ -1,44 +1,41 @@
 import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-import { signup, login, me, updateProfile } from '../controllers/authController.js';
+
+import {
+  signup,
+  login,
+  me,
+  updateProfile
+} from '../controllers/authController.js';
+
 import { authenticate } from '../middleware/auth.js';
+import { authRateLimiter } from '../middleware/rateLimiters.js';
+import {
+  signupValidation,
+  loginValidation,
+  validate,
+} from '../middleware/validationMiddleware.js';
 
 const router = Router();
-const parsedAuthWindowMs = Number.parseInt(
-  process.env.AUTH_RATE_LIMIT_WINDOW_MS ?? '',
-  10
+
+// Auth Routes
+router.post(
+  '/signup',
+  authRateLimiter,
+  signupValidation,
+  validate,
+  signup
 );
 
-const parsedAuthMax = Number.parseInt(
-  process.env.AUTH_RATE_LIMIT_MAX ?? '',
-  10
+router.post(
+  '/login',
+  authRateLimiter,
+  loginValidation,
+  validate,
+  login
 );
 
-const authWindowMs =
-  Number.isFinite(parsedAuthWindowMs) &&
-  parsedAuthWindowMs > 0
-    ? parsedAuthWindowMs
-    : 15 * 60 * 1000;
-
-const authMax =
-  Number.isFinite(parsedAuthMax) &&
-  parsedAuthMax > 0
-    ? parsedAuthMax
-    : 10;
-const authRateLimiter = rateLimit({
-  windowMs: authWindowMs,
-  max: authMax,
-  message: {
-    message: 'Too many authentication attempts. Please try again later.',
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-router.post('/signup', authRateLimiter, signup);
-router.post('/login', authRateLimiter, login);
+// User Routes
 router.get('/me', authenticate, me);
 router.put('/profile', authenticate, updateProfile);
 
 export default router;
-
-

@@ -1,0 +1,202 @@
+name: Stage 3 — Merge Gate + Leaderboard
+
+on:
+  pull_request_target:
+    types: [labeled, closed]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  # ── MERGE GATE: BLOCK UNLESS ALL LABELS ARE PRESENT ──
+  merge-gate:
+    name: 🔑 Stage 3 — Merge Gate
+    runs-on: ubuntu-latest
+    if: |
+      github.event.action == 'labeled' &&
+      (github.event.label.name == 'gssoc:approved' ||
+       github.event.label.name == 'stage-3-ready')
+
+    steps:
+      - name: Validate All Labels Before Merge
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const labels = pr.labels.map(l => l.name);
+
+            const hasStage1     = labels.includes('stage-1-approved');
+            const hasMentor     = labels.includes('mentor-approved');
+            const hasApproved   = labels.includes('gssoc:approved');
+            const hasDifficulty = ['level:beginner','level:intermediate','level:advanced','level:critical'].some(l => labels.includes(l));
+            const isBlocked     = ['gssoc:invalid','gssoc:spam','gssoc:ai-slop'].some(l => labels.includes(l));
+
+            if (isBlocked) {
+              core.setFailed('🚫 PR is marked as invalid/spam/ai-slop — merge blocked');
+            } else if (!hasStage1) {
+              core.setFailed('⏳ Stage 1 not passed — automated checks pending');
+            } else if (!hasMentor) {
+              core.setFailed('⏳ Waiting for mentor approval — Stage 2 not complete');
+            } else if (!hasApproved) {
+              core.setFailed('⏳ Waiting for gssoc:approved label from @anubhavxdev');
+            } else if (!hasDifficulty) {
+              core.setFailed('❌ No difficulty label — @anubhavxdev must apply level:beginner / level:intermediate / level:advanced / level:critical');
+            } else {
+              console.log('✅ All gates passed — merge is allowed!');
+            }
+
+  # ── ON MERGE: CALCULATE POINTS + POST LEADERBOARD ──
+  leaderboard:
+    name: 🏆 Points + Leaderboard
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Calculate Points & Post Leaderboard Comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const labels = pr.labels.map(l => l.name);
+            const prNumber = pr.number;
+
+            // ── POINT TABLES ──
+            const difficultyPoints = {
+              'level:beginner':     20,
+              'level:intermediate': 35,
+              'level:advanced':     55,
+              'level:critical':     80,
+            };
+            const mentorBasePoints = {
+              'level:beginner':     10,
+              'level:intermediate': 20,
+              'level:advanced':     30,
+              'level:critical':     50,
+            };
+            const qualityMultiplier = {
+              'quality:clean':       1.2,
+              'quality:exceptional': 1.5,
+            };
+            const typeLabels = [
+              'type:docs','type:testing','type:feature','type:bug',
+              'type:devops','type:design','type:performance',
+              'type:security','type:accessibility','type:refactor',
+            ];
+            const TYPE_BONUS = 10;
+
+            // ── THIS PR's POINTS ──
+            let basePoints = 0;
+            let difficultyLabel = 'none';
+            let multiplier = 1;
+            let qualityLabel = 'none';
+
+            for (const [lbl, pts] of Object.entries(difficultyPoints)) {
+              if (labels.includes(lbl)) { basePoints = pts; difficultyLabel = lbl; break; }
+            }
+            for (const [lbl, mult] of Object.entries(qualityMultiplier)) {
+              if (labels.includes(lbl)) { multiplier = mult; qualityLabel = lbl; break; }
+            }
+            const hasTypeBonus = typeLabels.some(l => labels.includes(l));
+            const appliedTypeLabel = typeLabels.find(l => labels.includes(l)) || 'none';
+
+            const contributorPoints = Math.round(basePoints * multiplier) + (hasTypeBonus ? TYPE_BONUS : 0);
+
+            // Mentor points
+            const mentorQualityBonus = labels.includes('quality:exceptional') ? 10
+                                     : labels.includes('quality:clean')       ? 5 : 0;
+            const mentorPoints = (mentorBasePoints[difficultyLabel] || 0) + mentorQualityBonus;
+            const mentorLabel = labels.find(l => l.startsWith('mentor:'));
+            const mentorUsername = mentorLabel ? mentorLabel.replace('mentor:', '') : null;
+
+            // ── FETCH ALL MERGED PRs FOR LEADERBOARD ──
+            const { data: allPRs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              per_page: 100,
+            });
+
+            const mergedPRs = allPRs.filter(p => p.merged_at && p.labels.some(l => l.name === 'gssoc:approved'));
+
+            const scores = {};
+            for (const mpr of mergedPRs) {
+              const user = mpr.user.login;
+              const pLabels = mpr.labels.map(l => l.name);
+
+              let pts = 0, mult = 1;
+              for (const [lbl, p] of Object.entries(difficultyPoints)) {
+                if (pLabels.includes(lbl)) { pts = p; break; }
+              }
+              for (const [lbl, m] of Object.entries(qualityMultiplier)) {
+                if (pLabels.includes(lbl)) { mult = m; break; }
+              }
+              const hasType = typeLabels.some(l => pLabels.includes(l));
+              const earned = Math.round(pts * mult) + (hasType ? TYPE_BONUS : 0);
+
+              if (!scores[user]) scores[user] = { mergedPRs: 0, score: 0 };
+              scores[user].mergedPRs++;
+              scores[user].score += earned;
+            }
+
+            const sorted = Object.entries(scores)
+              .sort(([,a],[,b]) => b.score - a.score || b.mergedPRs - a.mergedPRs)
+              .map(([user, data], idx) => ({ rank: idx + 1, user, ...data }));
+
+            const authorEntry = sorted.find(e => e.user === author);
+            const authorRank  = authorEntry?.rank ?? '—';
+            const authorScore = authorEntry?.score ?? contributorPoints;
+            const authorPRs   = authorEntry?.mergedPRs ?? 1;
+
+            // Show top 5 + author's row if outside top 5
+            const top5 = sorted.slice(0, 5);
+            const authorIdx = sorted.findIndex(e => e.user === author);
+            const showAuthorSeparately = authorIdx >= 5;
+            const surroundingRows = showAuthorSeparately
+              ? sorted.slice(Math.max(0, authorIdx - 1), authorIdx + 2)
+              : [];
+
+            const renderRows = (entries) => entries.map(e => {
+              const isAuthor = e.user === author;
+              const medal = e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : `#${e.rank}`;
+              return `| ${medal} | ${isAuthor ? `**@${e.user} ✨**` : `@${e.user}`} | ${e.mergedPRs} | **${e.score} pts** |`;
+            }).join('\n');
+
+            const comment = `## 🎉 PR Merged — Points Awarded!
+
+            Congratulations @${author}! PR #${prNumber} has been merged into EventOne.
+
+            ### 🎯 Your Points Breakdown
+            | | Points |
+            |--|--------|
+            | Difficulty (\`${difficultyLabel}\`) | ${basePoints} pts |
+            | Quality (\`${qualityLabel}\`) | ×${multiplier} multiplier |
+            | Type Bonus (\`${appliedTypeLabel}\`) | ${hasTypeBonus ? `+${TYPE_BONUS} pts` : 'none'} |
+            | **Contributor Total** | **${contributorPoints} pts** |
+            ${mentorUsername ? `| Mentor (@${mentorUsername}) | **${mentorPoints} pts** |` : ''}
+
+            ---
+
+            ### 🏆 EventOne GSSoC Leaderboard
+            | Rank | Contributor | Merged PRs | Score |
+            |------|-------------|------------|-------|
+            ${renderRows(top5)}
+            ${showAuthorSeparately ? `| ... | ... | ... | ... |\n${renderRows(surroundingRows)}` : ''}
+
+            **Your current rank: #${authorRank}** with **${authorScore} pts** across **${authorPRs} merged PR(s)**
+
+            Keep contributing to climb the leaderboard! 💪
+
+            ---
+            *EventOne × GSSoC Scoring Engine · Formula: \`(difficulty × quality) + type bonus\`*`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: comment,
+            });

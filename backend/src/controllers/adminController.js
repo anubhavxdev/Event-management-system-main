@@ -1,9 +1,14 @@
 import Event from '../models/Event.js';
 import User from '../models/User.js';
+import { sendEventRejectionEmail } from '../utils/email.js';
 
 export const approveEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, { status: 'approved' }, { new: true });
+    const event = await Event.findByIdAndUpdate(
+      req.params.id,
+      { status: 'approved' },
+      { new: true }
+    );
     if (!event) return res.status(404).json({ message: 'Not found' });
     res.json({ event });
   } catch (err) {
@@ -13,9 +18,30 @@ export const approveEvent = async (req, res) => {
 
 export const rejectEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndDelete(req.params.id);
+    const reason = req.body?.reason?.trim();
+
+    if (!reason || reason.length < 20) {
+      return res.status(400).json({
+        message: 'Rejection reason is required and must be at least 20 characters long'
+      });
+    }
+
+    const event = await Event.findById(req.params.id).populate('organizer', 'name email');
     if (!event) return res.status(404).json({ message: 'Not found' });
-    res.json({ message: 'Event rejected and removed', eventId: req.params.id });
+
+    event.status = 'rejected';
+    event.rejectionReason = reason;
+    await event.save();
+
+    if (event.organizer?.email) {
+      try {
+        await sendEventRejectionEmail(event.organizer.email, event, reason);
+      } catch (err) {
+        console.warn(`Failed to send rejection email for event ${event._id}: ${err.message}`);
+      }
+    }
+
+    res.json({ message: 'Event rejected', event });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -1,0 +1,157 @@
+name: Stage 1 — Automated Validation
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: read
+
+jobs:
+  validate:
+    name: 🤖 Stage 1 — Auto Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Run All Stage 1 Checks
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const title = pr.title;
+            const body = pr.body || '';
+            const labels = pr.labels.map(l => l.name);
+
+            let errors = [];
+            let warnings = [];
+
+            // ── 1. TITLE FORMAT CHECK (Conventional Commits) ──
+            const titleRegex = /^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{5,}/;
+            if (!titleRegex.test(title)) {
+              errors.push('❌ **Title format invalid** — Use Conventional Commits format\n  > Examples: `feat: add login page`, `fix: button alignment`, `docs: update readme`');
+            }
+
+            // ── 2. CLOSES ISSUE LINK ──
+            const closesRegex = /closes?\s+#\d+/i;
+            if (!closesRegex.test(body)) {
+              errors.push('❌ **No linked issue** — Add `Closes #<issue-number>` in your PR description\n  > Example: `Closes #42`');
+            }
+
+            // ── 3. PR BODY LENGTH ──
+            if (body.trim().length < 100) {
+              errors.push('❌ **Description too short** — Explain what you changed and why (minimum 100 characters)');
+            }
+
+            // ── 4. AI SLOP DETECTION ──
+            const aiPhrases = [
+              'as an ai', 'i cannot', 'i am unable', 'as a language model',
+              'certainly!', 'absolutely!', 'great question', 'of course!',
+              'i apologize for', 'feel free to', 'i understand your concern',
+              'happy to help', 'let me know if you need'
+            ];
+            const bodyLower = body.toLowerCase();
+            const foundAI = aiPhrases.filter(p => bodyLower.includes(p));
+            if (foundAI.length >= 2) {
+              errors.push('🤖 **Possible AI-generated description detected** — Write your own PR description. Admin may label this `gssoc:ai-slop`');
+            }
+
+            // ── 5. BRANCH CHECK ──
+            const branch = pr.head.ref;
+            if (branch === 'main' || branch === 'master' || branch === 'dev') {
+              errors.push(`❌ **PRs from \`${branch}\` branch not allowed** — Create a feature branch\n  > Run: \`git checkout -b feat/your-feature-name\``);
+            }
+
+            // ── 6. TESTING STEPS ──
+            const hasTesting = /how to test|test steps|testing|steps to test/i.test(body);
+            if (!hasTesting) {
+              warnings.push('⚠️ **No testing steps mentioned** — Add how reviewers can verify your changes');
+            }
+
+            // ── BUILD STATUS ──
+            const passed = errors.length === 0;
+            const icon = passed ? '✅' : '❌';
+            const status = passed ? 'Passed' : 'Failed — Please Fix Below';
+
+            const commentBody = `## ${icon} PR Format Check — ${status}
+
+            Hi @${author}! ${passed
+              ? "Your PR passed all automated checks and is now queued for mentor review. 🎉"
+              : "Please fix the issues below before your PR can proceed to mentor review."}
+
+            ${errors.length > 0 ? `### ❌ Must Fix Before Proceeding\n${errors.join('\n\n')}\n` : ''}
+            ${warnings.length > 0 ? `\n### ⚠️ Warnings (recommended)\n${warnings.join('\n')}` : ''}
+            ${passed ? `\n### ✅ Checks Passed\n- Conventional Commits title format ✓\n- Issue linked ✓\n- Description length sufficient ✓\n- Valid feature branch ✓` : ''}
+
+            ---
+            <details>
+            <summary>📋 EventOne PR Guidelines (click to expand)</summary>
+
+            **Title format** — Conventional Commits:
+            \`feat:\` · \`fix:\` · \`docs:\` · \`style:\` · \`refactor:\` · \`test:\` · \`chore:\` · \`perf:\`
+
+            **Always link an issue**: \`Closes #number\`
+
+            **Use a feature branch** — never PR directly from \`main\`
+
+            **Write your own description** — AI-generated content = \`gssoc:ai-slop\` label
+
+            </details>
+
+            *EventOne × GSSoC Pipeline — Stage 1 Automated Check*`;
+
+            // ── FIND EXISTING BOT COMMENT & UPDATE OR CREATE ──
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number,
+            });
+
+            const existing = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('PR Format Check')
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: commentBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: commentBody,
+              });
+            }
+
+            if (!passed) {
+              core.setFailed(`Stage 1 failed — ${errors.length} error(s) found. Fix them and push again.`);
+            }
+
+      - name: Apply Stage 1 Labels on Pass
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const currentLabels = pr.labels.map(l => l.name);
+
+            const toAdd = [];
+            if (!currentLabels.includes('gssoc:review')) toAdd.push('gssoc:review');
+            if (!currentLabels.includes('stage-1-approved')) toAdd.push('stage-1-approved');
+
+            if (toAdd.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                labels: toAdd,
+              });
+            }

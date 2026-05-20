@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 import { API_BASE_URL } from "../config";
 
@@ -16,31 +17,44 @@ export default function SignIn() {
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+    const loadingToast = toast.loading("Signing in...");
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            login(data.token, data.user);
+
+            toast.success("Login successful!", {
+                id: loadingToast,
             });
-            const data = await res.json();
 
-            if (res.ok) {
-                login(data.token, data.user);
-                navigate('/');
-            } else {
-                alert(data.message || 'Login failed');
-            }
-        } catch (error) {
-            console.error("Login error", error);
-            alert("Something went wrong");
-        } finally {
-            setIsLoading(false);
+            navigate('/');
+        } else {
+            toast.error(data.message || 'Login failed', {
+                id: loadingToast,
+            });
         }
-    };
+    } catch (error) {
+        console.error("Login error", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    } finally {
+        setIsLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
@@ -58,24 +72,31 @@ export default function SignIn() {
                 >
                     {/* Form Container with Dot Pattern */}
                     <div
-                        className="bg-[#0a0a0a] border border-gray-800/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm"
+                        className="bg-white/40 border border-white/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md"
                         style={{
-                            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+                            backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)`,
                             backgroundSize: '24px 24px'
                         }}
                     >
+                      {/* Close Button */}
+                        <button
+                           onClick={() => navigate(-1)}
+                           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 hover:text-white transition-all duration-200 z-20"
+                           type="button">
+                           ✕
+                        </button>
                         {/* Title */}
                         <div className="text-center mb-10 relative z-10">
-                            <h1 className="text-3xl font-bold text-white tracking-tight">
+                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
                                 Welcome Back
                             </h1>
-                            <p className="text-gray-400 text-sm mt-2">Sign in to access your account</p>
+                            <p className="text-gray-600 text-sm mt-2">Sign in to access your account</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                             {/* Email Field */}
                             <div className="space-y-2 group">
-                                <label className="text-xs font-medium text-gray-400 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="email">
+                                <label className="text-xs font-medium text-gray-600 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="email">
                                     Email
                                 </label>
                                 <input
@@ -84,14 +105,14 @@ export default function SignIn() {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base"
+                                    className="w-full bg-white/50 border border-white/50 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base backdrop-blur-sm shadow-sm"
                                     placeholder="name@example.com"
                                 />
                             </div>
 
                             {/* Password Field */}
                             <div className="space-y-2 group">
-                                <label className="text-xs font-medium text-gray-400 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="password">
+                                <label className="text-xs font-medium text-gray-600 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="password">
                                     Password
                                 </label>
                                 <div className="relative">
@@ -101,11 +122,11 @@ export default function SignIn() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-zinc-900/50 border border-gray-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base"
+                                        className="w-full bg-white/50 border border-white/50 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base backdrop-blur-sm shadow-sm"
                                         placeholder="••••••••"
                                     />
                                     <button
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors p-1"
                                         type="button"
                                         onClick={toggleVisibility}
                                     >
@@ -149,7 +170,7 @@ export default function SignIn() {
 
                         {/* Sign Up Link */}
                         <div className="mt-8 text-center text-sm relative z-10">
-                            <span className="text-gray-500">Don't have an account? </span>
+                            <span className="text-gray-600">Don't have an account? </span>
                             <Link
                                 to="/signup"
                                 className="font-semibold text-[#e63946] hover:text-[#ff4d5a] transition-colors"

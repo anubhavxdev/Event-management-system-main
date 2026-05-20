@@ -1,0 +1,42 @@
+name: Auto Add Contributor
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  add-contributor:
+    # Only run if the pull request was actually merged, not just closed
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Add Contributor using All-Contributors CLI
+        run: |
+          AUTHOR="${{ github.event.pull_request.user.login }}"
+          echo "Adding @$AUTHOR as a contributor..."
+          
+          # This automatically updates .all-contributorsrc and generates the README table
+          npx all-contributors-cli add $AUTHOR code
+        env:
+          # Required for all-contributors to fetch GitHub user profiles
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs(contributors): automatically add @${{ github.event.pull_request.user.login }} as a contributor"
+          file_pattern: "README.md .all-contributorsrc"
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
