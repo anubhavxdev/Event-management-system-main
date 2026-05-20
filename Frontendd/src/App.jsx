@@ -1,25 +1,13 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
-import "./index.css";
-import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2";
-import Home from "./pages/Home";
-} from "react-router-dom";
-
-import "./index.css";
+import React, { Suspense, lazy, useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import './index.css';
+import { Toaster } from "react-hot-toast";
 
 import { Toaster } from "react-hot-toast";
 
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
-
 import Home from "./pages/Home";
-import { useEffect, useState } from "react";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
@@ -28,9 +16,6 @@ import About from "./pages/About";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
-import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
-import DashboardLayout from "./components/DashboardLayout";
 import Profile from "./pages/Profile";
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
@@ -39,15 +24,14 @@ import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
 import { useAuth } from "./context/AuthContext";
 
-import { useAuth } from "./context/AuthContext";
-
 import ScrollToTop from "./components/ui/ScrollToTop";
+
+const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -127,15 +111,6 @@ const App = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/thank-you" element={<ThankYou />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
-
             {/* Protected Profile Route */}
             <Route
               path="/profile"
@@ -196,12 +171,19 @@ const App = () => {
               }
             />
 
-            {/* Fallback to 404 */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-            {/* Fallback Route */}
-            <Route path="*" element={<Home />} />
+            {/* Fallback to Home or 404 */}
+            <Route path="*" element={
+              <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center bg-background">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                    <p className="text-sm text-muted-foreground">Loading...</p>
+                  </div>
+                </div>
+              }>
+                <NotFound />
+              </Suspense>
+            } />
           </Routes>
         </main>
 
@@ -212,5 +194,4 @@ const App = () => {
   );
 };
 
-export default App;
 export default App;

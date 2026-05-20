@@ -1,57 +1,61 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowUpRight, Home } from "lucide-react";
+import { motion } from "framer-motion";
+import { AlertCircle, Home } from "lucide-react";
 
 export default function NotFound() {
-  return (
-    <div className="bg-background text-foreground relative flex min-h-screen flex-col overflow-hidden">
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(192,15,102,0.18),transparent_55%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:16px_16px] opacity-10" />
-        <div className="bg-primary/10 absolute -left-24 top-16 h-72 w-72 rounded-full blur-3xl" />
-        <div className="bg-primary/15 absolute -right-24 bottom-16 h-80 w-80 rounded-full blur-3xl" />
-      </div>
+    useEffect(() => {
+        document.title = "404 - Page Not Found";
+    }, []);
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-6 py-20">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
-          <div className="bg-background/70 border-border/40 mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-1 text-xs font-semibold uppercase tracking-[0.25em] backdrop-blur">
-            Lost Route
-          </div>
+    return (
+        <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#8882_1px,transparent_1px),linear-gradient(to_bottom,#8882_1px,transparent_1px)] bg-[size:16px_16px] opacity-15 pointer-events-none"></div>
 
-          <h1 className="font-instrument-serif text-primary text-7xl font-semibold leading-none sm:text-8xl md:text-9xl">
-            404
-          </h1>
-          <p className="mt-4 text-2xl font-semibold sm:text-3xl">
-            This page doesn&apos;t exist.
-          </p>
-          <p className="text-muted-foreground mt-3 max-w-xl text-base sm:text-lg">
-            The link you followed might be broken or the page may have been
-            removed. Head back to the homepage or explore what&apos;s happening
-            next.
-          </p>
+            <div className="relative flex-1 w-full flex items-center justify-center py-24 px-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="w-full max-w-md z-10"
+                >
+                    {/* Form Container with Dot Pattern */}
+                    <div
+                        className="bg-[#0a0a0a] border border-gray-800/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm text-center flex flex-col items-center"
+                        style={{
+                            backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)`,
+                            backgroundSize: '24px 24px'
+                        }}
+                    >
+                        {/* 404 Icon / Illustration */}
+                        <div className="mb-6 relative flex justify-center items-center w-24 h-24 rounded-full bg-red-500/10 border border-red-500/20">
+                            <AlertCircle className="w-12 h-12 text-[#e63946]" />
+                        </div>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-            <Link
-              to="/"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold shadow-lg shadow-primary/30 transition-all"
-            >
-              <Home className="h-4 w-4" />
-              Back to Home
-            </Link>
-            <Link
-              to="/features"
-              className="border-border/50 bg-background/70 hover:border-primary/40 inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-semibold backdrop-blur transition-all"
-            >
-              Explore Features
-              <ArrowUpRight className="h-4 w-4" />
-            </Link>
-          </div>
+                        {/* Title & Message */}
+                        <div className="mb-8 relative z-10">
+                            <h1 className="text-5xl font-extrabold text-white tracking-tight mb-2">
+                                404
+                            </h1>
+                            <h2 className="text-xl font-semibold text-gray-200 mb-3">
+                                Page Not Found
+                            </h2>
+                            <p className="text-gray-400 text-sm">
+                                Oops! It seems you've wandered into an unknown route. The page you're looking for doesn't exist or has been moved.
+                            </p>
+                        </div>
 
-          <div className="text-muted-foreground/80 mt-10 text-xs uppercase tracking-[0.2em]">
-            EventOne · Route not found
-          </div>
+                        {/* Back to Home Button */}
+                        <Link
+                            to="/"
+                            className="w-full py-3.5 px-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white font-semibold rounded-lg transition-all duration-300 shadow-lg shadow-red-600/20 hover:shadow-red-600/30 transform hover:-translate-y-0.5"
+                        >
+                            <Home className="w-5 h-5" />
+                            Back to Home
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
         </div>
-      </main>
-    </div>
-  );
+    );
 }
