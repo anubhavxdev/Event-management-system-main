@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2 } from 'lucide-react';
+import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2, BarChart3, PieChart as PieChartIcon, UserCheck, CalendarCheck } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
-
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Legend,
+} from 'recharts';
 
 import { API_BASE_URL } from '../../config';
+
+// ── Chart colour palette (dark-theme friendly) ──────────────────────
+const COLORS = [
+  '#a78bfa', '#f472b6', '#34d399', '#fbbf24', '#60a5fa',
+  '#f87171', '#2dd4bf', '#e879f9', '#fb923c', '#818cf8',
+];
+const STATUS_COLORS = { pending: '#fbbf24', approved: '#34d399', rejected: '#f87171' };
 
 export default function AdminDashboard() {
     const { user } = useAuth();
@@ -15,6 +25,8 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('Pending Reviews');
     const [allEvents, setAllEvents] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [analyticsData, setAnalyticsData] = useState(null);
+    const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
     useEffect(() => {
         if (activeTab === 'Pending Reviews') {
@@ -23,6 +35,8 @@ export default function AdminDashboard() {
             fetchAllEvents();
         } else if (activeTab === 'User Management') {
             fetchUsers();
+        } else if (activeTab === 'Analytics') {
+            fetchAnalytics();
         }
         fetchStats();
     }, [activeTab]);
@@ -81,6 +95,24 @@ export default function AdminDashboard() {
             }
         } catch (error) {
             console.error("Failed to fetch stats", error);
+        }
+    };
+
+    const fetchAnalytics = async () => {
+        setAnalyticsLoading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/stats/admin`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAnalyticsData(data);
+            }
+        } catch (error) {
+            console.error('Failed to fetch analytics', error);
+        } finally {
+            setAnalyticsLoading(false);
         }
     };
 
@@ -207,12 +239,12 @@ export default function AdminDashboard() {
                 {/* Navigation Tabs */}
                 <div className="mb-8 border-b border-border">
                     <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-                        {['Pending Reviews', 'All Events & Management', 'User Management'].map((tab) => (
+                        {['Pending Reviews', 'All Events & Management', 'User Management', 'Analytics'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
-                                    ? 'text-orange-500' // Orange text
+                                    ? 'text-orange-500'
                                     : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
@@ -220,7 +252,7 @@ export default function AdminDashboard() {
                                 {activeTab === tab && (
                                     <motion.div
                                         layoutId="activeTab"
-                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" // Orange underline
+                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500"
                                     />
                                 )}
                             </button>
@@ -236,6 +268,7 @@ export default function AdminDashboard() {
                             {activeTab === 'Pending Reviews' && 'Pending Events'}
                             {activeTab === 'All Events & Management' && 'All Events'}
                             {activeTab === 'User Management' && 'User Management'}
+                            {activeTab === 'Analytics' && 'Platform Analytics'}
                         </h2>
                         {activeTab === 'Pending Reviews' && (
                             <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-xs font-medium rounded-full border border-yellow-500/20">
@@ -250,6 +283,11 @@ export default function AdminDashboard() {
                         {activeTab === 'User Management' && (
                             <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-medium rounded-full border border-blue-500/20">
                                 {allUsers.length} Users
+                            </span>
+                        )}
+                        {activeTab === 'Analytics' && (
+                            <span className="px-3 py-1 bg-purple-500/10 text-purple-500 text-xs font-medium rounded-full border border-purple-500/20">
+                                <BarChart3 className="w-3 h-3 inline mr-1" />Live
                             </span>
                         )}
                     </div>
@@ -464,6 +502,194 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+                        )}
+
+                        {/* ── ANALYTICS TAB ─────────────────────────────────── */}
+                        {activeTab === 'Analytics' && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 12 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {analyticsLoading || !analyticsData ? (
+                                    <div className="flex items-center justify-center h-80">
+                                        <div className="w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-8">
+                                        {/* ── Stat Cards ──────────────────────────── */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            {(() => {
+                                                const CARD_COLORS = {
+                                                    purple: '#a78bfa',
+                                                    blue: '#60a5fa',
+                                                    green: '#34d399',
+                                                    orange: '#fb923c',
+                                                };
+                                                return [
+                                                    {
+                                                        label: 'Total Users',
+                                                        value: analyticsData.totalUsers,
+                                                        icon: <Users className="w-5 h-5" />,
+                                                        color: 'purple',
+                                                        sub: `${analyticsData.usersByRole?.customer || 0} customers · ${analyticsData.usersByRole?.organizer || 0} organizers`,
+                                                    },
+                                                    {
+                                                        label: 'Total Events',
+                                                        value: analyticsData.totalEvents,
+                                                        icon: <CalendarCheck className="w-5 h-5" />,
+                                                        color: 'blue',
+                                                        sub: `${analyticsData.eventsByStatus?.approved || 0} approved · ${analyticsData.eventsByStatus?.pending || 0} pending`,
+                                                    },
+                                                    {
+                                                        label: 'Total Registrations',
+                                                        value: analyticsData.totalRegistrations,
+                                                        icon: <Activity className="w-5 h-5" />,
+                                                        color: 'green',
+                                                        sub: 'All-time registrations',
+                                                    },
+                                                    {
+                                                        label: 'Check-in Rate',
+                                                        value: `${analyticsData.checkInRate}%`,
+                                                        icon: <UserCheck className="w-5 h-5" />,
+                                                        color: 'orange',
+                                                        sub: 'Attended / Registered',
+                                                    },
+                                                ].map((card) => {
+                                                    const hex = CARD_COLORS[card.color];
+                                                    return (
+                                                        <motion.div
+                                                            key={card.label}
+                                                            whileHover={{ y: -2 }}
+                                                            className="relative overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm"
+                                                        >
+                                                            <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl" style={{ backgroundColor: `${hex}18` }} />
+                                                            <div className="flex items-center justify-between mb-3">
+                                                                <span
+                                                                    className="flex items-center justify-center w-9 h-9 rounded-xl"
+                                                                    style={{ backgroundColor: `${hex}18`, color: hex }}
+                                                                >
+                                                                    {card.icon}
+                                                                </span>
+                                                            </div>
+                                                            <p className="text-2xl font-bold text-foreground tracking-tight">{card.value}</p>
+                                                            <p className="text-xs text-muted-foreground mt-0.5">{card.label}</p>
+                                                            <p className="text-[11px] text-muted-foreground/70 mt-1.5">{card.sub}</p>
+                                                        </motion.div>
+                                                    );
+                                                });
+                                            })()}
+                                        </div>
+
+                                        {/* ── Bar Chart: Registrations per day ──── */}
+                                        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                                            <div className="flex items-center gap-2 mb-4">
+                                                <BarChart3 className="w-4 h-4 text-purple-500" />
+                                                <h3 className="text-sm font-semibold text-foreground">Registrations — Last 30 Days</h3>
+                                            </div>
+                                            <div className="w-full" style={{ height: 300 }}>
+                                                <ResponsiveContainer width="100%" height="100%">
+                                                    <BarChart data={analyticsData.registrationsPerDay} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                                                        <XAxis
+                                                            dataKey="date"
+                                                            tick={{ fill: '#a1a1aa', fontSize: 10 }}
+                                                            tickFormatter={(v) => v.slice(5)}
+                                                            interval={4}
+                                                        />
+                                                        <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} allowDecimals={false} />
+                                                        <Tooltip
+                                                            contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12, color: '#e4e4e7' }}
+                                                            cursor={{ fill: 'rgba(167,139,250,0.08)' }}
+                                                        />
+                                                        <Bar dataKey="count" name="Registrations" fill="#a78bfa" radius={[4, 4, 0, 0]} />
+                                                    </BarChart>
+                                                </ResponsiveContainer>
+                                            </div>
+                                        </div>
+
+                                        {/* ── Two-column charts row ───────────── */}
+                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                            {/* Pie Chart: Events by Category */}
+                                            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <PieChartIcon className="w-4 h-4 text-pink-500" />
+                                                    <h3 className="text-sm font-semibold text-foreground">Events by Category</h3>
+                                                </div>
+                                                <div className="w-full" style={{ height: 280 }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={analyticsData.eventsByCategory}
+                                                                dataKey="count"
+                                                                nameKey="category"
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                outerRadius={90}
+                                                                strokeWidth={2}
+                                                                stroke="#09090b"
+                                                                label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
+                                                            >
+                                                                {analyticsData.eventsByCategory.map((_, i) => (
+                                                                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                                                                ))}
+                                                            </Pie>
+                                                            <Tooltip
+                                                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12, color: '#e4e4e7' }}
+                                                            />
+                                                            <Legend
+                                                                verticalAlign="bottom"
+                                                                iconSize={8}
+                                                                formatter={(v) => <span style={{ color: '#a1a1aa', fontSize: 11 }}>{v}</span>}
+                                                            />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+
+                                            {/* Donut Chart: Event Status Breakdown */}
+                                            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                                                <div className="flex items-center gap-2 mb-4">
+                                                    <Shield className="w-4 h-4 text-yellow-500" />
+                                                    <h3 className="text-sm font-semibold text-foreground">Event Status Breakdown</h3>
+                                                </div>
+                                                <div className="w-full" style={{ height: 280 }}>
+                                                    <ResponsiveContainer width="100%" height="100%">
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={Object.entries(analyticsData.eventsByStatus).map(([status, count]) => ({ status, count }))}
+                                                                dataKey="count"
+                                                                nameKey="status"
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                innerRadius={55}
+                                                                outerRadius={90}
+                                                                paddingAngle={3}
+                                                                strokeWidth={2}
+                                                                stroke="#09090b"
+                                                                label={({ status, percent }) => `${status} ${(percent * 100).toFixed(0)}%`}
+                                                            >
+                                                                {Object.entries(analyticsData.eventsByStatus).map(([status]) => (
+                                                                    <Cell key={status} fill={STATUS_COLORS[status] || '#71717a'} />
+                                                                ))}
+                                                            </Pie>
+                                                            <Tooltip
+                                                                contentStyle={{ backgroundColor: '#18181b', border: '1px solid #27272a', borderRadius: 12, fontSize: 12, color: '#e4e4e7' }}
+                                                            />
+                                                            <Legend
+                                                                verticalAlign="bottom"
+                                                                iconSize={8}
+                                                                formatter={(v) => <span style={{ color: '#a1a1aa', fontSize: 11, textTransform: 'capitalize' }}>{v}</span>}
+                                                            />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </motion.div>
                         )}
                     </AnimatePresence>
                 </div>

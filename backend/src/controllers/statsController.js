@@ -113,4 +113,112 @@ export const dashboardStats = async (_req, res) => {
   }
 };
 
+// ── Admin-only aggregated analytics ──────────────────────────────────
+export const adminStats = async (_req, res) => {
+  try {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    const [
+      usersByRole,
+      eventsByStatus,
+      eventsByCategory,
+      registrationsPerDay,
+      checkInAgg,
+    ] = await Promise.all([
+      // 1. Total users grouped by role
+      User.aggregate([
+        { $group: { _id: '$role', count: { $sum: 1 } } },
+      ]),
+
+      // 2. Events grouped by status
+      Event.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+
+      // 3. Events grouped by category (all statuses)
+      Event.aggregate([
+        { $group: { _id: '$category', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+
+      // 4. Registration count per day for last 30 days
+      Registration.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+
+      // 5. Overall check-in rate
+      Registration.aggregate([
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            attended: {
+              $sum: { $cond: [{ $eq: ['$status', 'attended'] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+    ]);
+
+    // ── Shape the response ───────────────────────────────────────────
+    // Users by role → { customer: N, organizer: N, admin: N }
+    const usersMap = {};
+    let totalUsers = 0;
+    for (const { _id, count } of usersByRole) {
+      usersMap[_id] = count;
+      totalUsers += count;
+    }
+
+    // Events by status → { pending: N, approved: N, rejected: N }
+    const statusMap = {};
+    let totalEvents = 0;
+    for (const { _id, count } of eventsByStatus) {
+      statusMap[_id] = count;
+      totalEvents += count;
+    }
+
+    // Check-in rate
+    const cRaw = checkInAgg[0] || { total: 0, attended: 0 };
+    const checkInRate =
+      cRaw.total > 0
+        ? Math.round((cRaw.attended / cRaw.total) * 10000) / 100
+        : 0;
+
+    // Fill in missing days in the 30-day window so the chart has no gaps
+    const regMap = new Map(registrationsPerDay.map((d) => [d._id, d.count]));
+    const filledRegistrations = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      filledRegistrations.push({ date: key, count: regMap.get(key) || 0 });
+    }
+
+    res.json({
+      usersByRole: usersMap,
+      totalUsers,
+      eventsByStatus: statusMap,
+      totalEvents,
+      eventsByCategory: eventsByCategory.map((c) => ({
+        category: c._id || 'Uncategorized',
+        count: c.count,
+      })),
+      registrationsPerDay: filledRegistrations,
+      totalRegistrations: cRaw.total,
+      checkInRate,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 

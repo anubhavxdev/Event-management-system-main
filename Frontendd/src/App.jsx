@@ -17,6 +17,7 @@ import CreateEvent from './pages/dashboard/CreateEvent';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
 import ThankYou from './pages/ThankYou';
 import { useAuth } from './context/AuthContext';
+import ErrorBoundary, { InlineFallback } from './components/ErrorBoundary';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -42,81 +43,149 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
-const App = () => {
+/**
+ * Route-level ErrorBoundary wrapper.
+ * Uses current pathname as a resetKey so the error state auto-clears
+ * when the user navigates to a different route via the still-functional header.
+ */
+const RouteErrorBoundary = ({ children }) => {
+  const location = useLocation();
   return (
-    <BrowserRouter>
-      <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <Header2 />
+    <ErrorBoundary level="route" resetKeys={[location.pathname]}>
+      {children}
+    </ErrorBoundary>
+  );
+};
 
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about-us" element={<About />} />
-            <Route path="/login" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/profile" element={
+const AppContent = () => {
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header — isolated so a header crash doesn't kill page content */}
+      <ErrorBoundary
+        level="layout"
+        fallback={({ resetError }) => (
+          <InlineFallback label="header" resetError={resetError} />
+        )}
+      >
+        <Header2 />
+      </ErrorBoundary>
+
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={
+            <RouteErrorBoundary><Home /></RouteErrorBoundary>
+          } />
+          <Route path="/features" element={
+            <RouteErrorBoundary><Features /></RouteErrorBoundary>
+          } />
+          <Route path="/pricing" element={
+            <RouteErrorBoundary><Pricing /></RouteErrorBoundary>
+          } />
+          <Route path="/contact" element={
+            <RouteErrorBoundary><Contact /></RouteErrorBoundary>
+          } />
+          <Route path="/about-us" element={
+            <RouteErrorBoundary><About /></RouteErrorBoundary>
+          } />
+          <Route path="/login" element={
+            <RouteErrorBoundary><SignIn /></RouteErrorBoundary>
+          } />
+          <Route path="/signup" element={
+            <RouteErrorBoundary><SignUp /></RouteErrorBoundary>
+          } />
+          <Route path="/thank-you" element={
+            <RouteErrorBoundary><ThankYou /></RouteErrorBoundary>
+          } />
+          <Route path="/profile" element={
+            <RouteErrorBoundary>
               <ProtectedRoute>
                 <Profile />
               </ProtectedRoute>
-            } />
+            </RouteErrorBoundary>
+          } />
 
-            {/* Dashboard Routes - Flattened, No Sidebar Layout */}
-            <Route
-              path="/customer/dashboard"
-              element={
+          {/* Dashboard Routes - Flattened, No Sidebar Layout */}
+          <Route
+            path="/customer/dashboard"
+            element={
+              <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['customer']}>
                   <CustomerDashboard />
                 </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organizer/dashboard"
-              element={
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/organizer/dashboard"
+            element={
+              <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <OrganizerDashboard />
                 </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/organizer/create-event"
-              element={
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/organizer/create-event"
+            element={
+              <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <CreateEvent />
                 </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/admin/dashboard"
-              element={
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              }
-            />
-            {/* Alias for admin pending events */}
-            <Route
-              path="/admin/pending-events"
-              element={
+              </RouteErrorBoundary>
+            }
+          />
+          {/* Alias for admin pending events */}
+          <Route
+            path="/admin/pending-events"
+            element={
+              <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboard />
                 </ProtectedRoute>
-              }
-            />
+              </RouteErrorBoundary>
+            }
+          />
 
-            {/* Fallback to Home or 404 */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </main>
+          {/* Fallback to Home or 404 */}
+          <Route path="*" element={
+            <RouteErrorBoundary><Home /></RouteErrorBoundary>
+          } />
+        </Routes>
+      </main>
+
+      {/* Footer — isolated so a footer crash doesn't kill page content */}
+      <ErrorBoundary
+        level="layout"
+        fallback={({ resetError }) => (
+          <InlineFallback label="footer" resetError={resetError} />
+        )}
+      >
         <Footer />
-      </div >
-    </BrowserRouter >
-  )
-}
+      </ErrorBoundary>
+    </div>
+  );
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      {/* Root-level boundary — last resort for catastrophic failures */}
+      <ErrorBoundary level="root">
+        <AppContent />
+      </ErrorBoundary>
+    </BrowserRouter>
+  );
+};
 
 export default App
-
