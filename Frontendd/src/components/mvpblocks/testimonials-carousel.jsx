@@ -62,38 +62,20 @@ export default function TestimonialsCarousel({
   className,
 }) {
   const [isHovered, setIsHovered] = useState(false);
-
-  // Duplicate items to create a seamless infinite loop
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 
   return (
-    <section
-      className={cn("relative overflow-hidden py-16 md:py-24", className)}
-    >
-      <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(var(--primary)/0.2),transparent_60%)]" />
-        <div className="bg-primary/5 absolute top-1/4 left-1/4 h-32 w-32 rounded-full blur-3xl" />
-        <div className="bg-primary/10 absolute right-1/4 bottom-1/4 h-40 w-40 rounded-full blur-3xl" />
     <section className={cn("relative py-24 bg-black border-t border-zinc-800 overflow-hidden", className)}>
-      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] -translate-y-1/2"></div>
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] translate-y-1/2"></div>
-        
-        {/* Moving dot grid */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0 z-0 bg-[radial-gradient(#ffffff33_1px,transparent_1px)] [background-size:32px_32px]"
-          animate={{
-            backgroundPosition: ["0px 0px", "32px 32px"],
-          }}
-          transition={{
-            repeat: Infinity,
-            duration: 3,
-            ease: "linear",
-          }}
+          animate={{ backgroundPosition: ["0px 0px", "32px 32px"] }}
+          transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
           style={{
             maskImage: "radial-gradient(ellipse at center, black 10%, transparent 70%)",
-            WebkitMaskImage: "radial-gradient(ellipse at center, black 10%, transparent 70%)"
+            WebkitMaskImage: "radial-gradient(ellipse at center, black 10%, transparent 70%)",
           }}
         />
       </div>
@@ -104,43 +86,23 @@ export default function TestimonialsCarousel({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="relative mb-12 text-center md:mb-16"
-        >
-          <h1 className="text-foreground mb-4 text-3xl font-bold md:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-
-          <motion.p
-            className="text-muted-foreground mx-auto max-w-2xl text-base md:text-lg"
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
           className="mb-16 text-center"
         >
           <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
             {title}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
-            {subtitle}
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">{subtitle}</p>
         </motion.div>
       </div>
 
       <div className="relative w-full max-w-[100vw] mx-auto overflow-hidden">
-        {/* Left/Right fading masks for a smooth fade-in/out effect */}
         <div className="absolute inset-y-0 left-0 w-1/6 md:w-1/4 bg-gradient-to-r from-black to-transparent z-10 pointer-events-none"></div>
         <div className="absolute inset-y-0 right-0 w-1/6 md:w-1/4 bg-gradient-to-l from-black to-transparent z-10 pointer-events-none"></div>
 
         <motion.div
           className="flex w-max"
           animate={{ x: isHovered ? undefined : ["0%", "-50%"] }}
-          transition={{
-            ease: "linear",
-            duration: 40,
-            repeat: Infinity,
-          }}
+          transition={{ ease: "linear", duration: 40, repeat: Infinity }}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onTouchStart={() => setIsHovered(true)}
@@ -160,23 +122,19 @@ export default function TestimonialsCarousel({
                       </svg>
                     ))}
                   </div>
-                  <p className="text-zinc-300 text-base leading-relaxed">
-                    "{testimonial.text}"
-                  </p>
+                  <p className="text-zinc-300 text-base leading-relaxed">"{testimonial.text}"</p>
                 </div>
-                
+
                 <div className="flex items-center gap-4 mt-auto pt-6 border-t border-zinc-800">
                   <Avatar className="h-10 w-10 rounded-full border border-zinc-700">
                     <AvatarImage src={testimonial.imageSrc} alt={testimonial.name} />
-                    <AvatarFallback className="bg-zinc-800 text-white">{testimonial.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-zinc-800 text-white">
+                      {testimonial.name.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h4 className="text-sm font-semibold text-white">
-                      {testimonial.name}
-                    </h4>
-                    <div className="text-sm text-zinc-400">
-                      {testimonial.role}
-                    </div>
+                    <h4 className="text-sm font-semibold text-white">{testimonial.name}</h4>
+                    <div className="text-sm text-zinc-400">{testimonial.role}</div>
                   </div>
                 </div>
               </div>

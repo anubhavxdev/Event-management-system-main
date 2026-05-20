@@ -163,7 +163,6 @@ export default function AboutUs1() {
             </p>
           </motion.div>
 
-          <div className="text-foreground grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 text-foreground">
             {aboutData.values.map((value, index) => {
               const IconComponent = iconComponents[value.icon];

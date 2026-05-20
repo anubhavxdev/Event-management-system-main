@@ -3,12 +3,6 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
-} from "react-router-dom";
-import "./index.css";
-import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2";
-import Home from "./pages/Home";
 } from "react-router-dom";
 
 import "./index.css";
@@ -16,30 +10,29 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 
 import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2"
-import Home from './pages/Home';
-import Features from './pages/Features';
-import Pricing from './pages/Pricing';
-import Contact from './pages/Contact';
-import About from './pages/About';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import Profile from './pages/Profile';
-import GoogleCallback from './pages/auth/GoogleCallback';
-import DashboardLayout from './components/DashboardLayout';
-import CustomerDashboard from './pages/dashboard/CustomerDashboard';
-import OrganizerDashboard from './pages/dashboard/OrganizerDashboard';
-import CreateEvent from './pages/dashboard/CreateEvent';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
-import ThankYou from './pages/ThankYou';
-import ScrollToTop from './components/ScrollToTop';
-import { useAuth } from './context/AuthContext';
+import Header2 from "./components/mvpblocks/header-2";
+import Home from "./pages/Home";
+import Features from "./pages/Features";
+import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
+import About from "./pages/About";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/Profile";
+import GoogleCallback from "./pages/auth/GoogleCallback";
+import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
+import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
+import CreateEvent from "./pages/dashboard/CreateEvent";
+import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import ThankYou from "./pages/ThankYou";
+import Support from "./pages/Support";
+import NotFound from "./pages/NotFound";
+import ScrollToTop from "./components/ScrollToTop";
+import { useAuth } from "./context/AuthContext";
 
-// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -64,12 +57,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 const App = () => {
   const { user } = useAuth();
-  
+
   return (
     <BrowserRouter>
       <ScrollToTop />
 
-      {/* Global Toast Notification System */}
       <Toaster
         position="top-right"
         reverseOrder={false}
@@ -96,12 +88,10 @@ const App = () => {
       />
 
       <div className="min-h-screen flex flex-col">
-        {/* Header */}
-        <Header2 />  
+        <Header2 />
 
         <main className="flex-grow">
           <Routes>
-            {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -111,15 +101,7 @@ const App = () => {
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <SignIn />} />
             <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
             <Route path="/thank-you" element={<ThankYou />} />
-            {/* Google OAuth callback handler */}
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
-            <Route path="/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-
-            {/* Protected Profile Route */}
             <Route
               path="/profile"
               element={
@@ -128,8 +110,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Customer Dashboard */}
             <Route
               path="/customer/dashboard"
               element={
@@ -138,8 +118,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Organizer Dashboard */}
             <Route
               path="/organizer/dashboard"
               element={
@@ -148,8 +126,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Create Event */}
             <Route
               path="/organizer/create-event"
               element={
@@ -158,8 +134,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Admin Dashboard */}
             <Route
               path="/admin/dashboard"
               element={
@@ -168,8 +142,6 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Pending Events Alias */}
             <Route
               path="/admin/pending-events"
               element={
@@ -178,22 +150,14 @@ const App = () => {
                 </ProtectedRoute>
               }
             />
-
-            {/* Fallback to 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
-            {/* Fallback Route */}
-            <Route path="*" element={<Home />} />
-          </Routes>
-        </main>
 
-        {/* Footer */}
         <Footer />
       </div>
     </BrowserRouter>
   );
 };
 
-export default App;
 export default App;
