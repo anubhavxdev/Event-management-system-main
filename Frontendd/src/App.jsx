@@ -3,12 +3,11 @@ import {
   Routes,
   Route,
   Navigate,
-} from "react-router-dom";
+n} from "react-router-dom";
 
 import "./index.css";
 
 import { Toaster } from "react-hot-toast";
-
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import Home from "./pages/Home";
@@ -20,6 +19,10 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/Profile";
 import GoogleCallback from "./pages/auth/GoogleCallback";
+import ForgotPassword from "./pages/ForgotPassword";
+import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
+import DashboardLayout from "./components/DashboardLayout";
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
@@ -30,6 +33,7 @@ import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import { useAuth } from "./context/AuthContext";
 
+// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 

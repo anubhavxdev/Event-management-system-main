@@ -1,7 +1,20 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence, easeInOut } from "framer-motion";
 import { Menu, X, ArrowRight, Zap, Search, User, LogOut, LayoutDashboard, Settings, ChevronDown, Moon, Sun } from "lucide-react";
+import {
+  Menu,
+  X,
+  ArrowRight,
+  Zap,
+  Search,
+  User,
+  LogOut,
+  LayoutDashboard,
+  ChevronDown,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,6 +26,7 @@ const navItems = [
   { name: "About", href: "/about-us" },
   { name: "Contact", href: "/contact" },
 ];
+
 export default function Header2() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -25,19 +39,23 @@ export default function Header2() {
 
   const getDashboardLink = () => {
     if (!user) return "/";
+
     switch (user.role) {
       case 'admin': return '/admin/dashboard';
       case 'organizer': return '/organizer/dashboard';
       default: return '/customer/dashboard';
     }
   };
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   const containerVariants = {
     hidden: { opacity: 0, y: -20 },
     visible: {
@@ -49,10 +67,12 @@ export default function Header2() {
       },
     },
   };
+
   const itemVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
   };
+
   const mobileMenuVariants = {
     closed: {
       opacity: 0,
@@ -72,10 +92,12 @@ export default function Header2() {
       },
     },
   };
+
   const mobileItemVariants = {
     closed: { opacity: 0, x: 20 },
     open: { opacity: 1, x: 0 },
   };
+
   return (
     <>
       <motion.header
@@ -86,6 +108,22 @@ export default function Header2() {
         <div className={`mx-auto max-w-6xl transition-all duration-500 rounded-full ${isScrolled 
           ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
           : "bg-transparent"}`}>
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 px-4 sm:px-6 lg:px-8 pt-4 ${
+          isScrolled
+            ? "border-border/50"
+            : ""
+        }`}
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <div
+          className={`mx-auto max-w-6xl transition-all duration-500 rounded-full ${
+            isScrolled
+              ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
+              : "bg-transparent"
+          }`}
+        >
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <motion.div
               className="flex items-center space-x-3"
@@ -99,11 +137,14 @@ export default function Header2() {
                   <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/20">
                     <Zap className="h-5 w-5 text-white" />
                   </div>
-                  <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-emerald-400"></div>
+                  <div className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-emerald-400" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-foreground text-xl font-extrabold tracking-tight">
-                    Event<span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">.One</span>
+                    Event
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-purple-500">
+                      .One
+                    </span>
                   </span>
                 </div>
               </Link>
@@ -120,6 +161,8 @@ export default function Header2() {
                   <Link
                     to={item.href}
                     className="text-foreground/70 hover:text-foreground relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200">
+                    className="text-foreground/70 hover:text-foreground relative rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200"
+                  >
                     {hoveredItem === item.name && (
                       <motion.div
                         className="bg-muted/80 absolute inset-0 rounded-full"
@@ -144,6 +187,30 @@ export default function Header2() {
               className="hidden items-center space-x-3 lg:flex"
               variants={itemVariants}>
               {/* Search icon removed */}
+              variants={itemVariants}
+            >
+              <motion.button
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                aria-label="Toggle dark mode"
+                title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
+                {isDark ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </motion.button>
+
+              <motion.button
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Search className="h-5 w-5" />
+              </motion.button>
 
               {user ? (
                 <div className="relative">
@@ -162,6 +229,11 @@ export default function Header2() {
                     </div>
                     <span>Account</span>
                     <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform duration-200 ${
+                        isProfileMenuOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </motion.button>
 
                   <AnimatePresence>
@@ -172,6 +244,7 @@ export default function Header2() {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
                         className="absolute -right-12 mt-2 w-56 rounded-xl bg-white dark: bg-black border border-border/50 shadow-xl overflow-hidden z-50"
+                        className="absolute -right-12 mt-2 w-56 rounded-xl border border-border/50 bg-background/95 shadow-xl overflow-hidden z-50 backdrop-blur"
                       >
                         <div className="p-2 space-y-1">
                           <div className="px-3 py-2 border-b border-border/50 mb-1">
@@ -197,7 +270,7 @@ export default function Header2() {
                             <span>Dashboard</span>
                           </Link>
 
-                          <div className="border-t border-border/50 my-1"></div>
+                          <div className="border-t border-border/50 my-1" />
 
                           <button
                             onClick={() => {
@@ -215,7 +288,6 @@ export default function Header2() {
                   </AnimatePresence>
                 </div>
               ) : (
-
                 <>
                   <Link
                     to="/login"
@@ -242,7 +314,6 @@ export default function Header2() {
                     </Link>
                   </motion.div>
                 </>
-
               )}
             </motion.div>
 
@@ -285,6 +356,8 @@ export default function Header2() {
                         to={item.href}
                         className="text-foreground/90 hover:bg-white/40 hover:text-foreground block rounded-xl px-4 py-3 font-medium transition-all duration-200 active:scale-[0.98]"
                         onClick={() => setIsMobileMenuOpen(false)}>
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         {item.name}
                       </Link>
                     </motion.div>
@@ -335,6 +408,22 @@ export default function Header2() {
                       <User className="h-5 w-5" />
                       <span>Sign In</span>
                     </Link>
+                    <>
+                      <Link
+                        to="/login"
+                        className="text-foreground hover:bg-muted block w-full rounded-lg py-3 text-center font-medium transition-colors duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        to="/signup"
+                        className="bg-foreground text-background hover:bg-foreground/90 block w-full rounded-lg py-3 text-center font-medium transition-all duration-200"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        Get Started
+                      </Link>
+                    </>
                   )}
                 </motion.div>
               </div>
