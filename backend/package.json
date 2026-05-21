@@ -4,6 +4,7 @@
   "description": "Backend API for eventone — an open-source event management platform",
   "main": "index.js",
   "type": "module",
+
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -11,13 +12,16 @@
     "test-cloudinary": "node test-upload.js",
     "test": "cross-env NODE_ENV=test node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
   },
+
   "keywords": [
     "events",
     "gssoc",
     "open-source"
   ],
+
   "author": "anubhavxdev",
   "license": "MIT",
+
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
@@ -39,6 +43,7 @@
     "socket.io": "^4.8.1",
     "validator": "^13.15.15"
   },
+
   "devDependencies": {
     "cross-env": "^10.0.0",
     "jest": "^30.0.5",
@@ -46,6 +51,7 @@
     "nodemon": "^3.1.10",
     "supertest": "^7.1.4"
   },
+
   "jest": {
     "testEnvironment": "node",
     "setupFilesAfterEnv": [

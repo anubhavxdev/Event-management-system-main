@@ -50,11 +50,11 @@ import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
 import { useAuth } from "./context/AuthContext";
 
+import QRScanner from "./pages/dashboard/QRScanner";
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -182,14 +182,6 @@ const App = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/thank-you" element={<ThankYou />} />
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
-            />
 
             {/* Protected Profile Route */}
             <Route
@@ -205,7 +197,7 @@ const App = () => {
             <Route
               path="/customer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={["customer"]}>
+                <ProtectedRoute allowedRoles={['attendee']}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               }
@@ -221,7 +213,15 @@ const App = () => {
               }
             />
 
-            {/* Create Event */}
+            <Route
+              path="/organizer/scan/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <QRScanner />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/organizer/create-event"
               element={

@@ -24,7 +24,7 @@ export default function SignUp() {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'customer'
+        role: 'attendee'
     });
 
     // ── Validation errors state ──────────────────────────────────────────────

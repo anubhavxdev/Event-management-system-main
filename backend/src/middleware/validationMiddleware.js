@@ -24,8 +24,8 @@ export const signupValidation = [
   body('role')
     .notEmpty()
     .withMessage('Role is required')
-    .isIn(['customer', 'organizer'])
-    .withMessage('Role must be either customer or organizer'),
+    .isIn(['attendee', 'organizer'])
+    .withMessage('Role must be either attendee or organizer'),
 ];
 
 export const loginValidation = [
