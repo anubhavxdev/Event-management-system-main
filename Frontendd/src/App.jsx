@@ -3,7 +3,7 @@ import {
   Routes,
   Route,
   Navigate,
-n} from "react-router-dom";
+} from "react-router-dom";
 
 import "./index.css";
 
@@ -21,19 +21,15 @@ import Profile from "./pages/Profile";
 import GoogleCallback from "./pages/auth/GoogleCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
-import DashboardLayout from "./components/DashboardLayout";
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
 import Support from "./pages/Support";
-import NotFound from "./pages/NotFound";
 import ScrollToTop from "./components/ScrollToTop";
 import { useAuth } from "./context/AuthContext";
 
-// Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
@@ -104,6 +100,7 @@ const App = () => {
             <Route path="/about-us" element={<About />} />
             <Route path="/login" element={user ? <Navigate to="/" replace /> : <SignIn />} />
             <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/thank-you" element={<ThankYou />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
             <Route

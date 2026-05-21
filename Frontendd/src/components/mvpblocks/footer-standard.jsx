@@ -116,8 +116,9 @@ export default function FooterStandard() {
             {/* Social Icons */}
             <div className="flex items-center gap-2">
               <div className="flex gap-2">
-                {data().socialLinks.map(
-                  ({ icon: IconComponent, label, href }) => (
+                {data().socialLinks.map(({ icon, label, href }) => {
+                  const Icon = icon;
+                  return (
                     <Button
                       key={label}
                       size="icon"
@@ -126,11 +127,11 @@ export default function FooterStandard() {
                       className="hover:bg-primary dark:hover:bg-primary !border-primary/30 cursor-pointer shadow-none transition-all duration-500 hover:scale-110 hover:-rotate-12 hover:text-white hover:shadow-md"
                     >
                       <a href={href}>
-                        <IconComponent className="h-4 w-4" />
+                        <Icon className="h-4 w-4" />
                       </a>
                     </Button>
-                  )
-                )}
+                  );
+                })}
               </div>
             </div>
 
