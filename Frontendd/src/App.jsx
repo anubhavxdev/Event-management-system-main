@@ -3,70 +3,46 @@ import {
   Routes,
   Route,
   Navigate,
-  useLocation,
-} from "react-router-dom";
-import "./index.css";
-import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2";
-import Home from "./pages/Home";
 } from "react-router-dom";
 
+import { useEffect, useState } from "react";
 import "./index.css";
 
 import { Toaster } from "react-hot-toast";
 
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
+import ScrollToTop from "./components/ui/ScrollToTop";
 
 import Home from "./pages/Home";
-import { useEffect, useState } from "react";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import Support from "./pages/Support";
 import About from "./pages/About";
+
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+
+import Profile from "./pages/Profile";
+import ThankYou from "./pages/ThankYou";
 import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
-import DashboardLayout from "./components/DashboardLayout";
-import Profile from "./pages/Profile";
+
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
-import ThankYou from "./pages/ThankYou";
-import { useAuth } from "./context/AuthContext";
 
 import { useAuth } from "./context/AuthContext";
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import './index.css'
-import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2"
-import Home from './pages/Home';
-import Features from './pages/Features';
-import Pricing from './pages/Pricing';
-import Contact from './pages/Contact';
-import About from './pages/About';
-import SignIn from './pages/SignIn';
-import SignUp from './pages/SignUp';
-import Profile from './pages/Profile';
-import DashboardLayout from './components/DashboardLayout';
-import CustomerDashboard from './pages/dashboard/CustomerDashboard';
-import OrganizerDashboard from './pages/dashboard/OrganizerDashboard';
-import CreateEvent from './pages/dashboard/CreateEvent';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
-import ThankYou from './pages/ThankYou';
-import { useAuth } from './context/AuthContext';
-import ScrollToTop from "./components/ui/ScrollToTop";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
+  // Loading State
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -78,10 +54,12 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     );
   }
 
+  // Not Logged In
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  // Role Check
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     return <Navigate to="/" replace />;
   }
@@ -92,18 +70,20 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 const App = () => {
   const [darkMode, setDarkMode] = useState(false);
 
+  // Dark Mode Toggle
   useEffect(() => {
-    if(darkMode){
+    if (darkMode) {
       document.documentElement.classList.add("dark");
-    }else{
+    } else {
       document.documentElement.classList.remove("dark");
-    } 
-  },[darkMode]);
+    }
+  }, [darkMode]);
+
   return (
     <BrowserRouter>
       <ScrollToTop />
 
-      {/* Global Toast Notification System */}
+      {/* Toast Notifications */}
       <Toaster
         position="top-right"
         reverseOrder={false}
@@ -130,11 +110,17 @@ const App = () => {
       />
 
       <div className="min-h-screen flex flex-col">
+        
         {/* Header */}
-        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
+        <Header2
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+        />
 
+        {/* Main Content */}
         <main className="flex-grow">
           <Routes>
+
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
@@ -142,22 +128,23 @@ const App = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/support" element={<Support />} />
             <Route path="/about-us" element={<About />} />
+
+            {/* Auth Routes */}
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/verify-email" element={<VerifyEmail />} /> 
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+
+            {/* Email Verification */}
+            <Route path="/verify-email" element={<VerifyEmail />} />
             <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              }
+              path="/verify-email/:token"
+              element={<VerifyEmail />}
             />
 
-            {/* Protected Profile Route */}
+            {/* Misc */}
+            <Route path="/thank-you" element={<ThankYou />} />
+
+            {/* Protected Profile */}
             <Route
               path="/profile"
               element={
@@ -187,7 +174,7 @@ const App = () => {
               }
             />
 
-            {/* Create Event */}
+            {/* Organizer Create Event */}
             <Route
               path="/organizer/create-event"
               element={
@@ -217,12 +204,9 @@ const App = () => {
               }
             />
 
-            {/* Fallback to 404 */}
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </main>
-            {/* Fallback Route */}
-            <Route path="*" element={<Home />} />
+
           </Routes>
         </main>
 
@@ -233,5 +217,4 @@ const App = () => {
   );
 };
 
-export default App;
 export default App;
