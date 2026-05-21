@@ -117,7 +117,7 @@ export default function FooterStandard() {
             <div className="flex items-center gap-2">
               <div className="flex gap-2">
                 {data().socialLinks.map(
-                  ({ icon: _IconComponent, label, href }) => (
+                  ({ icon: IconComponent, label, href }) => (
                     <Button
                       key={label}
                       size="icon"
