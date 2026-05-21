@@ -5,11 +5,9 @@ import codingninja from "../../assets/logos/codingninja.png";
 import d4 from "../../assets/logos/d4.jpg";
 import encrypted from "../../assets/logos/encrypted.jpg";
 import gdg from "../../assets/logos/gdg.jpg";
+
 export default function SparklesLogo() {
   return (
-    <div className="bg-background h-screen w-screen overflow-hidden">
-      <div className="mx-auto mt-30 w-screen max-w-2xl">
-        <div className="text-foreground text-center text-3xl">
     <div className="w-full overflow-hidden bg-white pt-32 pb-16">
       <div className="relative z-20 mx-auto w-full max-w-4xl px-4">
         <div className="text-center text-4xl md:text-5xl font-bold text-black">
@@ -54,28 +52,12 @@ export default function SparklesLogo() {
         </div>
       </div>
 
-      <div className="relative -mt-32 h-96 w-screen overflow-hidden [mask-image:radial-gradient(circle,white,transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom,#e60a64,transparent_70%)] before:opacity-40 after:absolute after:top-1/2 after:-left-1/2 after:aspect-[1/0.7] after:w-[200%] after:rounded-[100%] after:border-t after:border-[#c5769066] after:bg-background">
+      <div className="relative z-10 -mt-40 h-[32rem] md:h-[40rem] w-full overflow-hidden [mask-image:radial-gradient(circle,white,transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom,#e60a64,transparent_70%)] before:opacity-40 after:absolute after:top-1/2 after:-left-1/2 after:aspect-[1/0.7] after:w-[200%] after:rounded-[100%] after:border-t after:border-[#c5769066] after:bg-white">
         <SparklesCore
           id="tsparticles"
           background="transparent"
           particleDensity={300}
           particleColor="hsl(var(--foreground))"
-        <div className="mt-20 grid grid-cols-3 gap-8 md:gap-12 md:grid-cols-6 items-center opacity-100">
-          <img src={aws} alt="AWS" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-          <img src={codingblocks} alt="Coding Blocks" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-          <img src={codingninja} alt="Coding Ninja" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-          <img src={d4} alt="D4" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-          <img src={encrypted} alt="Encrypted" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-          <img src={gdg} alt="GDG" className="h-14 md:h-16 w-auto object-contain grayscale hover:grayscale-0 transition-all mx-auto" />
-        </div>
-      </div>
-
-      <div className="relative z-10 -mt-40 h-[32rem] md:h-[40rem] w-full overflow-hidden [mask-image:radial-gradient(circle,white,transparent)] before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_bottom,#e60a64,transparent_70%)] before:opacity-40 after:absolute after:top-1/2 after:-left-1/2 after:aspect-[1/0.7] after:w-[200%] after:rounded-[100%] after:border-t after:border-[#c5769066] after:bg-white">
-        <SparklesCore
-          id="tsparticles"
-          background="transparent"
-          particleDensity={400}
-          particleColor="#000"
           className="absolute inset-x-0 bottom-0 h-full w-full [mask-image:radial-gradient(circle,white,transparent_85%)]"
         />
       </div>
