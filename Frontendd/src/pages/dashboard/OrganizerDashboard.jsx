@@ -1,14 +1,28 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
+import CountdownTimer from '../../components/CountdownTimer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import {
+    Calendar,
+    MapPin,
+    Users,
+    Plus,
+    Upload,
+    Tag,
+    Search,
+    IndianRupee,
+    AlertCircle,
+    Download,
+    CheckCircle,
+    Clock,
+    XCircle,
+    Trash2
+} from 'lucide-react';import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
-
 
 import { API_BASE_URL } from '../../config';
 
@@ -456,9 +470,10 @@ const handleCreateSubmit = async (e) => {
                                                             )}
                                                             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                                                                 <span className="flex items-center">
-                                                                    <Calendar className="w-3 h-3 mr-1.5" />
+                                                                   <Calendar className="w-3 h-3 mr-1.5" />
                                                                     {new Date(event.date).toLocaleDateString()}
                                                                 </span>
+                                                                <CountdownTimer eventDate={event.date} />
                                                                 <span className="flex items-center">
                                                                     <MapPin className="w-3 h-3 mr-1.5" />
                                                                     {event.location}

@@ -71,44 +71,31 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
-
 app.use('/api/events', eventRoutes);
-
 app.use('/api/registrations', registrationRoutes);
-
 app.use('/api/reviews', reviewRoutes);
-
 app.use('/api/admin', adminRoutes);
-
 app.use('/api/stats', statsRoutes);
 
-// 404 handler
+// 404
 app.use((req, res) => {
-  res.status(404).json({
-    message: 'Route not found',
-  });
+  res.status(404).json({ message: 'Route not found' });
 });
 
-// Global error handler
-// eslint-disable-next-line no-unused-vars
+// error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-
   res.status(err.status || 500).json({
     message: err.message || 'Server error',
   });
 });
 
-// Start server
 async function start() {
-  await connectDB();
-  
+  //await connectDB();
+
   server.listen(env.port, () => {
-    console.log(
-      `Server running on http://localhost:${env.port}`
-    );
+    console.log(`Server running on http://localhost:${env.port}`);
   });
 }
 

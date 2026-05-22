@@ -1,7 +1,7 @@
 {
   "name": "eventone-backend",
   "version": "1.0.0",
-  "description": "Backend API for eventone — an open-source event management platform",
+  "description": "Backend API for eventone",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
@@ -25,7 +25,7 @@
     "cloudinary": "^1.41.3",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
-    "cors": "^2.8.6",
+    "cors": "^2.8.5",
     "csv-writer": "^1.6.0",
     "dotenv": "^17.2.1",
     "express": "^5.2.1",
