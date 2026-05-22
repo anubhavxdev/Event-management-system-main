@@ -19,6 +19,8 @@ import express from 'express';
 import helmet from 'helmet';
 
 
+import { initSocket } from './services/socket.js';
+
 const server = http.createServer(app);
 
 // Security & utils

@@ -19,7 +19,7 @@ async function run() {
     Review.deleteMany({}),
   ]);
 
-  const customer = await User.create({ name: 'Alice Customer', email: 'customer@example.com', password: 'password', role: 'customer' });
+  const customer = await User.create({ name: 'Alice Customer', email: 'customer@example.com', password: 'password', role: 'attendee' });
   const organizer = await User.create({ name: 'Oscar Organizer', email: 'organizer@example.com', password: 'password', role: 'organizer' });
   const admin = await User.create({ name: 'Adam Admin', email: 'admin@example.com', password: 'password', role: 'admin' });
   const users = [customer, organizer, admin];
