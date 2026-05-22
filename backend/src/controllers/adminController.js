@@ -26,7 +26,7 @@ export const rejectEvent = async (req, res) => {
       });
     }
 
-    const event = await Event.findById(req.params.id).populate('organizer', 'name email');
+    const event = await Event.findById(req.params.id).populate('organizer', 'name email _id');
     if (!event) return res.status(404).json({ message: 'Not found' });
 
     event.status = 'rejected';
@@ -49,7 +49,7 @@ export const rejectEvent = async (req, res) => {
 
 export const listPendingEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: 'pending' }).populate('organizer', 'name email');
+    const events = await Event.find({ status: 'pending' }).populate('organizer', 'name email _id');
     res.json({ events });
   } catch (err) {
     res.status(500).json({ message: err.message });

@@ -163,7 +163,7 @@ export const listEvents = async (req, res) => {
 
     const [events, total] = await Promise.all([
       Event.find(filter)
-        .populate('organizer', 'name')
+        .populate('organizer', 'name _id')
         .sort({ date: 1 })
         .skip(skip)
         .limit(limitNum),
@@ -227,7 +227,7 @@ export const getPopularTags = async (req, res) => {
 export const getEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
-      .populate('organizer', 'name');
+      .populate('organizer', 'name _id');
 
     if (!event) {
       return res.status(404).json({
