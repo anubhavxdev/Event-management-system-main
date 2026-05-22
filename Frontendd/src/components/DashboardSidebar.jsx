@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
     LayoutDashboard,
@@ -17,6 +17,7 @@ import { Button } from "./ui/button";
 export default function DashboardSidebar() {
     const { user, logout } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
 
     const adminLinks = [
         { name: 'Overview', href: '/admin/dashboard', icon: LayoutDashboard },
@@ -84,7 +85,7 @@ export default function DashboardSidebar() {
                 <Button
                     variant="ghost"
                     className="w-full justify-start text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-                    onClick={logout}
+                    onClick={() => logout(navigate)}
                 >
                     <LogOut className="w-5 h-5 mr-3" />
                     Sign Out

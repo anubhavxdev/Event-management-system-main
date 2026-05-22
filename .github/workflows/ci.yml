@@ -72,7 +72,7 @@ jobs:
       #   - It's faster in CI environments
       - name: Install backend dependencies
         working-directory: backend
-        run: npm ci
+        run: npm install
 
       # ── 4. Run ESLint if configured, otherwise skip gracefully ───────────────
       # This step checks whether a "lint" script exists in backend/package.json.
@@ -177,3 +177,27 @@ jobs:
           echo "Largest JS chunks:"
           find dist/assets -name "*.js" -exec du -sh {} \; 2>/dev/null | sort -rh | head -5
           echo ""
+  e2e-tests:
+    name: "🎭 Playwright E2E Tests"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install frontend dependencies
+        working-directory: Frontendd
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: Frontendd
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        working-directory: Frontendd
+        run: npx playwright test

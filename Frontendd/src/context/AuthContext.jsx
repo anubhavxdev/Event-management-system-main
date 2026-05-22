@@ -46,10 +46,14 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
     };
 
-    const logout = () => {
+    const logout = (navigate) => {
         localStorage.removeItem('token');
         setUser(null);
-        window.location.href = '/thank-you';
+        if (navigate) {
+        navigate('/');
+        } else {
+        window.location.href = '/';
+        }
     };
 
     // Always render children, pass loading state through context
