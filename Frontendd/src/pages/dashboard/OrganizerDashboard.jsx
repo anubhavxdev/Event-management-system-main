@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
+import EarningsDashboard from '../../components/EarningsDashboard';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
@@ -8,7 +9,6 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
-
 
 import { API_BASE_URL } from '../../config';
 
@@ -19,6 +19,7 @@ export default function OrganizerDashboard() {
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
     const [activeTab, setActiveTab] = useState('My Events');
+    const [hasPaidEvents, setHasPaidEvents] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [editingEventId, setEditingEventId] = useState(null);
 
@@ -78,14 +79,17 @@ export default function OrganizerDashboard() {
             });
             if (res.ok && mountedRef.current) {
                 const data = await res.json();
-                // Filter events where the organizer matches the current user
-                // Adjust logic based on how your backend returns data (populated organizer object vs id)
                 const myEvents = (data.events || []).filter(
                     e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
                 );
 
                 setEvents(myEvents);
                 calculateStats(myEvents);
+
+                const anyPaid = myEvents.some((e) => Number(e.price) > 0);
+                setHasPaidEvents(anyPaid);
+            } else if (!res.ok) {
+                console.error("Failed to fetch events - Status:", res.status, res.statusText);
             }
         } catch (error) {
             console.error("Failed to fetch events", error);
@@ -99,9 +103,9 @@ export default function OrganizerDashboard() {
     useEffect(() => {
         document.title = 'Organizer Dashboard | Event.One';
         if (user) {
-            (async () => {
-                await fetchMyEvents();
-            })();
+            fetchMyEvents();
+        } else {
+            setLoading(false); 
         }
     }, [user, fetchMyEvents]);
 
@@ -123,51 +127,51 @@ export default function OrganizerDashboard() {
             .catch(err => console.error("Failed to download CSV", err));
     };
 
-const handleDeleteEvent = async (eventId) => {
-    const confirmDelete = window.confirm(
-        'Are you sure you want to delete this event? This action cannot be undone.'
-    );
+    const handleDeleteEvent = async (eventId) => {
+        const confirmDelete = window.confirm(
+            'Are you sure you want to delete this event? This action cannot be undone.'
+        );
 
-    if (!confirmDelete) return;
+        if (!confirmDelete) return;
 
-    const loadingToast = toast.loading("Deleting event...");
+        const loadingToast = toast.loading("Deleting event...");
 
-    try {
-        const token = localStorage.getItem('token');
+        try {
+            const token = localStorage.getItem('token');
 
-        const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (res.ok) {
-            setEvents(prev => prev.filter(e => e._id !== eventId));
-
-            setStats(curr => ({
-                ...curr,
-                totalEvents: curr.totalEvents - 1,
-            }));
-
-            setSelectedEvent(null);
-
-            toast.success('Event deleted successfully', {
-                id: loadingToast,
+            const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            fetchMyEvents();
-        } else {
-            toast.error('Failed to delete event', {
+            if (res.ok) {
+                setEvents(prev => prev.filter(e => e._id !== eventId));
+
+                setStats(curr => ({
+                    ...curr,
+                    totalEvents: curr.totalEvents - 1,
+                }));
+
+                setSelectedEvent(null);
+
+                toast.success('Event deleted successfully', {
+                    id: loadingToast,
+                });
+
+                fetchMyEvents();
+            } else {
+                toast.error('Failed to delete event', {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error("Failed to delete event", error);
+
+            toast.error("Something went wrong", {
                 id: loadingToast,
             });
         }
-    } catch (error) {
-        console.error("Failed to delete event", error);
-
-        toast.error("Something went wrong", {
-            id: loadingToast,
-        });
-    }
-};
+    };
 
     const resetForm = () => {
         setEditingEventId(null);
@@ -202,77 +206,77 @@ const handleDeleteEvent = async (eventId) => {
         }
     };
 
-const handleCreateSubmit = async (e) => {
-    e.preventDefault();
+    const handleCreateSubmit = async (e) => {
+        e.preventDefault();
 
-    setCreating(true);
+        setCreating(true);
 
-    const loadingToast = toast.loading("Creating event...");
+        const loadingToast = toast.loading("Creating event...");
 
-    try {
-        const data = new FormData();
+        try {
+            const data = new FormData();
 
-        const fullDate = new Date(`${formData.date}T${formData.time}`);
+            const fullDate = new Date(`${formData.date}T${formData.time}`);
 
-        data.append('title', formData.title);
-        data.append('description', formData.description);
-        data.append('date', fullDate.toISOString());
-        data.append('location', formData.location);
-        data.append('category', formData.category);
-        data.append('price', formData.price);
-        data.append('capacity', formData.capacity);
+            data.append('title', formData.title);
+            data.append('description', formData.description);
+            data.append('date', fullDate.toISOString());
+            data.append('location', formData.location);
+            data.append('category', formData.category);
+            data.append('price', formData.price);
+            data.append('capacity', formData.capacity);
 
-        if (formData.poster) {
-            data.append('poster', formData.poster);
-        }
+            if (formData.poster) {
+                data.append('poster', formData.poster);
+            }
 
-        const token = localStorage.getItem('token');
+            const token = localStorage.getItem('token');
 
-        const res = await fetch(`${API_BASE_URL}/api/events`, {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            body: data
-        });
-
-        if (res.ok) {
-            setFormData({
-                title: '',
-                description: '',
-                date: '',
-                time: '',
-                location: '',
-                category: 'General',
-                price: '',
-                capacity: '',
-                poster: null
+            const res = await fetch(`${API_BASE_URL}/api/events`, {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                body: data
             });
 
-            toast.success('Event created successfully!', {
+            if (res.ok) {
+                setFormData({
+                    title: '',
+                    description: '',
+                    date: '',
+                    time: '',
+                    location: '',
+                    category: 'General',
+                    price: '',
+                    capacity: '',
+                    poster: null
+                });
+
+                toast.success('Event created successfully!', {
+                    id: loadingToast,
+                });
+
+                fetchMyEvents();
+
+                setActiveTab('My Events');
+            } else {
+                const err = await res.json();
+
+                toast.error(err.message || 'Failed to create event', {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error("Failed to create event", error);
+
+            toast.error("Something went wrong", {
                 id: loadingToast,
             });
-
-            fetchMyEvents();
-
-            setActiveTab('My Events');
-        } else {
-            const err = await res.json();
-
-            toast.error(err.message || 'Failed to create event', {
-                id: loadingToast,
-            });
+        } finally {
+            setCreating(false);
         }
-    } catch (error) {
-        console.error("Failed to create event", error);
-
-        toast.error("Something went wrong", {
-            id: loadingToast,
-        });
-    } finally {
-        setCreating(false);
-    }
-};
+    };
 
     if (loading) {
         return (
@@ -283,21 +287,23 @@ const handleCreateSubmit = async (e) => {
     }
 
     const handleGenerateCertificate = (event) => {
-    toast.success(
-        `Certificate generation request received for "${event.title}"`
-    );
+        toast.success(
+            `Certificate generation request received for "${event.title}"`
+        );
 
-    toast(
-        "Automated certificate generation feature coming soon!"
-    );
-};
+        toast(
+            "Automated certificate generation feature coming soon!"
+        );
+    };
 
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date());
     const pastEvents = events.filter(e => new Date(e.date) < new Date());
 
+    const tabs = ['My Events', 'Past Events', 'Create New Event', 'Analytics', ...(hasPaidEvents ? ['Earnings'] : [])];
+
     return (
         <div className="min-h-screen bg-background text-foreground pt-24 px-4 sm:px-6 lg:px-8 font-sans selection:bg-purple-500/30 relative overflow-hidden">
-            {/* Background gradient from Admin/Hero */}
+            {/* Background gradient */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div className="from-primary/20 via-background to-background absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))]"></div>
                 <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-[1000px] w-[1000px] -translate-x-1/2 rounded-full blur-3xl"></div>
@@ -325,12 +331,12 @@ const handleCreateSubmit = async (e) => {
                 {/* Navigation Tabs */}
                 <div className="mb-8 border-b border-border">
                     <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-                        {['My Events', 'Past Events', 'Create New Event', 'Analytics'].map((tab) => (
+                        {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
-                                    ? 'text-orange-500' // Keeping orange accent for Organizer distinction
+                                    ? 'text-orange-500'
                                     : 'text-muted-foreground hover:text-foreground'
                                     }`}
                             >
@@ -348,13 +354,14 @@ const handleCreateSubmit = async (e) => {
 
                 {/* Main Content Area */}
                 <div className="bg-card/50 backdrop-blur-sm rounded-3xl p-6 md:p-8 min-h-[500px] border border-border shadow-sm">
-                    {/* Content Header based on Tab */}
+                    {/* Content Header */}
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-xl font-semibold text-foreground">
                             {activeTab === 'My Events' && 'Your Upcoming Events'}
                             {activeTab === 'Past Events' && 'Past Events History'}
                             {activeTab === 'Create New Event' && 'Create a New Event'}
                             {activeTab === 'Analytics' && 'Performance Overview'}
+                            {activeTab === 'Earnings' && 'Revenue & Earnings'}
                         </h2>
                         {activeTab === 'My Events' && (
                             <div className="flex gap-2">
@@ -371,8 +378,6 @@ const handleCreateSubmit = async (e) => {
                             </div>
                         )}
                     </div>
-
-
 
                     <AnimatePresence mode="popLayout">
                         {/* MY EVENTS TAB */}
@@ -501,7 +506,6 @@ const handleCreateSubmit = async (e) => {
                                                             </div>
                                                         )}
 
-                                                        
                                                         {/* Management Actions */}
                                                         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
                                                             {event.status === 'approved' && (
@@ -533,7 +537,6 @@ const handleCreateSubmit = async (e) => {
                                                                 Manage Event
                                                             </Button>
                                                         </div>
-
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -912,6 +915,18 @@ const handleCreateSubmit = async (e) => {
                                 </div>
                             </motion.div>
                         )}
+
+                        {/* EARNINGS TAB */}
+                        {activeTab === 'Earnings' && (
+                            <motion.div
+                                key="earnings"
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                            >
+                                <EarningsDashboard />
+                            </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
             </div>
@@ -1018,6 +1033,6 @@ const handleCreateSubmit = async (e) => {
                     </div>
                 )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 }
