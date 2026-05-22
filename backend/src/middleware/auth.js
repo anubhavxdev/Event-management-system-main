@@ -14,4 +14,12 @@ export function authenticate(req, res, next) {
   }
 }
 
-
+export const checkEmailVerified = (req, res, next) => {
+  if (!req.user.isVerified) { 
+    return res.status(403).json({
+      success: false,
+      message: 'Access Denied: Please verify your email address to register for events.'
+    });
+  }
+  next();
+};

@@ -22,6 +22,9 @@ export const signupValidation = [
     .withMessage('Password must be at least 6 characters long'),
 
   body('role')
+  .optional()
+  .isIn(['attendee', 'organizer', 'admin'])
+  .withMessage('Role must be either attendee, organizer, or admin')
     .notEmpty()
     .withMessage('Role is required')
     .isIn(['attendee', 'organizer'])

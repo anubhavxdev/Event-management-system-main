@@ -1,10 +1,10 @@
 import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
-import { registrationLimiter } from '../middleware/rateLimiters.js';
-import { registerForEvent, myRegistrations, participantsForEvent, checkInParticipant, exportParticipantsCsv, checkRegistrationStatus, cancelRegistration } from '../controllers/registrationController.js';
-
-
+import { registrationRateLimiter } from '../middleware/rateLimiters.js';
+import { registerForEvent, myRegistrations, participantsForEvent, checkInParticipant, exportParticipantsCsv, checkRegistrationStatus } from '../controllers/registrationController.js';
+import { checkEmailVerified } from '../middleware/auth.js'; 
+import { registerForEvent, myRegistrations, participantsForEvent, checkInParticipant, exportParticipantsCsv, checkRegistrationStatus,cancelRegistration } from '../controllers/registrationController.js';
 
 const router = Router();
 
@@ -12,6 +12,8 @@ router.post(
   '/:id/register',
   registrationLimiter,
   authenticate,
+  checkEmailVerified,
+  authorizeRoles('attendee', 'organizer', 'admin'),
   authorizeRoles('customer', 'organizer', 'admin'),
   registerForEvent
 );

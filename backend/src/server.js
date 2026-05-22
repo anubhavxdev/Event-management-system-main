@@ -1,5 +1,5 @@
-import http from 'http';
 import express from 'express';
+import http from 'http';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -8,7 +8,6 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
 import app from './app.js';
-
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
 
@@ -50,8 +49,7 @@ const parsedApiRateLimitMax = Number.parseInt(
 );
 
 const apiRateLimitMax =
-  Number.isFinite(parsedApiRateLimitMax) &&
-  parsedApiRateLimitMax > 0
+  Number.isFinite(parsedApiRateLimitMax) && parsedApiRateLimitMax > 0
     ? parsedApiRateLimitMax
     : 120;
 
@@ -71,15 +69,10 @@ app.get('/api/health', (req, res) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-
 app.use('/api/events', eventRoutes);
-
 app.use('/api/registrations', registrationRoutes);
-
 app.use('/api/reviews', reviewRoutes);
-
 app.use('/api/admin', adminRoutes);
-
 app.use('/api/stats', statsRoutes);
 
 // 404 handler
@@ -104,9 +97,7 @@ async function start() {
   await connectDB();
   
   server.listen(env.port, () => {
-    console.log(
-      `Server running on http://localhost:${env.port}`
-    );
+    console.log(`Server running on http://localhost:${env.port}`);
   });
 }
 

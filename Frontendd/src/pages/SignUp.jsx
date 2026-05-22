@@ -126,6 +126,12 @@ export default function SignUp() {
             toast.success("Account created successfully!", {
                 id: loadingToast,
             });
+            const data = await res.json();
+
+            if (res.ok) {
+                navigate('/verify-email');
+            } else {
+                alert(data.message || 'Signup failed');
 
             switch (data.user.role) {
                 case 'admin':
