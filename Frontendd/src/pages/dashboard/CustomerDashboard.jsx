@@ -4,6 +4,7 @@ import { Calendar, MapPin, Ticket, X, Download, Search } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 import ConfirmationModal from '../../components/ui/confirmation-modal';
@@ -262,15 +263,15 @@ export default function CustomerDashboard() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message || 'Successfully registered!');
+        toast.success(data.message || 'Successfully registered!');
         setActiveTab('Upcoming Tickets');
         fetchRegistrations();
       } else {
-        alert(data.message || 'Registration failed');
+        toast.error(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Registration failed', error);
-      alert('Something went wrong');
+      toast.error('Something went wrong');
     }
   };
 
@@ -304,9 +305,10 @@ export default function CustomerDashboard() {
 
       setIsModalOpen(false);
       setSelectedRegistrationId(null);
+      toast.success('Registration cancelled successfully!');
     } catch (error) {
       console.error(error);
-      alert('Something went wrong');
+      toast.error('Something went wrong');
     }
   };
 
@@ -459,7 +461,7 @@ export default function CustomerDashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-foreground">No upcoming tickets</h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
-                      You haven&apos;t registered for any upcoming events yet. Check out what&apos;s happening!
+                      You haven't registered for any upcoming events yet. Check out what's happening!
                     </p>
                     <Button asChild className="mt-6 bg-rose-600 hover:bg-rose-700">
                       <Link to="/#events">Browse Events</Link>
@@ -580,7 +582,7 @@ export default function CustomerDashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-foreground">No past events</h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
-                      You haven&apos;t attended any past events yet.
+                      You haven't attended any past events yet.
                     </p>
                   </motion.div>
                 ) : (
@@ -781,7 +783,6 @@ export default function CustomerDashboard() {
                                 {evt.category}
                               </span>
                             </div>
-
                             <div className="flex-1 flex flex-col justify-between">
                               <div>
                                 <div className="flex justify-between items-start">

@@ -501,17 +501,29 @@ const handleCreateSubmit = async (e) => {
                                                             </div>
                                                         )}
 
+                                                        
                                                         {/* Management Actions */}
-                                                        <div className="flex justify-end mt-4 pt-4 border-t border-border/50">
+                                                        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
+                                                            {event.status === 'approved' && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                                                                    onClick={() => navigate(`/organizer/scan/${event._id}`)}
+                                                                >
+                                                                    Scan QR
+                                                                </Button>
+                                                            )}
+
                                                             {event.status === 'rejected' && (
                                                                 <Button
                                                                     size="sm"
-                                                                    className="mr-3 bg-red-600 text-white hover:bg-red-700"
+                                                                    className="bg-red-600 text-white hover:bg-red-700"
                                                                     onClick={() => handleEditResubmit(event)}
                                                                 >
                                                                     Edit & Resubmit
                                                                 </Button>
                                                             )}
+
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
@@ -521,6 +533,7 @@ const handleCreateSubmit = async (e) => {
                                                                 Manage Event
                                                             </Button>
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             </motion.div>

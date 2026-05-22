@@ -25,6 +25,10 @@ export const signupValidation = [
   .optional()
   .isIn(['attendee', 'organizer', 'admin'])
   .withMessage('Role must be either attendee, organizer, or admin')
+    .notEmpty()
+    .withMessage('Role is required')
+    .isIn(['attendee', 'organizer'])
+    .withMessage('Role must be either attendee or organizer'),
 ];
 
 export const loginValidation = [

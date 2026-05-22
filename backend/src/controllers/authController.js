@@ -3,6 +3,29 @@ import { generateJwtToken } from '../utils/generateToken.js';
 import crypto from 'crypto';
 import { sendEmail } from '../utils/sendEmail.js';
 
+const handleAuthError = (res, err) => {
+  console.error('ERROR:', err);
+
+  if (err.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: 'Email already exists',
+    });
+  }
+
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({
+      success: false,
+      message: Object.values(err.errors).map((error) => error.message).join(', '),
+    });
+  }
+
+  return res.status(500).json({
+    success: false,
+    message: 'Something went wrong. Please try again later.',
+  });
+};
+
 export const signup = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -72,6 +95,7 @@ export const signup = async (req, res) => {
       success: false,
       message: 'Something went wrong. Please try again later.',
     });
+    return handleAuthError(res, err); // <--- YAHAN GADBAD HAI!
   }
 };
 
@@ -91,9 +115,8 @@ export const login = async (req, res) => {
 });
     res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role, isVerified: user.isVerified } });
   } catch (err) {
-  console.error('ERROR:', err);
-  res.status(500).json({ message: err.message });
-}
+    return handleAuthError(res, err);
+  }
 };
 
 export const me = async (req, res) => {
@@ -102,9 +125,8 @@ export const me = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'Not found' });
     res.json({ user: { id: user._id, name: user.name, email: user.email, role: user.role, points: user.points, phoneNumber: user.phoneNumber, avatarUrl: user.avatarUrl, isVerified: user.isVerified } });
   } catch (err) {
-  console.error('ERROR:', err);
-  res.status(500).json({ message: err.message });
-}
+    return handleAuthError(res, err);
+  }
 };
 
 export const updateProfile = async (req, res) => {
@@ -138,9 +160,8 @@ export const updateProfile = async (req, res) => {
       }
     });
   } catch (err) {
-  console.error('ERROR:', err);
-  res.status(500).json({ message: err.message });
-}
+    return handleAuthError(res, err);
+  }
 };
 
 export const verifyEmail = async (req, res) => {

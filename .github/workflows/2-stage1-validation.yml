@@ -35,10 +35,41 @@ jobs:
               errors.push('❌ **Title format invalid** — Use Conventional Commits format\n  > Examples: `feat: add login page`, `fix: button alignment`, `docs: update readme`');
             }
 
-            // ── 2. CLOSES ISSUE LINK ──
-            const closesRegex = /closes?\s+#\d+/i;
-            if (!closesRegex.test(body)) {
+            // ── 2. CLOSES ISSUE LINK + ASSIGNMENT CHECK ──
+            const closesRegex = /closes?\s+#(\d+)/gi;
+            const issueMatches = [...body.matchAll(closesRegex)];
+
+            if (issueMatches.length === 0) {
               errors.push('❌ **No linked issue** — Add `Closes #<issue-number>` in your PR description\n  > Example: `Closes #42`');
+            } else {
+              // Check each linked issue — must exist AND be assigned to the PR author
+              for (const match of issueMatches) {
+                const issueNumber = parseInt(match[1]);
+                let issueData;
+                try {
+                  const { data } = await github.rest.issues.get({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                  });
+                  issueData = data;
+                } catch (e) {
+                  errors.push(`❌ **Issue #${issueNumber} does not exist** — You referenced a non-existent issue. Open an issue first and get it assigned to you.`);
+                  continue;
+                }
+
+                // Check issue is open (not already closed/stale)
+                if (issueData.state === 'closed') {
+                  errors.push(`❌ **Issue #${issueNumber} is already closed** — You cannot link a PR to a closed issue. Open a new issue for this work.`);
+                  continue;
+                }
+
+                // Check issue is assigned to the PR author
+                const assignees = issueData.assignees.map(a => a.login.toLowerCase());
+                if (!assignees.includes(author.toLowerCase())) {
+                  errors.push(`❌ **Issue #${issueNumber} is not assigned to you (@${author})** — You must be assigned to the issue before submitting a PR.\n  > Comment \`/assign\` on Issue #${issueNumber} or ask a maintainer to assign it to you.`);
+                }
+              }
             }
 
             // ── 3. PR BODY LENGTH ──

@@ -38,6 +38,7 @@ import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import { useAuth } from "./context/AuthContext";
 
 
+import QRScanner from "./pages/dashboard/QRScanner";
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -158,7 +159,7 @@ const App = () => {
             <Route
               path="/customer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={["customer"]}>
+                <ProtectedRoute allowedRoles={['attendee']}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               }
@@ -175,6 +176,15 @@ const App = () => {
             />
 
             {/* Organizer Create Event */}
+            <Route
+              path="/organizer/scan/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <QRScanner />
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/organizer/create-event"
               element={
