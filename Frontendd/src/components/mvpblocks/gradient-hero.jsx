@@ -4,7 +4,23 @@ import { ArrowRight, ChevronRight, Github } from "lucide-react";
 import { Button } from "../ui/button.jsx";
 import { Link } from "react-router-dom";
 
+const PLACEHOLDERS = [
+  "Search for events...",
+  "Search for communities...",
+  "Search for organizers...",
+];
+
 export default function GradientHero() {
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [inputValue, setInputValue] = useState("");
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="bg-background relative w-full overflow-hidden">
 
@@ -90,6 +106,38 @@ export default function GradientHero() {
             {/* <Github className="h-4 w-4" /> */}
             {/* Star on GitHub */}
             {/* </Button> */}
+              <Search className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+              <div className="relative w-full h-full flex items-center overflow-hidden">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="w-full h-full bg-transparent px-4 text-base text-foreground focus:outline-none relative z-10"
+                />
+                {!inputValue && (
+                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={placeholderIndex}
+                        initial={{ y: 15, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -15, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="text-muted-foreground text-base"
+                      >
+                        {PLACEHOLDERS[placeholderIndex]}
+                      </motion.span>
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="h-12 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg hover:shadow-indigo-500/25 px-8 font-medium transition-all hover:scale-105 active:scale-95"
+              >
+                Search
+              </Button>
+            </form>
           </motion.div>
 
           {/* Feature Image */}

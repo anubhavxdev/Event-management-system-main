@@ -68,7 +68,25 @@ export default function AboutUs1() {
   const valuesRef = useRef(null);
 
   const missionInView = useInView(missionRef, { once: true, amount: 0.3 });
-  const valuesInView = useInView(valuesRef, { once: true, amount: 0.3 });
+  const valuesInView = useInView(valuesRef, { once: true, amount: 0.2 });
+
+  const cardContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.15 },
+    },
+  };
+
+  const cardItemVariants = {
+    hidden: { opacity: 0, y: 40, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
 
   return (
     <section className="relative w-full overflow-hidden pt-20">
@@ -103,8 +121,9 @@ export default function AboutUs1() {
             className="relative z-10 grid gap-12 md:grid-cols-2"
           >
             <motion.div
-              whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
-              className="group border-border/40 relative block overflow-hidden rounded-2xl border bg-gradient-to-br p-10 backdrop-blur-3xl"
+              whileHover={{ y: -6, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+              className="group border-border/50 relative block overflow-hidden rounded-2xl border bg-card/80 p-10 backdrop-blur-xl dark:bg-card/50"
             >
               <BorderBeam
                 duration={8}
@@ -114,17 +133,18 @@ export default function AboutUs1() {
               <div className="from-primary/20 to-primary/5 mb-6 inline-flex aspect-square h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br backdrop-blur-sm">
                 <Rocket className="text-primary h-8 w-8" />
               </div>
-              <h2 className="from-primary/90 to-primary/70 mb-4 bg-gradient-to-r bg-clip-text text-3xl font-bold text-transparent">
+              <h2 className="mb-4 text-3xl font-bold text-foreground">
                 Our Mission
               </h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+              <p className="text-lg leading-relaxed text-muted-foreground">
                 {aboutData.mission}
               </p>
             </motion.div>
 
             <motion.div
-              whileHover={{ y: -5, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}
-              className="group border-border/40 relative block overflow-hidden rounded-2xl border bg-gradient-to-br p-10 backdrop-blur-3xl"
+              whileHover={{ y: -6, scale: 1.01 }}
+              transition={{ duration: 0.3 }}
+              className="group border-border/50 relative block overflow-hidden rounded-2xl border bg-card/80 p-10 backdrop-blur-xl dark:bg-card/50"
             >
               <BorderBeam
                 duration={8}
@@ -135,10 +155,10 @@ export default function AboutUs1() {
               <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-500/5 backdrop-blur-sm">
                 <Target className="h-8 w-8 text-blue-500" />
               </div>
-              <h2 className="mb-4 bg-gradient-to-r from-blue-500/90 to-blue-500/70 bg-clip-text text-3xl font-bold text-transparent">
+              <h2 className="mb-4 text-3xl font-bold text-foreground">
                 Our Vision
               </h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+              <p className="text-lg leading-relaxed text-muted-foreground">
                 {aboutData.vision}
               </p>
             </motion.div>
@@ -157,28 +177,24 @@ export default function AboutUs1() {
             <h2 className="from-foreground/80 via-foreground to-foreground/80 bg-gradient-to-r bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">
               Our Core Values
             </h2>
-            <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
               The principles that guide everything we do and every decision we
               make.
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 text-foreground">
+          <motion.div
+            className="grid gap-6 md:grid-cols-2 xl:grid-cols-4"
+            variants={cardContainerVariants}
+            initial="hidden"
+            animate={valuesInView ? "visible" : "hidden"}
+          >
             {aboutData.values.map((value, index) => {
               const IconComponent = iconComponents[value.icon];
               return (
                 <motion.div
                   key={value.title}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={
-                    valuesInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }
-                  }
-                  transition={{
-                    duration: 0.6,
-                    delay: index * 0.1 + 0.2,
-                    ease: "easeOut",
-                  }}
-                  whileHover={{ y: -5, scale: 1.02 }}
+                  variants={cardItemVariants}
                 >
                   <CardHoverEffect
                     icon={<IconComponent className="h-6 w-6" />}
@@ -199,7 +215,7 @@ export default function AboutUs1() {
                 </motion.div>
               );
             })}
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

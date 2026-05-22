@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema(
   {
+   
     title: {
       type: String,
       required: true,
@@ -75,6 +76,10 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    
+    // Event price fields (temporary optional)
+    price: { type: Number, default: 0 },
+    isFree: {type:Boolean, default:true}
   },
   { timestamps: true }
 );
