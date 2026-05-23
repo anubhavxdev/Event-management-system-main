@@ -22,7 +22,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import DashboardLayout from "./components/DashboardLayout";
-import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
+//import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
@@ -129,7 +129,7 @@ const App = () => {
               path="/customer/dashboard"
               element={
                 <ProtectedRoute allowedRoles={['attendee']}>
-                  <CustomerDashboard />
+                 <div>Dashboard</div>
                 </ProtectedRoute>
               }
             />

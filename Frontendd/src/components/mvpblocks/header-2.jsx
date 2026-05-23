@@ -386,7 +386,11 @@ export default function Header2() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
-              className="fixed top-16 right-4 z-50 w-[88%] max-w-sm overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(15,23,42,0.18)] supports-[backdrop-filter]:bg-white/55 lg:hidden"
+              className={`fixed top-16 right-4 z-50 w-[88%] max-w-sm overflow-hidden rounded-3xl backdrop-blur-2xl lg:hidden ${
+  isDark
+    ? "border border-white/10 bg-zinc-900/90 shadow-[0_8px_32px_rgba(15,23,42,0.4)] supports-[backdrop-filter]:bg-zinc-900/80"
+    : "border border-white/20 bg-white/70 shadow-[0_8px_32px_rgba(15,23,42,0.18)] supports-[backdrop-filter]:bg-white/55"
+}`}
               variants={mobileMenuVariants}
               initial="closed"
               animate="open"
