@@ -19,7 +19,7 @@ export default function GradientHero() {
       setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, []);
+  }, [placeholders.length]);
 
   return (
     <div className="bg-background relative w-full overflow-hidden">

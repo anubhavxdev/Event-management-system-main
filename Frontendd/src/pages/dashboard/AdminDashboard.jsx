@@ -11,7 +11,7 @@ import { API_BASE_URL } from '../../config';
 export default function AdminDashboard() {
     const { user } = useAuth();
     const [pendingEvents, setPendingEvents] = useState([]);
-    const [stats, setStats] = useState({ totalUsers: 0, totalEvents: 0, pendingCount: 0 });
+    const [_stats, setStats] = useState({ totalUsers: 0, totalEvents: 0, pendingCount: 0 });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Pending Reviews');
     const [allEvents, setAllEvents] = useState([]);
