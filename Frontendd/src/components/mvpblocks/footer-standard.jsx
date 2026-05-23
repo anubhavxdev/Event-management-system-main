@@ -12,7 +12,6 @@ import {
   Twitter,
   MessageCircle,
   Zap,
-  Heart,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -32,8 +31,6 @@ const data = () => ({
     resources: [
       { name: "Documentation", href: "#" },
       { name: "API Reference", href: "#" },
-      // { name: "Community", href: "/community" },
-      // { name: "Status", href: "/status" },
     ],
 
     legal: [
@@ -206,8 +203,8 @@ export default function FooterStandard() {
           </div>
         </div>
 
-               {/* Bottom */}
-        <div className="animate-rotate-3d via-primary h-px w-full bg-gradient-to-r from-transparent to-transparent" />
+        {/* Bottom */}
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
 
         <div className="text-muted-foreground container m-auto flex flex-col items-center justify-between gap-4 p-4 text-xs md:flex-row md:px-0 md:text-sm">
           <p>
@@ -248,46 +245,26 @@ export default function FooterStandard() {
           background-size: 200% 100%;
         }
 
-        {/* Legal Modal */}
-        <LegalModal
-          isOpen={!!activeModal}
-          onClose={() => setActiveModal(null)}
-          title={activeModal ? legalContent[activeModal].title : ""}
-          content={activeModal ? legalContent[activeModal].content : ""}
-        />
-
-        {/* Animation Styles */}
-        <style>{`
-          .animate-rotate-3d {
-            animation: rotate3d 8s linear infinite;
+        @keyframes rotate3d {
+          0% {
+            transform: rotateY(0);
           }
 
-          .animate-energy-flow {
-            animation: energy-flow 4s linear infinite;
-            background-size: 200% 100%;
+          100% {
+            transform: rotateY(360deg);
+          }
+        }
+
+        @keyframes energy-flow {
+          0% {
+            background-position: -100% 0;
           }
 
-          @keyframes rotate3d {
-            0% {
-              transform: rotateY(0);
-            }
-
-            100% {
-              transform: rotateY(360deg);
-            }
+          100% {
+            background-position: 100% 0;
           }
-
-          @keyframes energy-flow {
-            0% {
-              background-position: -100% 0;
-            }
-
-            100% {
-              background-position: 100% 0;
-            }
-          }
-        `}</style>
-      </div>
+        }
+      `}</style>
     </footer>
   );
 }
