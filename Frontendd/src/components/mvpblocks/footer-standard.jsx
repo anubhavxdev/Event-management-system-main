@@ -12,7 +12,6 @@ import {
   Twitter,
   MessageCircle,
   Zap,
-  Heart,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -23,32 +22,25 @@ const data = () => ({
       { name: "Features", href: "#features" },
       { name: "Pricing", href: "#pricing" },
     ],
-
     company: [
       { name: "About", href: "/about" },
       { name: "Contact", href: "/contact" },
     ],
-
     resources: [
       { name: "Documentation", href: "#" },
       { name: "API Reference", href: "#" },
-      // { name: "Community", href: "/community" },
-      // { name: "Status", href: "/status" },
     ],
-
     legal: [
       { name: "Privacy", href: "/privacy" },
       { name: "Terms", href: "/terms" },
     ],
   },
-
   socialLinks: [
     { icon: Twitter, label: "Twitter", href: "#" },
     { icon: Github, label: "GitHub", href: "#" },
     { icon: MessageCircle, label: "Discord", href: "#" },
     { icon: Linkedin, label: "LinkedIn", href: "#" },
   ],
-
   bottomLinks: [
     { href: "/privacy", label: "Privacy Policy" },
     { href: "/terms", label: "Terms of Service" },
@@ -57,16 +49,12 @@ const data = () => ({
 
 export default function FooterStandard() {
   const currentYear = new Date().getFullYear();
-
   const [activeModal, setActiveModal] = useState(null);
-
   const [email, setEmail] = useState("");
 
   const handleLegalClick = (e, href) => {
     e.preventDefault();
-
     const key = href.replace("/", "");
-
     if (legalContent[key]) {
       setActiveModal(key);
     }
@@ -74,14 +62,11 @@ export default function FooterStandard() {
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-
     if (!email.trim()) {
       toast.error("Please enter your email");
       return;
     }
-
     toast.success("Successfully Subscribed!");
-
     setEmail("");
   };
 
@@ -99,48 +84,37 @@ export default function FooterStandard() {
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 shadow-lg">
                   <Zap className="h-5 w-5 text-white" />
                 </div>
-
                 <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full bg-green-400"></div>
               </div>
-
-              <span className="text-xl font-semibold">
-                Event.One
-              </span>
+              <span className="text-xl font-semibold">Event.One</span>
             </a>
 
             <p className="text-muted-foreground max-w-md">
-              Building innovative solutions for modern businesses.
-              Fast, reliable, and scalable.
+              Building innovative solutions for modern businesses. Fast, reliable, and scalable.
             </p>
 
             {/* Social Icons */}
             <div className="flex items-center gap-2">
               <div className="flex gap-2">
                 {data().socialLinks.map(({ icon, label, href }) => (
-                    <Button
-                      key={label}
-                      size="icon"
-                      variant="outline"
-                      asChild
-                      className="hover:bg-primary dark:hover:bg-primary !border-primary/30 cursor-pointer shadow-none transition-all duration-500 hover:scale-110 hover:-rotate-12 hover:text-white hover:shadow-md"
-                    >
-                      <a href={href}>
-                        {React.createElement(icon, { className: "h-4 w-4" })}
-                      </a>
-                    </Button>
-                  ))}
+                  <Button
+                    key={label}
+                    size="icon"
+                    variant="outline"
+                    asChild
+                    className="hover:bg-primary dark:hover:bg-primary !border-primary/30 cursor-pointer shadow-none transition-all duration-500 hover:scale-110 hover:-rotate-12 hover:text-white hover:shadow-md"
+                  >
+                    <a href={href}>
+                      {React.createElement(icon, { className: "h-4 w-4" })}
+                    </a>
+                  </Button>
+                ))}
               </div>
             </div>
 
             {/* Newsletter */}
-            <form
-              onSubmit={handleSubscribe}
-              className="w-full max-w-md space-y-3"
-            >
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium"
-              >
+            <form onSubmit={handleSubscribe} className="w-full max-w-md space-y-3">
+              <label htmlFor="email" className="block text-sm font-medium">
                 Subscribe to our newsletter
               </label>
 
@@ -154,7 +128,6 @@ export default function FooterStandard() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                 />
-
                 <Button
                   type="submit"
                   className="absolute top-1.5 right-1.5 cursor-pointer transition-all duration-300 hover:px-10"
@@ -206,13 +179,11 @@ export default function FooterStandard() {
           </div>
         </div>
 
-               {/* Bottom */}
-        <div className="animate-rotate-3d via-primary h-px w-full bg-gradient-to-r from-transparent to-transparent" />
+        {/* Bottom Section Divider */}
+        <div className="animate-rotate-three-d via-primary h-px w-full bg-gradient-to-r from-transparent to-transparent" />
 
         <div className="text-muted-foreground container m-auto flex flex-col items-center justify-between gap-4 p-4 text-xs md:flex-row md:px-0 md:text-sm">
-          <p>
-            &copy; {currentYear} Event.One | All rights reserved
-          </p>
+          <p>&copy; {currentYear} Event.One | All rights reserved</p>
 
           <div className="flex items-center gap-4">
             {data().bottomLinks.map(({ href, label }) => (
@@ -237,9 +208,9 @@ export default function FooterStandard() {
         content={activeModal ? legalContent[activeModal].content : ""}
       />
 
-      {/* Animation Styles */}
+      {/* Pure CSS Injection Strings (No Babel parser breaks) */}
       <style>{`
-        .animate-rotate-3d {
+        .animate-rotate-three-d {
           animation: rotate3d 8s linear infinite;
         }
 
@@ -248,46 +219,16 @@ export default function FooterStandard() {
           background-size: 200% 100%;
         }
 
-        {/* Legal Modal */}
-        <LegalModal
-          isOpen={!!activeModal}
-          onClose={() => setActiveModal(null)}
-          title={activeModal ? legalContent[activeModal].title : ""}
-          content={activeModal ? legalContent[activeModal].content : ""}
-        />
+        @keyframes rotate3d {
+          0% { transform: rotateY(0); }
+          100% { transform: rotateY(360deg); }
+        }
 
-        {/* Animation Styles */}
-        <style>{`
-          .animate-rotate-3d {
-            animation: rotate3d 8s linear infinite;
-          }
-
-          .animate-energy-flow {
-            animation: energy-flow 4s linear infinite;
-            background-size: 200% 100%;
-          }
-
-          @keyframes rotate3d {
-            0% {
-              transform: rotateY(0);
-            }
-
-            100% {
-              transform: rotateY(360deg);
-            }
-          }
-
-          @keyframes energy-flow {
-            0% {
-              background-position: -100% 0;
-            }
-
-            100% {
-              background-position: 100% 0;
-            }
-          }
-        `}</style>
-      </div>
+        @keyframes energy-flow {
+          0% { background-position: -100% 0; }
+          100% { background-position: 100% 0; }
+        }
+      `}</style>
     </footer>
   );
 }

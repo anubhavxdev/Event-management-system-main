@@ -60,6 +60,58 @@ export default function Header2() {
     }
   };
 
+  // Smooth scroll handler for landing search button bug #110
+  const handleSearchClick = (e) => {
+    e.preventDefault();
+
+    // Agar user kisi dusre page par hai, toh pehle use home par redirect karo
+    if (location.pathname !== "/") {
+      navigate("/?focusSearch=true");
+      return;
+    }
+
+    // Advanced Input selector fallback strategy (bina alert crash ke query detect karega)
+    const mainSearchBar =
+      document.querySelector('input[placeholder*="Search"]') ||
+      document.querySelector('input[type="text"]') ||
+      document.getElementById("search");
+
+    if (mainSearchBar) {
+      // Smooth automatic view alignment translation
+      mainSearchBar.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      // Auto blink-focus setup post animation transition
+      setTimeout(() => {
+        mainSearchBar.focus();
+      }, 500);
+    } else {
+      console.warn("DOM target fallback mismatch.");
+    }
+  };
+
+  // Listen to search focus flags across redirection redirects
+  useEffect(() => {
+    if (location.pathname === "/") {
+      const params = new URLSearchParams(location.search);
+      if (params.get("focusSearch") === "true") {
+        setTimeout(() => {
+          const mainSearchBar = document.querySelector(
+            'input[placeholder*="Search for organizers"]',
+          );
+          if (mainSearchBar) {
+            mainSearchBar.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+            });
+            mainSearchBar.focus();
+          }
+        }, 600);
+        // Clean URL params after focusing
+        navigate("/", { replace: true });
+      }
+    }
+  }, [location, navigate]);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -115,9 +167,7 @@ export default function Header2() {
     <>
       <motion.header
         className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 px-4 sm:px-6 lg:px-8 pt-4 ${
-          isScrolled
-            ? "border-border/50"
-            : ""
+          isScrolled ? "border-border/50" : ""
         }`}
         variants={containerVariants}
         initial="hidden"
@@ -189,9 +239,7 @@ export default function Header2() {
                               ? "bg-indigo-500/15 ring-1 ring-indigo-500/30"
                               : "bg-muted/80"
                           }`}
-                          layoutId={
-                            isActive ? "navbar-active" : "navbar-hover"
-                          }
+                          layoutId={isActive ? "navbar-active" : "navbar-hover"}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -245,10 +293,13 @@ export default function Header2() {
                 )}
               </motion.button>
 
+              {/* SEARCH TRIGGER BUTTON (FIXED BUG #110) */}
               <motion.button
+                onClick={handleSearchClick}
                 className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                aria-label="Search events"
               >
                 <Search className="h-5 w-5" />
               </motion.button>
