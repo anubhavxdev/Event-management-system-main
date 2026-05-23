@@ -1,0 +1,294 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# CI Workflow — eventone
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# PURPOSE:
+#   Automatically validates every Pull Request and push to `main` to ensure:
+#     1. Backend dependencies install cleanly with no errors
+#     2. Frontend builds successfully for production (via Vite)
+#
+# JOBS (run in parallel):
+#   • backend-check  → install deps, run lint if configured (graceful skip if not)
+#   • frontend-check → install deps, run `npm run build` to catch broken imports
+#
+# CONTRIBUTOR NOTE:
+#   If your PR fails CI, click "Details" next to the failing check on GitHub
+#   to see the exact error. See CONTRIBUTING.md for how to run these checks
+#   locally before pushing.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: CI — eventone
+
+on:
+  # ── Trigger on pushes to the main branch ──────────────────────────────────
+  push:
+    branches: [main]
+
+  # ── Trigger on all Pull Requests targeting main ───────────────────────────
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+# ── Cancel any in-progress run for the same branch/PR when a new one starts ─
+# This saves GitHub Actions minutes and avoids stale build feedback.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 1: Backend Health Check
+  #
+  # Verifies that the backend (Node.js + Express) installs cleanly.
+  # Runs ESLint only if a "lint" script is defined in backend/package.json.
+  # Currently the backend has no lint script, so that step is skipped
+  # automatically — no manual changes needed when lint is added later.
+  # ───────────────────────────────────────────────────────────────────────────
+  backend-check:
+    name: "🔧 Backend — Install & Lint"
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Check out the full repository ────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Node.js 18 ────────────────────────────────────────────────
+      # Node 18 is the LTS version aligned with the project's target runtime.
+      # The `cache` option speeds up runs by reusing node_modules from npm cache.
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      # ── 3. Install backend dependencies ─────────────────────────────────────
+      # `npm ci` is used instead of `npm install` because:
+      #   - It installs EXACTLY the versions in package-lock.json (reproducible)
+      #   - It fails fast if package-lock.json is out of sync with package.json
+      #   - It's faster in CI environments
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      # ── 4. Run ESLint if configured, otherwise skip gracefully ───────────────
+      # This step checks whether a "lint" script exists in backend/package.json.
+      # - If YES → runs `npm run lint`
+      # - If NO  → prints a friendly message and skips (exit 0, job still passes)
+      #
+      # This means: as soon as someone adds ESLint to the backend (Issue #11),
+      # this step will automatically start enforcing it with zero workflow changes.
+      - name: Run ESLint (skip if not configured)
+        working-directory: backend
+        shell: bash
+        run: |
+          # Use Node itself to safely parse package.json and check for lint script
+          HAS_LINT=$(node -e "
+            const pkg = require('./package.json');
+            const hasLint = !!(pkg.scripts && pkg.scripts.lint);
+            console.log(hasLint ? 'yes' : 'no');
+          ")
+
+          if [ "$HAS_LINT" = "yes" ]; then
+            echo "✅ Lint script found in backend/package.json — running ESLint..."
+            npm run lint
+          else
+            echo "⏭️  No 'lint' script in backend/package.json — skipping ESLint."
+            echo "   To enable linting: add eslint config and a lint script to backend/package.json"
+            echo "   See: https://eslint.org/docs/latest/use/getting-started"
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 2: Frontend Production Build
+  #
+  # Verifies that the React + Vite frontend builds successfully for production.
+  # A failed build here means: broken imports, missing components, or syntax
+  # errors that would crash the deployed site.
+  #
+  # Also runs ESLint (the frontend already has eslint configured).
+  # Both lint and build must pass for this job to succeed.
+  # ───────────────────────────────────────────────────────────────────────────
+  frontend-check:
+    name: "⚡ Frontend — Lint & Build (Vite)"
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Check out the full repository ────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Node.js 18 ────────────────────────────────────────────────
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: Frontendd/package-lock.json
+
+      # ── 3. Install frontend dependencies ────────────────────────────────────
+      - name: Install frontend dependencies
+        working-directory: Frontendd
+        run: npm ci
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      # ── 4. Run ESLint on the frontend ────────────────────────────────────────
+      # The frontend already has eslint configured (eslint.config.js + scripts.lint).
+      # This catches: React hooks violations, undefined variables, import errors.
+      #
+      # NOTE: The current ESLint config uses 'warn' for no-unused-vars, so
+      # warnings are allowed here — only actual errors will fail this step.
+      # Once the codebase is lint-warning-free, you can enforce strict mode by
+      # adding `-- --max-warnings 0` to the command.
+      - name: Run ESLint
+        working-directory: Frontendd
+        run: npm run lint
+
+      # ── 5. Build frontend for production ─────────────────────────────────────
+      # Runs `vite build` which:
+      #   - Bundles all JS/CSS/assets into the `dist/` folder
+      #   - Catches: unresolved imports, missing files, env var issues
+      #   - Fails loudly if anything is broken → blocks the PR from merging
+      #
+      # VITE_API_URL is set to empty string because:
+      #   - The Vite proxy handles /api calls in local dev (vite.config.js)
+      #   - In production, the actual URL is injected via deployment env vars
+      #   - An empty string is valid (falls back to same-origin API calls)
+      - name: Build frontend for production
+        working-directory: Frontendd
+        run: npm run build
+        env:
+          VITE_API_URL: ""
+
+      # ── 6. Report build output size (informational — never blocks the PR) ───
+      # Prints the total size of the production bundle.
+      # Useful for tracking bundle size growth over time across PRs.
+      - name: Report build output size
+        if: success()
+        working-directory: Frontendd
+        shell: bash
+        run: |
+          echo ""
+          echo "📦 Production build output:"
+          echo "──────────────────────────"
+          du -sh dist/
+          echo ""
+          echo "Largest JS chunks:"
+          find dist/assets -name "*.js" -exec du -sh {} \; 2>/dev/null | sort -rh | head -5
+          echo ""
+  e2e-tests:
+    timeout-minutes: 10
+    name: "🎭 Playwright E2E Tests"
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })' || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: Frontendd
+        run: npm ci
+
+      - name: Install Playwright browsers
+        working-directory: Frontendd
+        run: npx playwright install --with-deps
+
+      - name: Start backend server
+        working-directory: backend
+        run: |
+          echo "Starting backend in background..."
+          mkdir -p ../ci-logs
+          
+          # Start with verbose logging
+          JWT_SECRET="test-secret-key-for-ci" \
+          MONGO_URI="mongodb://127.0.0.1:27017/event_mgmt_test" \
+          PORT=5050 \
+          NODE_ENV=test \
+          npm start > ../ci-logs/backend.log 2>&1 &
+          
+          BACKEND_PID=$!
+          echo $BACKEND_PID > ../ci-logs/backend.pid
+          
+          # Give server time to start
+          sleep 3
+          
+          # Check if process is still running
+          if ! kill -0 $BACKEND_PID 2>/dev/null; then
+            echo "❌ Backend process died immediately"
+            echo "--- Backend logs ---"
+            cat ../ci-logs/backend.log || echo "No logs found"
+            exit 1
+          fi
+          echo "✅ Backend process started (PID: $BACKEND_PID)"
+
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..60}; do
+            if curl -s http://localhost:5050/api/events > /dev/null 2>&1; then
+              echo "✅ Backend server is ready!"
+              exit 0
+            fi
+            echo "⏳ Waiting for backend... ($i/60)"
+            sleep 2
+          done
+          echo "❌ Backend server failed to start"
+          echo ""
+          echo "--- Backend logs ---"
+          cat ci-logs/backend.log 2>/dev/null || echo "No logs found"
+          exit 1
+
+      - name: Start frontend dev server
+        working-directory: Frontendd
+        run: |
+          echo "Starting frontend dev server..."
+          npm run dev > ../ci-logs/frontend.log 2>&1 &
+          echo $! > ../ci-logs/frontend.pid
+
+      - name: Wait for frontend to be ready
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null 2>&1; then
+              echo "✅ Frontend server is ready!"
+              exit 0
+            fi
+            echo "⏳ Waiting for frontend... ($i/30)"
+            sleep 2
+          done
+          echo "❌ Frontend server failed to start"
+          echo ""
+          echo "--- Frontend logs ---"
+          cat ci-logs/frontend.log 2>/dev/null || echo "No logs found"
+          exit 1
+
+      - name: Run Playwright tests
+        working-directory: Frontendd
+        run: npx playwright test --reporter=list
+        env:
+          CLIENT_URL: "http://localhost:5173"
+          API_URL: "http://localhost:5050"
+          CI: "true"
