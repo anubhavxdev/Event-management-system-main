@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { Link, useNavigate } from "react-router-dom";
+import SearchModal from "../ui/search-modal";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -29,6 +30,7 @@ const navItems = [
 export default function Header2() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
@@ -200,6 +202,9 @@ export default function Header2() {
                 className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg p-2 transition-colors duration-200"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search"
+                title="Search events (Ctrl+K)"
               >
                 <Search className="h-5 w-5" />
               </motion.button>
@@ -360,6 +365,19 @@ export default function Header2() {
 
                 <motion.button
                   type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsSearchOpen(true);
+                  }}
+                  className="border-border text-foreground hover:bg-muted flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm font-medium transition-colors duration-200 mb-3"
+                  variants={mobileItemVariants}
+                >
+                  <span>Search events...</span>
+                  <Search className="h-4 w-4" />
+                </motion.button>
+
+                <motion.button
+                  type="button"
                   onClick={toggleTheme}
                   className="border-border text-foreground hover:bg-muted flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm font-medium transition-colors duration-200"
                   variants={mobileItemVariants}
@@ -437,6 +455,7 @@ export default function Header2() {
           </>
         )}
       </AnimatePresence>
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </>
   );
 }
