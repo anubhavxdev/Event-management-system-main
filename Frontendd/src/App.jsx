@@ -9,20 +9,25 @@ import { useEffect, useState } from "react";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
 import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2"
+import Header2 from "./components/mvpblocks/header-2";
+import ScrollToTop from "./components/ui/ScrollToTop";
 import Home from './pages/Home';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
+import Support from "./pages/Support";
 import About from './pages/About';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import ForgotPassword from "./pages/ForgotPassword";
+import NotFound from "./pages/NotFound";
 import Profile from './pages/Profile';
 import DashboardLayout from './components/DashboardLayout';
 import CustomerDashboard from './pages/dashboard/CustomerDashboard';
 import OrganizerDashboard from './pages/dashboard/OrganizerDashboard';
 import CreateEvent from './pages/dashboard/CreateEvent';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
+import QRScanner from "./pages/dashboard/QRScanner";
 import ThankYou from './pages/ThankYou';
 import { useAuth } from './context/AuthContext';
 import ErrorBoundary, { InlineFallback } from './components/ErrorBoundary';
@@ -31,7 +36,6 @@ import ErrorBoundary, { InlineFallback } from './components/ErrorBoundary';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
-  if (loading)
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -69,8 +73,46 @@ const RouteErrorBoundary = ({ children }) => {
 };
 
 const AppContent = () => {
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    if(darkMode){
+      document.documentElement.classList.add("dark");
+    }else{
+      document.documentElement.classList.remove("dark");
+    } 
+  },[darkMode]);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollToTop />
+      
+      {/* Global Toast Notification System */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: "#1f2937",
+            color: "#ffffff",
+            border: "1px solid #374151",
+          },
+          success: {
+            iconTheme: {
+              primary: "#10b981",
+              secondary: "#ffffff",
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: "#ef4444",
+              secondary: "#ffffff",
+            },
+          },
+        }}
+      />
+
       {/* Header — isolated so a header crash doesn't kill page content */}
       <ErrorBoundary
         level="layout"
@@ -78,7 +120,7 @@ const AppContent = () => {
           <InlineFallback label="header" resetError={resetError} />
         )}
       >
-        <Header2 />
+        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />
       </ErrorBoundary>
 
       <main className="flex-grow">
@@ -95,6 +137,9 @@ const AppContent = () => {
           <Route path="/contact" element={
             <RouteErrorBoundary><Contact /></RouteErrorBoundary>
           } />
+          <Route path="/support" element={
+            <RouteErrorBoundary><Support /></RouteErrorBoundary>
+          } />
           <Route path="/about-us" element={
             <RouteErrorBoundary><About /></RouteErrorBoundary>
           } />
@@ -103,6 +148,9 @@ const AppContent = () => {
           } />
           <Route path="/signup" element={
             <RouteErrorBoundary><SignUp /></RouteErrorBoundary>
+          } />
+          <Route path="/forgot-password" element={
+            <RouteErrorBoundary><ForgotPassword /></RouteErrorBoundary>
           } />
           <Route path="/thank-you" element={
             <RouteErrorBoundary><ThankYou /></RouteErrorBoundary>
@@ -120,7 +168,7 @@ const AppContent = () => {
             path="/customer/dashboard"
             element={
               <RouteErrorBoundary>
-                <ProtectedRoute allowedRoles={['customer']}>
+                <ProtectedRoute allowedRoles={['attendee']}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               </RouteErrorBoundary>
@@ -132,6 +180,16 @@ const AppContent = () => {
               <RouteErrorBoundary>
                 <ProtectedRoute allowedRoles={['organizer']}>
                   <OrganizerDashboard />
+                </ProtectedRoute>
+              </RouteErrorBoundary>
+            }
+          />
+          <Route
+            path="/organizer/scan/:eventId"
+            element={
+              <RouteErrorBoundary>
+                <ProtectedRoute allowedRoles={['organizer']}>
+                  <QRScanner />
                 </ProtectedRoute>
               </RouteErrorBoundary>
             }
@@ -168,9 +226,9 @@ const AppContent = () => {
             }
           />
 
-          {/* Fallback to Home or 404 */}
+          {/* Fallback to 404 */}
           <Route path="*" element={
-            <RouteErrorBoundary><Home /></RouteErrorBoundary>
+            <RouteErrorBoundary><NotFound /></RouteErrorBoundary>
           } />
         </Routes>
       </main>
@@ -199,4 +257,4 @@ const App = () => {
   );
 };
 
-export default App
+export default App;

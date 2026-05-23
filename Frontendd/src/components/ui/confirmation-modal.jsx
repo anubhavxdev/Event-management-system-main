@@ -5,7 +5,9 @@ const ConfirmationModal = ({
     onClose,
     onConfirm,
     title,
-    message,
+    // message,
+    refundInfo
+
   }) => {
     if (!isOpen) return null;
   
@@ -17,7 +19,7 @@ const ConfirmationModal = ({
           </h2>
   
           <p className="text-gray-600 mb-6">
-            {message}
+            {refundInfo ? `Are you sure you want to cancel your registration? This action cannot be undone. Total ₹${refundInfo.refundData.refundAmount} will be refunded.` : 'Cannot cancel due to an error'}
           </p>
   
           <div className="flex justify-end gap-3">
@@ -28,12 +30,16 @@ const ConfirmationModal = ({
               Cancel
             </button>
   
-            <button
+            {
+              refundInfo ? (
+                <button
               onClick={onConfirm}
               className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
             >
               Confirm
             </button>
+              ) : (null)
+            }
           </div>
         </div>
       </div>

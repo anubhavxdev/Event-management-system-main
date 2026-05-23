@@ -4,7 +4,7 @@ import Event from '../models/Event.js';
 
 export const leaderboard = async (req, res) => {
   try {
-    const top = await User.find({ role: { $in: ['customer', 'organizer'] }, isBlocked: false })
+    const top = await User.find({ role: { $in: ['customer', 'attendee', 'organizer'] }, isBlocked: false })
       .sort({ points: -1 })
       .limit(10)
       .select('name points');
@@ -36,7 +36,7 @@ export const summary = async (_req, res) => {
       Event.countDocuments({ status: 'approved' }),
       Event.countDocuments({ status: 'approved', date: { $gte: new Date() } }),
       Registration.countDocuments({}),
-      User.countDocuments({ role: 'customer', isBlocked: false }),
+      User.countDocuments({ role: { $in: ['customer', 'attendee'] }, isBlocked: false }),
       User.countDocuments({ role: 'organizer', isBlocked: false }),
     ]);
 

@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download, Search } from 'lucide-react';
 import { io } from 'socket.io-client';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Link, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 import ConfirmationModal from '../../components/ui/confirmation-modal';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -14,8 +15,19 @@ import jsPDF from 'jspdf';
 
 const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Music', 'Other'];
 
+const getEventDate = (registration) => {
+  if (!registration?.event?.date) return null;
+
+  const eventDate = new Date(registration.event.date);
+  return Number.isNaN(eventDate.getTime()) ? null : eventDate;
+};
+
+const isActiveRegistration = (registration) =>
+  registration?.event && registration.status !== 'cancelled';
+
 export default function CustomerDashboard() {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Upcoming Tickets');
@@ -24,9 +36,10 @@ export default function CustomerDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
   const [highlightedEvents, setHighlightedEvents] = useState({});
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
   const [isFetching, setIsFetching] = useState(false);
+  const [registrationsError, setRegistrationsError] = useState('');
 
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
@@ -34,13 +47,16 @@ export default function CustomerDashboard() {
   const joinedEventIdsRef = useRef([]);
   const highlightTimeoutsRef = useRef({});
 
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const debouncedSearch = useDebounce(searchQuery, 400);
 
   useEffect(() => {
-    setSearchQuery(searchParams.get('q') || '');
-    setSelectedCategory(searchParams.get('category') || '');
+    const nextSearch = searchParams.get('q') || '';
+    const nextCategory = searchParams.get('category') || '';
+
+    queueMicrotask(() => {
+      setSearchQuery((current) => (current === nextSearch ? current : nextSearch));
+      setSelectedCategory((current) => (current === nextCategory ? current : nextCategory));
+    });
   }, [searchParams]);
 
   useEffect(() => {
@@ -79,6 +95,7 @@ export default function CustomerDashboard() {
 
   const fetchAvailableEvents = useCallback(async () => {
     try {
+      await Promise.resolve();
       setIsFetching(true);
 
       const params = new URLSearchParams();
@@ -117,33 +134,53 @@ export default function CustomerDashboard() {
 
   const fetchRegistrations = useCallback(async () => {
     try {
-      if (mountedRef.current) setLoading(true);
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.ok && mountedRef.current) {
-        const data = await res.json();
-        setRegistrations(data.registrations || []);
+      if (!res.ok) {
+        throw new Error('Failed to fetch registrations');
+      }
+
+      const data = await res.json();
+
+      if (mountedRef.current) {
+        setRegistrationsError('');
+        setRegistrations(Array.isArray(data.registrations) ? data.registrations : []);
       }
     } catch (error) {
       console.error('Failed to fetch registrations', error);
+      if (mountedRef.current) {
+        setRegistrationsError('Unable to load your registered events. Please try again later.');
+        setRegistrations([]);
+      }
     } finally {
       if (mountedRef.current) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'Browse Events') {
-      fetchAvailableEvents();
-    } else {
+    queueMicrotask(() => {
       fetchRegistrations();
-    }
-  }, [activeTab, fetchAvailableEvents, fetchRegistrations]);
+    });
+  }, [fetchRegistrations]);
 
   useEffect(() => {
-    if (activeTab !== 'Browse Events' || availableEvents.length === 0) {
+    if (activeTab === 'Browse Events') {
+      queueMicrotask(() => {
+        fetchAvailableEvents();
+      });
+    }
+  }, [activeTab, fetchAvailableEvents]);
+
+  const availableEventIds = useMemo(
+    () => availableEvents.map((evt) => evt?._id).filter(Boolean),
+    [availableEvents]
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'Browse Events' || availableEventIds.length === 0) {
       return undefined;
     }
 
@@ -154,11 +191,7 @@ export default function CustomerDashboard() {
 
     socketRef.current = socket;
 
-    const eventIds = availableEvents
-      .map((evt) => evt?._id)
-      .filter(Boolean);
-
-    joinedEventIdsRef.current = eventIds;
+    joinedEventIdsRef.current = availableEventIds;
 
     const pulseEvent = (eventId) => {
       setHighlightedEvents((prev) => ({
@@ -181,7 +214,7 @@ export default function CustomerDashboard() {
     };
 
     const joinRooms = () => {
-      eventIds.forEach((eventId) => {
+      availableEventIds.forEach((eventId) => {
         socket.emit('event:join', { eventId });
       });
     };
@@ -246,7 +279,7 @@ export default function CustomerDashboard() {
       });
       highlightTimeoutsRef.current = {};
     };
-  }, [activeTab, availableEvents.map((evt) => evt?._id).filter(Boolean).join(',')]);
+  }, [activeTab, availableEventIds]);
 
   const handleRegister = async (eventId) => {
     try {
@@ -262,15 +295,15 @@ export default function CustomerDashboard() {
       const data = await res.json();
 
       if (res.ok) {
-        alert(data.message || 'Successfully registered!');
+        toast.success(data.message || 'Successfully registered!');
         setActiveTab('Upcoming Tickets');
         fetchRegistrations();
       } else {
-        alert(data.message || 'Registration failed');
+        toast.error(data.message || 'Registration failed');
       }
     } catch (error) {
       console.error('Registration failed', error);
-      alert('Something went wrong');
+      toast.error('Something went wrong');
     }
   };
 
@@ -304,9 +337,10 @@ export default function CustomerDashboard() {
 
       setIsModalOpen(false);
       setSelectedRegistrationId(null);
+      toast.success('Registration cancelled successfully!');
     } catch (error) {
       console.error(error);
-      alert('Something went wrong');
+      toast.error('Something went wrong');
     }
   };
 
@@ -360,12 +394,33 @@ export default function CustomerDashboard() {
     }
   };
 
-  const upcomingEvents = registrations.filter(
-    (reg) => reg.event && reg.status !== 'cancelled' && new Date(reg.event.date) >= new Date()
-  );
-  const pastEvents = registrations.filter(
-    (reg) => reg.event && reg.status !== 'cancelled' && new Date(reg.event.date) < new Date()
-  );
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    const now = new Date();
+
+    return registrations.reduce(
+      (groupedEvents, registration) => {
+        if (!isActiveRegistration(registration)) {
+          return groupedEvents;
+        }
+
+        const eventDate = getEventDate(registration);
+
+        if (!eventDate) {
+          groupedEvents.upcomingEvents.push(registration);
+          return groupedEvents;
+        }
+
+        if (eventDate >= now) {
+          groupedEvents.upcomingEvents.push(registration);
+        } else {
+          groupedEvents.pastEvents.push(registration);
+        }
+
+        return groupedEvents;
+      },
+      { upcomingEvents: [], pastEvents: [] }
+    );
+  }, [registrations]);
 
   if (loading) {
     return (
@@ -446,6 +501,16 @@ export default function CustomerDashboard() {
           </div>
 
           <AnimatePresence mode="popLayout">
+            {registrationsError && activeTab !== 'Browse Events' && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-500"
+              >
+                {registrationsError}
+              </motion.div>
+            )}
+
             {activeTab === 'Upcoming Tickets' && (
               <div className="space-y-6">
                 {upcomingEvents.length === 0 ? (
@@ -459,7 +524,7 @@ export default function CustomerDashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-foreground">No upcoming tickets</h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
-                      You haven&apos;t registered for any upcoming events yet. Check out what&apos;s happening!
+                      You haven't registered for any upcoming events yet. Check out what's happening!
                     </p>
                     <Button asChild className="mt-6 bg-rose-600 hover:bg-rose-700">
                       <Link to="/#events">Browse Events</Link>
@@ -580,7 +645,7 @@ export default function CustomerDashboard() {
                     </div>
                     <h3 className="text-lg font-medium text-foreground">No past events</h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
-                      You haven&apos;t attended any past events yet.
+                      You haven't attended any past events yet.
                     </p>
                   </motion.div>
                 ) : (
@@ -781,7 +846,6 @@ export default function CustomerDashboard() {
                                 {evt.category}
                               </span>
                             </div>
-
                             <div className="flex-1 flex flex-col justify-between">
                               <div>
                                 <div className="flex justify-between items-start">
