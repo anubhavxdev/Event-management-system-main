@@ -1,30 +1,55 @@
 {
-  "name": "eventone",
-  "version": "1.0.0",
-  "description": "eventone — open-source full-stack event management platform (GSSoC project)",
+  "name": "eventone-frontend",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd Frontendd && npm run dev",
-    "seed": "cd backend && npm run seed",
-    "install:all": "cd backend && npm install && cd ../Frontendd && npm install",
-    "contributors:add": "all-contributors add",
-    "contributors:generate": "all-contributors generate"
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
-    "compression": "^1.8.1"
+    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@tsparticles/engine": "^3.9.1",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cobe": "^0.6.5",
+    "embla-carousel-react": "^8.6.0",
+    "express-validator": "^7.3.2",
+    "framer-motion": "^12.23.26",
+    "html2canvas": "^1.4.1",
+    "html5-qrcode": "^2.3.8",
+    "jspdf": "^4.2.1",
+    "lucide-react": "^0.561.0",
+    "next-themes": "^0.4.6",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.0",
+    "react-helmet-async": "^3.0.0",
+    "react-hot-toast": "^2.6.0",
+    "react-icons": "^5.6.0",
+    "react-router-dom": "^7.11.0",
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^2.5.4",
+    "tailwindcss": "^3.4.19"
   },
-  "keywords": [
-    "events",
-    "gssoc",
-    "open-source",
-    "mern",
-    "socket.io"
-  ],
-  "author": "anubhavxdev",
-  "license": "MIT",
   "devDependencies": {
-    "all-contributors-cli": "^6.26.1"
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.60.0",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "autoprefixer": "^10.4.20",
+    "babel-plugin-react-compiler": "^1.0.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.4.47",
+    "vite": "^6.0.0"
   }
 }
