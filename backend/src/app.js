@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import passport from './config/passport.js';
 import { secureUploads } from './middleware/secureUploads.js';
 
 import { env } from './config/env.js';
@@ -34,6 +35,7 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compression());
+app.use(passport.initialize());
 
 // Basic rate limit
 app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));

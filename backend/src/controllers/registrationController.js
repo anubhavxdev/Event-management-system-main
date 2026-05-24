@@ -14,36 +14,6 @@ import { emitRegistrationCount } from '../services/socket.js';
 export const registerForEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
-    if (!event || event.status !== 'approved') return res.status(400).json({ message: 'Event not available' });
-    const payload = JSON.stringify({ userId: req.user.id, eventId: event._id, at: Date.now() });
-    const qrCodeDataUrl = await generateQRCodeDataUrl(payload);
-
-    // Current implementation includes : 
-    // Checks for an existing cancelled registration
-    // Reactivating the existing registration instead of inserting a new record
-    // Capacity validation on event registration
-    // Keeps the audit trail intact while avoiding unique index conflicts
-
-    // Check active registration
-    const activeRegistrations = await Registration.countDocuments({
-      event: req.params.id,
-      status: { $ne: "cancelled" },
-    });
-
-    // Capacity validation
-    if (activeRegistrations >= event.capacity && event.capacity > 0) {
-      return res.status(400).json({
-        message: "Event is fully booked"
-      })
-    }
-
-    // To reinitiate the existing registered event
-    const existingRegistration = await Registration.findOne({ user: req.user.id, event: req.params.id });
-
-    if (existingRegistration) {
-      if (existingRegistration.status === "cancelled") {
-        existingRegistration.status = 'registered';
-      }
 
     if (!event || event.status !== 'approved') {
       return res.status(400).json({
@@ -51,13 +21,11 @@ export const registerForEvent = async (req, res) => {
       });
     }
 
-    // Check existing registration
     const existingRegistration = await Registration.findOne({
       user: req.user.id,
       event: event._id,
     });
 
-    // Already active
     if (
       existingRegistration &&
       ['registered', 'waitlisted', 'attended'].includes(
@@ -69,7 +37,6 @@ export const registerForEvent = async (req, res) => {
       });
     }
 
-    // Atomically increment count only if under capacity
     const updatedEvent = await Event.findOneAndUpdate(
       {
         _id: event._id,
@@ -88,17 +55,6 @@ export const registerForEvent = async (req, res) => {
       }
     );
 
-      return res.status(201).json({
-        registration: existingRegistration,
-      })
-    }
-
-    else {
-      const reg = await Registration.create({ user: req.user.id, event: event._id, qrCodeDataUrl });
-      try {
-        await sendEmail({ to: req.user.email, subject: `Registered: ${event.title}`, html: `<p>You are registered for ${event.title}.</p>` });
-      } catch (_) { }
-    // Event is full — reject immediately, no registration created
     if (!updatedEvent) {
       return res.status(400).json({
         message: 'Event is full',
@@ -111,22 +67,17 @@ export const registerForEvent = async (req, res) => {
       at: Date.now(),
     });
 
-    const qrCodeDataUrl =
-      await generateQRCodeDataUrl(payload);
+    const qrCodeDataUrl = await generateQRCodeDataUrl(payload);
 
     let registration;
 
-    // Reuse cancelled registration
     if (
       existingRegistration &&
       existingRegistration.status === 'cancelled'
     ) {
       existingRegistration.status = 'registered';
-      existingRegistration.qrCodeDataUrl =
-        qrCodeDataUrl;
-
-      registration =
-        await existingRegistration.save();
+      existingRegistration.qrCodeDataUrl = qrCodeDataUrl;
+      registration = await existingRegistration.save();
     } else {
       try {
         registration = await Registration.create({
@@ -137,18 +88,14 @@ export const registerForEvent = async (req, res) => {
         });
       } catch (dupErr) {
         if (dupErr.code === 11000) {
-          await Event.findByIdAndUpdate(
-            event._id,
-            {
-              $inc: {
-                registeredCount: -1,
-              },
-            }
-          );
+          await Event.findByIdAndUpdate(event._id, {
+            $inc: {
+              registeredCount: -1,
+            },
+          });
 
           return res.status(400).json({
-            message:
-              'Already registered or waitlisted',
+            message: 'Already registered or waitlisted',
           });
         }
 
@@ -156,12 +103,7 @@ export const registerForEvent = async (req, res) => {
       }
     }
 
-
-    // Send email
-    emitRegistrationCount(
-      updatedEvent._id,
-      updatedEvent.registeredCount,
-    );
+    emitRegistrationCount(updatedEvent._id, updatedEvent.registeredCount);
 
     try {
       await sendEmail({
@@ -184,45 +126,37 @@ export const registerForEvent = async (req, res) => {
   }
 };
 
-// Fetch registrations with waitlist position
-export const myRegistrations = async (
-  req,
-  res
-) => {
+export const myRegistrations = async (req, res) => {
   try {
     const regs = await Registration.find({
       user: req.user.id,
     }).populate('event');
 
-    const registrationsWithPosition =
-      await Promise.all(
-        regs.map(async (reg) => {
-          let waitlistPosition = null;
+    const registrationsWithPosition = await Promise.all(
+      regs.map(async (reg) => {
+        let waitlistPosition = null;
 
-          if (reg.status === 'waitlisted') {
-            const peopleAhead =
-              await Registration.countDocuments({
-                event: reg.event._id,
-                status: 'waitlisted',
-                createdAt: {
-                  $lt: reg.createdAt,
-                },
-              });
+        if (reg.status === 'waitlisted') {
+          const peopleAhead = await Registration.countDocuments({
+            event: reg.event._id,
+            status: 'waitlisted',
+            createdAt: {
+              $lt: reg.createdAt,
+            },
+          });
 
-            waitlistPosition =
-              peopleAhead + 1;
-          }
+          waitlistPosition = peopleAhead + 1;
+        }
 
-          return {
-            ...reg.toObject(),
-            waitlistPosition,
-          };
-        })
-      );
+        return {
+          ...reg.toObject(),
+          waitlistPosition,
+        };
+      })
+    );
 
     res.json({
-      registrations:
-        registrationsWithPosition,
+      registrations: registrationsWithPosition,
     });
   } catch (err) {
     console.error('ERROR:', err);
@@ -233,399 +167,318 @@ export const myRegistrations = async (
   }
 };
 
-// Get participants for organizer/admin
-export const participantsForEvent =
-  async (req, res) => {
-    try {
-      const regs = await Registration.find({
-        event: req.params.id,
-      }).populate('user', 'name email');
+export const participantsForEvent = async (req, res) => {
+  try {
+    const regs = await Registration.find({
+      event: req.params.id,
+    }).populate('user', 'name email');
 
-      res.json({
-        participants: regs,
-      });
-    } catch (err) {
-      console.error('ERROR:', err);
+    res.json({
+      participants: regs,
+    });
+  } catch (err) {
+    console.error('ERROR:', err);
 
-      res.status(500).json({
-        message: err.message,
-      });
-    }
-  };
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
 
-// Secure check-in handler
-export const checkInParticipant =
-  async (req, res) => {
-    try {
-      if (!req.user) {
-        return res.status(401).json({
-          message:
-            'Unauthorized: user not authenticated',
-        });
-      }
-
-      if (!req.body || !req.body.userId) {
-        return res.status(400).json({
-          message:
-            'Bad Request: userId is required',
-        });
-      }
-
-      const validStatuses = [
-        'attended',
-        'cancelled',
-        'no-show',
-      ];
-
-      const status = (
-        req.body.status || 'attended'
-      )
-        .toString()
-        .trim()
-        .toLowerCase();
-
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({
-          message: 'Invalid status',
-        });
-      }
-
-      const event = await Event.findById(
-        req.params.id
-      ).select('organizer');
-
-      if (!event) {
-        return res.status(404).json({
-          message: 'Event not found',
-        });
-      }
-
-      if (
-        req.user.role !== 'admin' &&
-        event.organizer.toString() !==
-          req.user.id
-      ) {
-        return res.status(403).json({
-          message:
-            'Forbidden: not organizer',
-        });
-      }
-
-      const registration = await Registration.findOne({
-        user: req.body.userId,
-        event: req.params.id,
-      });
-
-      if (!registration) {
-        return res.status(404).json({
-          message: 'Registration not found',
-        });
-      }
-
-      if (status === 'attended' && registration.status === 'attended') {
-        return res.status(400).json({
-          message: 'Attendee already checked in',
-        });
-      }
-
-      registration.status = status;
-      if (status === 'attended') {
-        registration.checkedInAt = new Date();
-      } else {
-        registration.checkedInAt = undefined;
-      }
-      await registration.save();
-
-      // Promote waitlisted user
-      if (status === 'cancelled') {
-        await promoteFromWaitlist(
-          req.params.id
-        );
-      }
-
-      const attendee =
-        await User.findById(
-          req.body.userId
-        );
-
-      res.status(200).json({
-        registration,
-        attendeeName:
-          attendee?.name || 'Attendee',
-      });
-    } catch (err) {
-      console.error('ERROR:', err);
-
-      res.status(500).json({
-        message: err.message,
+export const checkInParticipant = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({
+        message: 'Unauthorized: user not authenticated',
       });
     }
-  };
 
-// Export CSV
-export const exportParticipantsCsv =
-  async (req, res) => {
-    try {
-      const regs = await Registration.find({
-        event: req.params.id,
-      }).populate('user', 'name email');
-
-      const rows = regs.map((r) => ({
-        name: r.user?.name || '',
-        email: r.user?.email || '',
-        status: r.status,
-        registeredAt: r.createdAt,
-      }));
-
-      const filePath = path.join(
-        process.cwd(),
-        `participants-${req.params.id}.csv`
-      );
-
-      const csvWriter =
-        createObjectCsvWriter({
-          path: filePath,
-          header: [
-            {
-              id: 'name',
-              title: 'Name',
-            },
-            {
-              id: 'email',
-              title: 'Email',
-            },
-            {
-              id: 'status',
-              title: 'Status',
-            },
-            {
-              id: 'registeredAt',
-              title: 'Registered At',
-            },
-          ],
-        });
-
-      await csvWriter.writeRecords(rows);
-
-      res.download(filePath);
-    } catch (err) {
-      console.error('ERROR:', err);
-
-      res.status(500).json({
-        message: err.message,
+    if (!req.body || !req.body.userId) {
+      return res.status(400).json({
+        message: 'Bad Request: userId is required',
       });
     }
-  };
 
-// Registration status
-export const checkRegistrationStatus =
-  async (req, res) => {
-    try {
-      const registration =
-        await Registration.findOne({
-          user: req.user.id,
-          event: req.params.id,
-          status: {
-            $ne: 'cancelled',
-          },
-        });
+    const validStatuses = ['attended', 'cancelled', 'no-show'];
 
-      res.json({
-        isRegistered:
-          registration?.status ===
-          'registered',
+    const status = (req.body.status || 'attended')
+      .toString()
+      .trim()
+      .toLowerCase();
 
-        isWaitlisted:
-          registration?.status ===
-          'waitlisted',
-
-        registration,
-      });
-    } catch (err) {
-      console.error('ERROR:', err);
-
-      res.status(500).json({
-        message: err.message,
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid status',
       });
     }
-  };
 
-// Promote waitlisted user
-export const promoteFromWaitlist =
-  async (eventId) => {
-    const nextRegistration =
-      await Registration.findOne({
-        event: eventId,
-        status: 'waitlisted',
-      })
-        .sort({
-          createdAt: 1,
-        })
-        .populate('user')
-        .populate('event');
+    const event = await Event.findById(req.params.id).select('organizer');
 
-    if (!nextRegistration) return;
+    if (!event) {
+      return res.status(404).json({
+        message: 'Event not found',
+      });
+    }
 
-    const payload = JSON.stringify({
-      userId:
-        nextRegistration.user._id,
-      eventId:
-        nextRegistration.event._id,
-      at: Date.now(),
+    if (
+      req.user.role !== 'admin' &&
+      event.organizer.toString() !== req.user.id
+    ) {
+      return res.status(403).json({
+        message: 'Forbidden: not organizer',
+      });
+    }
+
+    const registration = await Registration.findOne({
+      user: req.body.userId,
+      event: req.params.id,
     });
 
-    const qrCodeDataUrl =
-      await generateQRCodeDataUrl(
-        payload
-      );
+    if (!registration) {
+      return res.status(404).json({
+        message: 'Registration not found',
+      });
+    }
 
-    nextRegistration.status =
-      'registered';
+    if (status === 'attended' && registration.status === 'attended') {
+      return res.status(400).json({
+        message: 'Attendee already checked in',
+      });
+    }
 
-    nextRegistration.qrCodeDataUrl =
-      qrCodeDataUrl;
+    registration.status = status;
+    if (status === 'attended') {
+      registration.checkedInAt = new Date();
+    } else {
+      registration.checkedInAt = undefined;
+    }
+    await registration.save();
 
-    await nextRegistration.save();
+    if (status === 'cancelled') {
+      await promoteFromWaitlist(req.params.id);
+    }
 
-    try {
-      await sendEmail({
-        to: nextRegistration.user.email,
-        subject: `Spot Confirmed: ${nextRegistration.event.title}`,
-        html: `
+    const attendee = await User.findById(req.body.userId);
+
+    res.status(200).json({
+      registration,
+      attendeeName: attendee?.name || 'Attendee',
+    });
+  } catch (err) {
+    console.error('ERROR:', err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+export const exportParticipantsCsv = async (req, res) => {
+  try {
+    const regs = await Registration.find({
+      event: req.params.id,
+    }).populate('user', 'name email');
+
+    const rows = regs.map((r) => ({
+      name: r.user?.name || '',
+      email: r.user?.email || '',
+      status: r.status,
+      registeredAt: r.createdAt,
+    }));
+
+    const filePath = path.join(
+      process.cwd(),
+      `participants-${req.params.id}.csv`
+    );
+
+    const csvWriter = createObjectCsvWriter({
+      path: filePath,
+      header: [
+        { id: 'name', title: 'Name' },
+        { id: 'email', title: 'Email' },
+        { id: 'status', title: 'Status' },
+        { id: 'registeredAt', title: 'Registered At' },
+      ],
+    });
+
+    await csvWriter.writeRecords(rows);
+
+    res.download(filePath);
+  } catch (err) {
+    console.error('ERROR:', err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+export const checkRegistrationStatus = async (req, res) => {
+  try {
+    const registration = await Registration.findOne({
+      user: req.user.id,
+      event: req.params.id,
+      status: {
+        $ne: 'cancelled',
+      },
+    });
+
+    res.json({
+      isRegistered: registration?.status === 'registered',
+      isWaitlisted: registration?.status === 'waitlisted',
+      registration,
+    });
+  } catch (err) {
+    console.error('ERROR:', err);
+
+    res.status(500).json({
+      message: err.message,
+    });
+  }
+};
+
+export const promoteFromWaitlist = async (eventId) => {
+  const nextRegistration = await Registration.findOne({
+    event: eventId,
+    status: 'waitlisted',
+  })
+    .sort({
+      createdAt: 1,
+    })
+    .populate('user')
+    .populate('event');
+
+  if (!nextRegistration) return;
+
+  const payload = JSON.stringify({
+    userId: nextRegistration.user._id,
+    eventId: nextRegistration.event._id,
+    at: Date.now(),
+  });
+
+  const qrCodeDataUrl = await generateQRCodeDataUrl(payload);
+
+  nextRegistration.status = 'registered';
+  nextRegistration.qrCodeDataUrl = qrCodeDataUrl;
+
+  await nextRegistration.save();
+
+  try {
+    await sendEmail({
+      to: nextRegistration.user.email,
+      subject: `Spot Confirmed: ${nextRegistration.event.title}`,
+      html: `
         <p>You have been promoted from the waitlist.</p>
         <p>Your registration for ${nextRegistration.event.title} is now confirmed.</p>
       `,
-      });
-    } catch (_) {}
-  };
+    });
+  } catch (_) {}
+};
 
 export const cancelRegistration = async (req, res) => {
-  // Only the customer who owns the registration can cancel it
-  // Cannot cancel if event.date is in the past
-  // Sets registration.status = 'cancelled'; does not delete the document (for audit trail)
-
   try {
     const { id } = req.params;
     const userId = req.user.id;
 
     const registration = await Registration.findById(id)
-      .populate("event")
-      .populate("user");
+      .populate('event')
+      .populate('user');
 
-      const registration =
-        await Registration.findById(
-          id
-        ).populate('event');
-
-    // Owner check
-    if (registration.user._id.toString() !== userId) {
-      return res.status(403).json({
-        message: "Unauthorized",
+    if (!registration) {
+      return res.status(404).json({
+        message: 'Registration not found',
       });
     }
 
-      // Owner check
-      if (
-        registration.user.toString() !==
-        userId
-      ) {
-        return res.status(403).json({
-          message: 'Unauthorized',
-        });
-      }
+    if (registration.user._id.toString() !== userId) {
+      return res.status(403).json({
+        message: 'Unauthorized',
+      });
+    }
 
-      // Already cancelled
-      if (
-        registration.status ===
-        'cancelled'
-      ) {
-        return res.status(400).json({
-          message: 'Already cancelled',
-        });
-      }
+    if (registration.status === 'cancelled') {
+      return res.status(400).json({
+        message: 'Already cancelled',
+      });
+    }
+
+    const eventDate = new Date(registration.event.date);
+
+    if (eventDate < new Date()) {
+      return res.status(400).json({
+        message: 'Cannot cancel past events',
+      });
+    }
 
     let refundData = {
       refundStatus: 'not_applicable',
-      refundAmount: 0
-    }
+      refundAmount: 0,
+    };
 
-    // Check if the event is paid or free
-    const isPaidEvent = registration.event.price && registration.event.price > 0;
+    const isPaidEvent =
+      registration.event.price && registration.event.price > 0;
 
     if (isPaidEvent) {
-      // Check if the event is more than 24 hours away (no refunds within 24 hours of event)
-      const refundPolicy = calculateRefund(eventDate, registration.event.price);
+      const refundPolicy = calculateRefund(
+        eventDate,
+        registration.event.price
+      );
 
       refundData = {
         refundStatus: refundPolicy.status,
-        refundAmount: refundPolicy.refundAmount
-      }
+        refundAmount: refundPolicy.refundAmount,
+      };
 
       if (refundPolicy.eligible && registration.paymentId) {
         try {
-          // Call Razorpay Refund API with the stored paymentId
-          console.log("Refund API call...")
-          // TODO: Add after #76 merges
-          // Razorpay refund integration
+          refundData.refundId = 'mock_refund_id';
+          refundData.refundStatus = 'pending';
+          refundData.refundedAt = new Date();
 
-          /*
-          const refund =
-            await razorpay.payments.refund(
-              registration.paymentId,
-              {
-                amount:
-                  refundPolicy.refundAmount * 100,
-              }
-            );
-
-          refundData.refundId = refund.id;
-          refundData.refundStatus =
-            refund.status;
-          */
-
-          // Mock temporary response
-          refundData.refundId =
-            "mock_refund_id";
-          refundData.refundStatus =
-            "pending";
-          refundData.refundedAt =
-            new Date();
-
-          // Send a refund confirmation email to the customer
           try {
-            await sendEmail({ to: req.user.email, subject: `Payment Refund : ${registration.event.title}`, html: `<p>You are refunded for ${registration.event.title} of total Amount : ${refundData.refundAmount}.</p>` });
-          } catch (_) { }
-
+            await sendEmail({
+              to: req.user.email,
+              subject: `Payment Refund : ${registration.event.title}`,
+              html: `<p>You are refunded for ${registration.event.title} of total Amount : ${refundData.refundAmount}.</p>`,
+            });
+          } catch (_) {}
         } catch (refundError) {
           return res.status(500).json({
-            message: "Refund processing failed",
+            message: 'Refund processing failed',
             error: refundError.message,
           });
-          console.log(refundError)
         }
       }
     }
 
-    // Save refund details: refundId, refundStatus, refundedAt to the Registration document
     registration.refundId = refundData.refundId || null;
     registration.refundStatus = refundData.refundStatus;
     registration.refundAmount = refundData.refundAmount;
     registration.refundedAt = refundData.refundedAt || null;
+    registration.status = 'cancelled';
 
-
-
-    registration.status = "cancelled";
     await registration.save();
+
+    await Event.findByIdAndUpdate(registration.event._id, {
+      $inc: {
+        registeredCount: -1,
+      },
+    });
+
+    await promoteFromWaitlist(registration.event._id);
 
     res.status(200).json({
       message: 'Registration cancelled successfully',
       registration,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('ERROR:', error);
+
+    res.status(500).json({
+      message: error.message,
+    });
   }
 };
-
 
 export const checkRefundStatus = async (req, res) => {
   try {
@@ -634,46 +487,39 @@ export const checkRefundStatus = async (req, res) => {
 
     const registration = await Registration.findById(id);
 
-    // Registration exists check
     if (!registration) {
       return res.status(404).json({
-        message: "Registration not found",
+        message: 'Registration not found',
       });
     }
 
-    // Owner check
     if (registration.user.toString() !== userId) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: 'Unauthorized',
       });
     }
 
-    // Refund only applies to cancelled registrations
-    if (registration.status !== "cancelled") {
+    if (registration.status !== 'cancelled') {
       return res.status(400).json({
-        message:
-          "Registration is not cancelled",
+        message: 'Registration is not cancelled',
       });
     }
 
-    // Free event / no payment
     if (!registration.paymentId) {
       return res.status(200).json({
-        refundStatus:
-          "not_applicable",
+        refundStatus: 'not_applicable',
         refundAmount: 0,
         refundedAt: null,
-        message:"No refund for free events",
+        message: 'No refund for free events',
       });
     }
 
     return res.status(200).json({
-      refundStatus:registration.refundStatus,
-      refundAmount:registration.refundAmount,
-      refundedAt:registration.refundedAt,
-      refundId:registration.refundId,
+      refundStatus: registration.refundStatus,
+      refundAmount: registration.refundAmount,
+      refundedAt: registration.refundedAt,
+      refundId: registration.refundId,
     });
-
   } catch (error) {
     return res.status(500).json({
       message: error.message,
@@ -682,124 +528,66 @@ export const checkRefundStatus = async (req, res) => {
 };
 
 export const checkRefundPolicy = async (req, res) => {
-
   try {
     const { id } = req.params;
-    const userId = req.user.id; // from auth middleware
+    const userId = req.user.id;
 
     const registration = await Registration.findById(id)
-      .populate("event")
-      .populate("user");
+      .populate('event')
+      .populate('user');
 
     if (!registration) {
       return res.status(404).json({
-        message: "Registration not found",
+        message: 'Registration not found',
       });
     }
 
-    console.log(
-      req.user.id,
-      registration.user.toString()
-    );
-
-    // Owner check
     if (registration.user._id.toString() !== userId) {
       return res.status(403).json({
-        message: "Unauthorized",
+        message: 'Unauthorized',
       });
     }
 
-    // Already cancelled
-    if (registration.status === "cancelled") {
+    if (registration.status === 'cancelled') {
       return res.status(400).json({
-        message: "Already cancelled",
+        message: 'Already cancelled',
       });
     }
 
-    // Past event check
     const eventDate = new Date(registration.event.date);
 
     if (eventDate < new Date()) {
       return res.status(400).json({
-        message: "Cannot cancel past events",
+        message: 'Cannot cancel past events',
       });
     }
 
     let refundData = {
       refundStatus: 'not_applicable',
-      refundAmount: 0
-    }
+      refundAmount: 0,
+    };
 
-    // Check if the event is paid or free
-    const isPaidEvent = registration.event.price && registration.event.price > 0;
+    const isPaidEvent =
+      registration.event.price && registration.event.price > 0;
 
     if (isPaidEvent) {
-      // Check if the event is more than 24 hours away (no refunds within 24 hours of event)
-      const refundPolicy = calculateRefund(eventDate, registration.event.price);
+      const refundPolicy = calculateRefund(
+        eventDate,
+        registration.event.price
+      );
 
       refundData = {
         refundStatus: refundPolicy.status,
-        refundAmount: refundPolicy.refundAmount
-      }
-
-      
+        refundAmount: refundPolicy.refundAmount,
+      };
     }
 
     res.status(200).json({
       refundData,
     });
-
-    
-
   } catch (error) {
     res.status(500).json({
       message: error.message,
     });
   }
 };
-
-
-      // Past event check
-      const eventDate = new Date(
-        registration.event.date
-      );
-
-      if (eventDate < new Date()) {
-        return res.status(400).json({
-          message:
-            'Cannot cancel past events',
-        });
-      }
-
-      registration.status = 'cancelled';
-
-      await registration.save();
-
-      // Decrease registered count
-      await Event.findByIdAndUpdate(
-        registration.event._id,
-        {
-          $inc: {
-            registeredCount: -1,
-          },
-        }
-      );
-
-      // Promote next waitlisted user
-      await promoteFromWaitlist(
-        registration.event._id
-      );
-
-      res.status(200).json({
-        message:
-          'Registration cancelled successfully',
-        registration,
-      });
-    } catch (error) {
-      console.error('ERROR:', error);
-
-      res.status(500).json({
-        message: error.message,
-      });
-    }
-  };
