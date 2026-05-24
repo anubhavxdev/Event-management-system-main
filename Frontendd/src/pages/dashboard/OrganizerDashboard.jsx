@@ -25,6 +25,8 @@ import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
 
 import { API_BASE_URL } from '../../config';
+// Manual Check-In: helper debounce delay
+const SEARCH_DEBOUNCE_MS = 150;
 
 export default function OrganizerDashboard() {
     const { user } = useAuth();
@@ -35,6 +37,13 @@ export default function OrganizerDashboard() {
     const [activeTab, setActiveTab] = useState('My Events');
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [editingEventId, setEditingEventId] = useState(null);
+    // Manual Check-In states
+    const [participants, setParticipants] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [filterMode, setFilterMode] = useState('all'); // all | checked | pending
+    const [loadingId, setLoadingId] = useState(null);
+    const [manualOpen, setManualOpen] = useState(true);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -64,6 +73,33 @@ export default function OrganizerDashboard() {
             mountedRef.current = false;
         };
     }, []);
+
+    // Debounce searchQuery -> debouncedQuery
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
+
+    // Fetch participants when selectedEvent changes
+    useEffect(() => {
+        let cancelled = false;
+        const fetchParticipants = async () => {
+            if (!selectedEvent) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE_URL}/api/registrations/${selectedEvent._id}/participants`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!cancelled) setParticipants(data.participants || data || []);
+            } catch (err) {
+                console.error('Failed to fetch participants', err);
+            }
+        };
+        fetchParticipants();
+        return () => { cancelled = true; };
+    }, [selectedEvent]);
 
     const calculateStats = (events) => {
         const newStats = {
@@ -182,6 +218,45 @@ const handleDeleteEvent = async (eventId) => {
         });
     }
 };
+
+    // Handle check-in with optimistic update
+    const handleCheckin = async (registrationObj) => {
+        // permission check: only organizer can checkin
+        const isOrganizer = selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id);
+        if (!isOrganizer) {
+            toast.error('You do not have permission to check in attendees for this event.');
+            return;
+        }
+
+        if (loadingId === registrationObj._id) return; // prevent duplicate
+
+        setLoadingId(registrationObj._id);
+
+        const original = participants.map(p => ({ ...p }));
+        const now = new Date();
+
+        // optimistic
+        setParticipants(prev => prev.map(p => p._id === registrationObj._id ? { ...p, checkedIn: true, checkinTime: now.toISOString() } : p));
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/registrations/${registrationObj._id}/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+            });
+
+            if (!res.ok) throw new Error('Failed');
+
+            toast.success(`${registrationObj.name} checked in at ${now.toLocaleTimeString()}`);
+        } catch (err) {
+            // rollback
+            setParticipants(original);
+            console.error('Check-in failed', err);
+            toast.error(`Failed to check in ${registrationObj.name}. Please try again.`);
+        } finally {
+            setLoadingId(null);
+        }
+    };
 
     const resetForm = () => {
         setEditingEventId(null);
@@ -1010,6 +1085,113 @@ const handleCreateSubmit = async (e) => {
                                     </div>
 
                                     <div className="flex items-center justify-between p-3 bg-red-500/5 rounded-lg border border-red-500/10">
+
+                                                                            {/* Manual Check-In Panel */}
+                                                                            <div className="mt-4 p-4 bg-secondary/10 rounded-lg border border-border/50">
+                                                                                <div className="flex items-center justify-between mb-3">
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <h4 className="font-semibold">Manual Check-In</h4>
+                                                                                        <span className="text-xs text-muted-foreground">Fallback if QR fails</span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div className="text-sm text-muted-foreground">{participants.filter(p=>p.checkedIn).length} / {participants.length} checked in</div>
+                                                                                        <button
+                                                                                            className="text-sm text-muted-foreground hover:text-foreground"
+                                                                                            onClick={() => setManualOpen(!manualOpen)}
+                                                                                        >
+                                                                                            {manualOpen ? 'Hide' : 'Show'}
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {manualOpen && (
+                                                                                    <div>
+                                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                                                                            <div className="md:col-span-2">
+                                                                                                <Input
+                                                                                                    placeholder="Search by name or email..."
+                                                                                                    value={searchQuery}
+                                                                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                                                                    aria-label="Search participants"
+                                                                                                />
+                                                                                            </div>
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='all'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('all')}
+                                                                                                >All</button>
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='checked'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('checked')}
+                                                                                                >Checked In</button>
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='pending'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('pending')}
+                                                                                                >Pending</button>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        {/* Participant list */}
+                                                                                        <div className="max-h-64 overflow-auto border border-border rounded-lg">
+                                                                                            <table className="w-full text-sm">
+                                                                                                <thead className="bg-secondary/30 sticky top-0">
+                                                                                                    <tr>
+                                                                                                        <th className="text-left px-3 py-2">Name</th>
+                                                                                                        <th className="text-left px-3 py-2">Email</th>
+                                                                                                        <th className="text-left px-3 py-2">Status</th>
+                                                                                                        <th className="text-left px-3 py-2">Check-In</th>
+                                                                                                        <th className="text-left px-3 py-2">Action</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    {(() => {
+                                                                                                        const q = debouncedQuery;
+                                                                                                        let list = participants || [];
+                                                                                                        if (q) {
+                                                                                                            list = list.filter(p => ((p.name||'').toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q)));
+                                                                                                        }
+                                                                                                        if (filterMode === 'checked') list = list.filter(p => p.checkedIn === true);
+                                                                                                        if (filterMode === 'pending') list = list.filter(p => !p.checkedIn);
+                                                                                                        if (list.length === 0) {
+                                                                                                            return (
+                                                                                                                <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No participants</td></tr>
+                                                                                                            );
+                                                                                                        }
+                                                                                                        return list.map(p => (
+                                                                                                            <tr key={p._id} className="border-t border-border/50">
+                                                                                                                <td className="px-3 py-2">{p.name}</td>
+                                                                                                                <td className="px-3 py-2">{p.email}</td>
+                                                                                                                <td className="px-3 py-2">{p.status || 'Registered'}</td>
+                                                                                                                <td className="px-3 py-2">
+                                                                                                                    {p.checkedIn ? (
+                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-green-700 bg-green-100">✓ Checked In{p.checkinTime?` (${new Date(p.checkinTime).toLocaleTimeString()})`:''}</span>
+                                                                                                                    ) : (
+                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-yellow-800 bg-yellow-100">Pending</span>
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                                <td className="px-3 py-2">
+                                                                                                                    {!p.checkedIn ? (
+                                                                                                                        <Button
+                                                                                                                            size="sm"
+                                                                                                                            onClick={() => handleCheckin(p)}
+                                                                                                                            disabled={loadingId === p._id || !(selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id))}
+                                                                                                                        >
+                                                                                                                            {loadingId === p._id ? (<span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin inline-block mr-2" />) : null}
+                                                                                                                            Check In
+                                                                                                                        </Button>
+                                                                                                                    ) : (
+                                                                                                                        <span className="text-sm text-muted-foreground">—</span>
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        ));
+                                                                                                    })()}
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-red-500/10 rounded-full text-red-500">
                                                 <Trash2 className="w-4 h-4" />

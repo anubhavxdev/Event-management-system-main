@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 import { Link, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 import { generateCertificate } from '../../utils/generateCertificate';

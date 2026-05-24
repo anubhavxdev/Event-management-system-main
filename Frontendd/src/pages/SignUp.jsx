@@ -250,7 +250,7 @@ export default function SignUp() {
                                         type="button"
                                         onClick={toggleVisibility}
                                     >
-                                        {isVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                        {isVisible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                     </button>
                                 </div>
                                 <ErrorMsg msg={errors.password} />
@@ -276,7 +276,7 @@ export default function SignUp() {
                                         type="button"
                                         onClick={toggleConfirmVisibility}
                                     >
-                                        {isConfirmVisible ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                        {isConfirmVisible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                     </button>
                                 </div>
                                 <ErrorMsg msg={errors.confirmPassword} />
