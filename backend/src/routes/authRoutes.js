@@ -8,7 +8,7 @@ import {
 } from '../controllers/authController.js';
 
 import { authenticate } from '../middleware/auth.js';
-import { authRateLimiter } from '../middleware/rateLimiters.js';
+import { authLimiter, registrationLimiter } from '../middleware/rateLimiters.js';
 import {
   signupValidation,
   loginValidation,
@@ -20,7 +20,7 @@ const router = Router();
 // Auth Routes
 router.post(
   '/signup',
-  authRateLimiter,
+  registrationLimiter,
   signupValidation,
   validate,
   signup
@@ -28,7 +28,7 @@ router.post(
 
 router.post(
   '/login',
-  authRateLimiter,
+  authLimiter,
   loginValidation,
   validate,
   login
