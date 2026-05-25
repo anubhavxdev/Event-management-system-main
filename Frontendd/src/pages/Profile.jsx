@@ -10,11 +10,13 @@ const Profile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         name: user?.name || '',
+        email: user?.email || '',
         phoneNumber: user?.phoneNumber || '',
     });
     const [message, setMessage] = useState('');
     const [messageType, setMessageType] = useState(''); // 'success' or 'error'
     const [phoneError, setPhoneError] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     // Validate phone number format
     const validatePhoneNumber = (phoneNumber) => {
@@ -27,6 +29,10 @@ const Profile = () => {
     // Validate name
     const validateName = (name) => {
         return name && name.trim().length >= 2;
+    };
+
+    const validateEmail = (email) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
     };
 
     const handleChange = (e) => {
@@ -57,6 +63,12 @@ const Profile = () => {
             return;
         }
 
+        if (!validateEmail(formData.email)) {
+            setMessageType('error');
+            setMessage('Please enter a valid email address.');
+            return;
+        }
+
         if (formData.phoneNumber && !validatePhoneNumber(formData.phoneNumber)) {
             setMessageType('error');
             setMessage('Invalid phone number format. Use format: +1234567890 or 1234567890');
@@ -64,6 +76,7 @@ const Profile = () => {
         }
         
         try {
+            setIsSaving(true);
             const token = localStorage.getItem('token');
             if (!token) {
                 setMessageType('error');
@@ -98,7 +111,20 @@ const Profile = () => {
             console.error('Profile update error:', error);
             setMessageType('error');
             setMessage('An error occurred while updating your profile. Please try again.');
+        } finally {
+            setIsSaving(false);
         }
+    };
+
+    const handleCancel = () => {
+        setFormData({
+            name: user?.name || '',
+            email: user?.email || '',
+            phoneNumber: user?.phoneNumber || '',
+        });
+        setPhoneError('');
+        setMessage('');
+        setIsEditing(false);
     };
 
     if (!user) {
@@ -156,13 +182,11 @@ const Profile = () => {
                                 <input
                                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                     name="email"
-                                    value={user.email}
-                                    disabled={true} // Usually email change requires more validation
+                                    value={isEditing ? formData.email : user.email}
+                                    onChange={handleChange}
+                                    disabled={!isEditing}
                                 />
                             </div>
-                            <p className="text-[0.8rem] text-muted-foreground">
-                                Email cannot be changed directly.
-                            </p>
                         </div>
                         <div className="grid gap-2">
                             <label className="text-sm font-medium leading-none">Phone Number</label>
@@ -202,13 +226,13 @@ const Profile = () => {
                     <div className="flex justify-end gap-4 pt-4 border-t border-border">
                         {isEditing ? (
                             <>
-                                <Button variant="ghost" onClick={() => setIsEditing(false)}>Cancel</Button>
+                                <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
                                 <Button 
                                     onClick={handleSubmit}
-                                    disabled={phoneError || !validateName(formData.name)}
+                                    disabled={isSaving || phoneError || !validateName(formData.name) || !validateEmail(formData.email)}
                                     className="disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Save Changes
+                                    {isSaving ? 'Saving...' : 'Save Changes'}
                                 </Button>
                             </>
                         ) : (
