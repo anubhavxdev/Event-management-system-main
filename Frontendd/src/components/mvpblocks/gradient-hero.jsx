@@ -42,7 +42,7 @@ export default function GradientHero() {
 
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-center text-4xl tracking-tight sm:text-6xl lg:text-7xl"
- 
+
           >
             <span className="text-foreground">Run Events </span>
             <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">Smarter</span>

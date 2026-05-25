@@ -5,6 +5,7 @@ import { API_BASE_URL } from '../../config';
 export default function QRScanner() {
   const [feedback, setFeedback] = useState(null);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     let scanner;
 
@@ -114,6 +115,7 @@ export default function QRScanner() {
         scanner.clear().catch(() => {});
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
