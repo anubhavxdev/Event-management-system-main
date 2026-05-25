@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2, MessageSquare, AlertTriangle, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
@@ -20,6 +21,11 @@ export default function AdminDashboard() {
     const [rejectingEvent, setRejectingEvent] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const [rejectLoading, setRejectLoading] = useState(false);
+    const [selectedPendingEventIds, setSelectedPendingEventIds] = useState([]);
+    const [bulkActionLoading, setBulkActionLoading] = useState(null);
+    const [bulkProgress, setBulkProgress] = useState({ completed: 0, total: 0, action: '' });
+    const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
+    const [bulkRejectReason, setBulkRejectReason] = useState('');
     const mountedRef = useRef(true);
 
     useEffect(() => {
@@ -243,6 +249,109 @@ export default function AdminDashboard() {
         }
     };
 
+    const visiblePendingIdSet = new Set(pendingEvents.map((event) => event._id));
+    const selectedPendingIds = selectedPendingEventIds.filter((id) => visiblePendingIdSet.has(id));
+    const selectedCount = selectedPendingIds.length;
+    const allPendingSelected = pendingEvents.length > 0 && selectedCount === pendingEvents.length;
+
+    const togglePendingSelection = (eventId) => {
+        setSelectedPendingEventIds((prev) => (
+            prev.includes(eventId)
+                ? prev.filter((id) => id !== eventId)
+                : [...prev, eventId]
+        ));
+    };
+
+    const toggleSelectAllPending = () => {
+        if (allPendingSelected) {
+            setSelectedPendingEventIds([]);
+            return;
+        }
+        setSelectedPendingEventIds(pendingEvents.map((event) => event._id));
+    };
+
+    const runBulkAction = async (action, options = {}) => {
+        if (selectedPendingIds.length === 0) {
+            return;
+        }
+
+        const token = localStorage.getItem('token');
+        const selectedIds = [...selectedPendingIds];
+        const selectedIdSet = new Set(selectedIds);
+        const payload = { eventIds: selectedIds };
+
+        if (action === 'reject') {
+            payload.rejectionReason = options.rejectionReason?.trim();
+        }
+
+        const actionText = action === 'approve' ? 'Approving' : action === 'reject' ? 'Rejecting' : 'Deleting';
+        const loadingToast = toast.loading(`${actionText} ${selectedIds.length} event${selectedIds.length > 1 ? 's' : ''}...`);
+
+        try {
+            setBulkActionLoading(action);
+            setBulkProgress({ completed: 0, total: selectedIds.length, action });
+
+            const endpoint = `${API_BASE_URL}/api/admin/events/bulk-${action}`;
+            const res = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok) {
+                throw new Error(data.message || `Failed to ${action} selected events`);
+            }
+
+            const failedErrors = Array.isArray(data.errors) ? data.errors : [];
+            const failedIds = new Set(failedErrors.map((entry) => entry.eventId));
+            const succeeded = Number(data.succeeded) || 0;
+            const failed = Number(data.failed) || 0;
+
+            setBulkProgress((prev) => ({ ...prev, completed: prev.total }));
+
+            setPendingEvents((prev) => prev.filter((event) => !selectedIdSet.has(event._id) || failedIds.has(event._id)));
+            setSelectedPendingEventIds(Array.from(failedIds));
+            fetchStats();
+
+            const verb = action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'deleted';
+            toast.success(`${succeeded} events ${verb}, ${failed} failed`, { id: loadingToast });
+        } catch (error) {
+            toast.error(error.message || `Failed to ${action} selected events`, { id: loadingToast });
+        } finally {
+            setBulkActionLoading(null);
+            setBulkProgress({ completed: 0, total: 0, action: '' });
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedPendingIds.length === 0) {
+            return;
+        }
+
+        const confirmed = window.confirm(`Delete ${selectedPendingIds.length} selected event${selectedPendingIds.length > 1 ? 's' : ''}? This action cannot be undone.`);
+        if (!confirmed) {
+            return;
+        }
+
+        await runBulkAction('delete');
+    };
+
+    const handleBulkRejectSubmit = async () => {
+        const trimmedReason = bulkRejectReason.trim();
+        if (trimmedReason.length < 20) {
+            return;
+        }
+
+        setBulkRejectOpen(false);
+        await runBulkAction('reject', { rejectionReason: trimmedReason });
+        setBulkRejectReason('');
+    };
+
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
@@ -342,7 +451,25 @@ export default function AdminDashboard() {
                                         <p className="text-muted-foreground italic text-sm">No pending events to review at the moment.</p>
                                     </motion.div>
                                 ) : (
-                                    <div className="grid grid-cols-1 gap-6">
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between rounded-xl border border-border bg-card/70 px-4 py-3">
+                                            <label className="inline-flex items-center gap-2 text-sm text-foreground cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={allPendingSelected}
+                                                    onChange={toggleSelectAllPending}
+                                                    className="h-4 w-4 rounded border-border bg-background"
+                                                />
+                                                Select All Visible
+                                            </label>
+                                            {selectedCount > 0 && (
+                                                <span className="text-xs text-muted-foreground">
+                                                    {selectedCount} selected
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-6">
                                         {pendingEvents.map((event, idx) => (
                                             <motion.div
                                                 key={event._id}
@@ -353,7 +480,16 @@ export default function AdminDashboard() {
                                                 transition={{ delay: idx * 0.05 }}
                                                 className="group relative bg-card border border-border rounded-2xl p-4 hover:border-purple-500/50 transition-colors shadow-sm"
                                             >
-                                                <div className="flex flex-col md:flex-row gap-6">
+                                                <div className="flex items-start gap-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedPendingEventIds.includes(event._id)}
+                                                        onChange={() => togglePendingSelection(event._id)}
+                                                        className="mt-1 h-4 w-4 rounded border-border bg-background"
+                                                        aria-label={`Select ${event.title}`}
+                                                    />
+
+                                                    <div className="flex-1 flex flex-col md:flex-row gap-6">
                                                     {/* Poster */}
                                                     <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden shrink-0 bg-muted relative">
                                                         {event.posterUrl ? (
@@ -423,9 +559,11 @@ export default function AdminDashboard() {
                                                             </Button>
                                                         </div>
                                                     </div>
+                                                    </div>
                                                 </div>
                                             </motion.div>
                                         ))}
+                                    </div>
                                     </div>
                                 )}
                             </div>
@@ -556,6 +694,136 @@ export default function AdminDashboard() {
             </div>
 
             {/* Manage Event Modal */}
+            <AnimatePresence>
+                {selectedCount > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 40 }}
+                        className="fixed bottom-6 left-1/2 z-50 w-[95%] max-w-3xl -translate-x-1/2 rounded-2xl border border-border bg-card/95 p-4 shadow-2xl backdrop-blur"
+                    >
+                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                            <div className="text-sm text-foreground">
+                                <span className="font-semibold">{selectedCount}</span> event{selectedCount > 1 ? 's' : ''} selected
+                                {bulkActionLoading && (
+                                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        {bulkProgress.action === 'approve' && `Approving ${bulkProgress.completed} of ${bulkProgress.total}...`}
+                                        {bulkProgress.action === 'reject' && `Rejecting ${bulkProgress.completed} of ${bulkProgress.total}...`}
+                                        {bulkProgress.action === 'delete' && `Deleting ${bulkProgress.completed} of ${bulkProgress.total}...`}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    onClick={() => runBulkAction('approve')}
+                                    disabled={Boolean(bulkActionLoading)}
+                                    className="bg-green-600 text-white hover:bg-green-700"
+                                >
+                                    Approve Selected ({selectedCount})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setBulkRejectOpen(true)}
+                                    disabled={Boolean(bulkActionLoading)}
+                                    className="border-red-500/30 text-red-600 hover:bg-red-500/10"
+                                >
+                                    Reject Selected ({selectedCount})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={handleBulkDelete}
+                                    disabled={Boolean(bulkActionLoading)}
+                                    className="border-zinc-500/30 text-zinc-700 hover:bg-zinc-500/10"
+                                >
+                                    Delete Selected ({selectedCount})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setSelectedPendingEventIds([])}
+                                    disabled={Boolean(bulkActionLoading)}
+                                    className="text-muted-foreground"
+                                >
+                                    Clear
+                                </Button>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {bulkRejectOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="bg-white text-zinc-950 w-full max-w-lg rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden"
+                        >
+                            <div className="p-6">
+                                <div className="flex justify-between items-start gap-4 mb-6">
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-zinc-900">Reject Selected Events</h3>
+                                        <p className="text-zinc-500 text-sm mt-1">This reason will be used for all selected events.</p>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            if (bulkActionLoading) return;
+                                            setBulkRejectOpen(false);
+                                            setBulkRejectReason('');
+                                        }}
+                                        className="text-zinc-400 hover:text-zinc-900"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <label className="text-sm font-medium text-zinc-800">
+                                        Reason for rejection
+                                    </label>
+                                    <Textarea
+                                        value={bulkRejectReason}
+                                        onChange={(e) => setBulkRejectReason(e.target.value)}
+                                        placeholder="Reason for rejection"
+                                        className="min-h-[140px] bg-zinc-50 border-zinc-200"
+                                    />
+                                    <div className={`text-xs ${bulkRejectReason.trim().length >= 20 ? 'text-green-600' : 'text-zinc-500'}`}>
+                                        {bulkRejectReason.trim().length}/20 characters minimum
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end gap-3 mt-6">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => {
+                                            setBulkRejectOpen(false);
+                                            setBulkRejectReason('');
+                                        }}
+                                        disabled={Boolean(bulkActionLoading)}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleBulkRejectSubmit}
+                                        disabled={Boolean(bulkActionLoading) || bulkRejectReason.trim().length < 20}
+                                        className="bg-red-600 hover:bg-red-700 text-white"
+                                    >
+                                        {bulkActionLoading === 'reject' ? 'Rejecting...' : 'Reject Selected'}
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <AnimatePresence>
                 {selectedEvent && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">

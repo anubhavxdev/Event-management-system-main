@@ -161,6 +161,16 @@ export default function CustomerDashboard() {
   }, []);
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (activeTab === 'Browse Events') {
+        fetchAvailableEvents();
+      } else {
+        fetchRegistrations();
+      }
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeTab, fetchAvailableEvents, fetchRegistrations]);
     queueMicrotask(() => {
       fetchRegistrations();
     });
