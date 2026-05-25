@@ -3,6 +3,92 @@ import Registration from '../models/Registration.js';
 import { uploadOnCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 import { sendTicketEmail } from '../utils/email.js';
 import { generateQRCodeDataUrl } from '../utils/qrcode.js';
+import User from "../models/User.js";
+
+export const addCoOrganizer = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+      });
+    }
+
+    // only owner can add
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only owner can add co-organizers",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // avoid duplicate
+    if (
+      event.coOrganizers.includes(user._id)
+    ) {
+      return res.status(400).json({
+        message: "Already a co-organizer",
+      });
+    }
+
+    event.coOrganizers.push(user._id);
+
+    await event.save();
+
+    res.status(200).json({
+      message: "Co-organizer added successfully",
+      coOrganizers: event.coOrganizers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+export const removeCoOrganizer = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+
+    if (!event) {
+      return res.status(404).json({
+        message: "Event not found",
+      });
+    }
+
+    // only owner can remove
+    if (event.organizer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        message: "Only owner can remove co-organizers",
+      });
+    }
+
+    event.coOrganizers = event.coOrganizers.filter(
+      (id) => id.toString() !== req.params.userId
+    );
+
+    await event.save();
+
+    res.status(200).json({
+      message: "Co-organizer removed successfully",
+      coOrganizers: event.coOrganizers,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 export const createEvent = async (req, res) => {
   try {
@@ -117,69 +203,52 @@ export const deleteEvent = async (req, res) => {
 };
 export const listEvents = async (req, res) => {
   try {
-    const {
-      q,
-      category,
-      status,
-      organizer,
-      tags,
-      page = 1,
-      limit = 12,
-    } = req.query;
+    const { q, category, status, organizer } = req.query;
 
-    const filter = {
-      status: 'approved',
-    };
+    const filter = {};
 
-    // Search title + description
     if (q) {
-      filter.$or = [
-        { title: { $regex: q, $options: 'i' } },
-        { description: { $regex: q, $options: 'i' } },
-      ];
+      filter.title = {
+        $regex: q,
+        $options: 'i',
+      };
     }
 
-    if (category) filter.category = category;
-    if (status) filter.status = status;
-    if (organizer) filter.organizer = organizer;
-
-    if (tags) {
-      const tagArray = tags
-        .split(',')
-        .map((tag) => tag.toLowerCase().trim())
-        .filter(Boolean);
-
-      filter.tags = { $all: tagArray };
+    if (category) {
+      filter.category = category;
     }
 
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    if (status) {
+      filter.status = status;
+    }
 
-    const limitNum = Math.min(
-      50,
-      Math.max(1, parseInt(limit, 10) || 12)
+    if (organizer) {
+      filter.organizer = organizer;
+    }
+
+    const events = await Event.find(filter)
+      .populate('organizer', 'name')
+      .sort({ date: 1 });
+
+    const eventsWithCount = await Promise.all(
+      events.map(async (event) => {
+        const registeredCount =
+          await Registration.countDocuments({
+            event: event._id,
+            status: 'registered',
+          });
+
+        return {
+          ...event.toObject(),
+          registeredCount,
+        };
+      })
     );
 
-    const skip = (pageNum - 1) * limitNum;
-
-    const [events, total] = await Promise.all([
-      Event.find(filter)
-        .populate('organizer', 'name')
-        .sort({ date: 1 })
-        .skip(skip)
-        .limit(limitNum),
-
-      Event.countDocuments(filter),
-    ]);
-
     res.json({
-      events,
-      pagination: {
-        total,
-        page: pageNum,
-        limit: limitNum,
-        totalPages: Math.ceil(total / limitNum),
-      },
+      events: eventsWithCount,
     });
+
   } catch (err) {
     res.status(500).json({
       message: err.message,
@@ -263,11 +332,19 @@ export const sendEventReminders = async (req, res) => {
     }
 
     // Only organizer can send reminders
-    if (event.organizer.toString() !== req.user.id) {
-      return res.status(403).json({
-        message: 'Not authorized: Only the event organizer can send reminders',
-      });
-    }
+    const isOwner =
+  event.organizer.toString() === req.user.id;
+
+const isCoOrganizer =
+  event.coOrganizers?.some(
+    (id) => id.toString() === req.user.id
+  );
+
+if (!isOwner && !isCoOrganizer) {
+  return res.status(403).json({
+    message: "Not authorized",
+  });
+} 
 
     const registrations = await Registration.find({
       event: event._id,

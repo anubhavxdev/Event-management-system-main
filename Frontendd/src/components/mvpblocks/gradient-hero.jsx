@@ -19,7 +19,7 @@ export default function GradientHero() {
       setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
     }, 3000);
     return () => clearInterval(interval);
-  }, [placeholders.length]);
+  }, []);
 
   return (
     <div className="bg-background relative w-full overflow-hidden">
@@ -59,7 +59,7 @@ export default function GradientHero() {
 
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-center text-4xl tracking-tight sm:text-6xl lg:text-7xl"
- 
+
           >
             Powering Communities to Run Events Smarter
           </motion.h1>

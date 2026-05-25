@@ -7,26 +7,7 @@ import {
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "./index.css";
-import Footer from "./components/mvpblocks/footer-standard";
-import Header2 from "./components/mvpblocks/header-2";
-import { useAuth } from "./context/AuthContext";
-
-// Lazy-loaded pages
-const Home = lazy(() => import("./pages/Home"));
-const Features = lazy(() => import("./pages/Features"));
-const Pricing = lazy(() => import("./pages/Pricing"));
-const Contact = lazy(() => import("./pages/Contact"));
-const About = lazy(() => import("./pages/About"));
-const SignIn = lazy(() => import("./pages/SignIn"));
-const SignUp = lazy(() => import("./pages/SignUp"));
-const Profile = lazy(() => import("./pages/Profile"));
-const CustomerDashboard = lazy(() => import("./pages/dashboard/CustomerDashboard"));
-const OrganizerDashboard = lazy(() => import("./pages/dashboard/OrganizerDashboard"));
-const CreateEvent = lazy(() => import("./pages/dashboard/CreateEvent"));
-const AdminDashboard = lazy(() => import("./pages/dashboard/AdminDashboard"));
-const ThankYou = lazy(() => import("./pages/ThankYou"));
-
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import ScrollToTop from "./components/ui/ScrollToTop";
@@ -86,6 +67,20 @@ const App = () => {
       document.documentElement.classList.remove("dark");
     } 
   },[darkMode]);
+
+  useEffect(() => {
+    const handleOnline = () => toast.success("You are back online!");
+    const handleOffline = () => toast.error("You are offline. Viewing cached data.");
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
