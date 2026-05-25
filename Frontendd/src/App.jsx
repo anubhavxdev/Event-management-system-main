@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from "react";
 import {
   BrowserRouter,
   Routes,
@@ -82,39 +83,87 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <ScrollToTop />
-
-      {/* Global Toast Notification System */}
-      <Toaster
-        position="top-right"
-        reverseOrder={false}
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: "#1f2937",
-            color: "#ffffff",
-            border: "1px solid #374151",
-          },
-          success: {
-            iconTheme: {
-              primary: "#10b981",
-              secondary: "#ffffff",
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: "#ef4444",
-              secondary: "#ffffff",
-            },
-          },
-        }}
-      />
-
       <div className="min-h-screen flex flex-col">
         {/* Header */}
         <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
 
         <main className="flex-grow">
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-background">
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-10 w-10 rounded-full border-4 border-primary border-t-transparent animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading page...</p>
+              </div>
+            </div>
+          }>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/about-us" element={<About />} />
+              <Route path="/login" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/thank-you" element={<ThankYou />} />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Dashboard Routes - Flattened, No Sidebar Layout */}
+              <Route
+                path="/customer/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["customer"]}>
+                    <CustomerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["organizer"]}>
+                    <OrganizerDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/organizer/create-event"
+                element={
+                  <ProtectedRoute allowedRoles={["organizer"]}>
+                    <CreateEvent />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/dashboard"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Alias for admin pending events */}
+              <Route
+                path="/admin/pending-events"
+                element={
+                  <ProtectedRoute allowedRoles={["admin"]}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Fallback to Home or 404 */}
+              <Route path="*" element={<Home />} />
+            </Routes>
+          </Suspense>
+          <>
+            <ScrollToTop />
+          </>
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />

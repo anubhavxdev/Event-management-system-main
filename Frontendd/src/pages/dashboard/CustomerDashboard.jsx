@@ -13,6 +13,84 @@ import { generateCertificate } from '../../utils/generateCertificate';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+export default function CustomerDashboard() {
+    const { user } = useAuth();
+    const [registrations, setRegistrations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('Upcoming Tickets');
+    const [selectedTicket, setSelectedTicket] = useState(null);
+    const ticketRef = useRef(null);
+
+    const [availableEvents, setAvailableEvents] = useState([]);
+
+    useEffect(() => {
+        if (activeTab === 'Browse Events') {
+            fetchAvailableEvents();
+        } else {
+            fetchRegistrations();
+        }
+    }, [activeTab]);
+
+    const fetchAvailableEvents = async () => {
+        try {
+            setLoading(true);
+            const res = await fetch(`${API_BASE_URL}/api/events?status=approved`);
+            if (res.ok) {
+                const data = await res.json();
+                // Filter events that are in the future
+                const upcoming = (data.events || []).filter(evt => new Date(evt.date) >= new Date());
+                setAvailableEvents(upcoming);
+            }
+        } catch (error) {
+            console.error("Failed to fetch events", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const fetchRegistrations = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setRegistrations(data.registrations || []);
+            }
+        } catch (error) {
+            console.error("Failed to fetch registrations", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async (eventId) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/registrations/${eventId}/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                alert('Successfully registered!');
+                // Refresh data
+                setActiveTab('Upcoming Tickets');
+            } else {
+                const data = await res.json();
+                alert(data.message || 'Registration failed');
+            }
+        } catch (error) {
+            console.error("Registration failed", error);
+            alert('Something went wrong');
+        }
+    };
+
 const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Music', 'Other'];
 
 const getEventDate = (registration) => {
@@ -841,6 +919,51 @@ export default function CustomerDashboard() {
                               : 'border-border hover:border-rose-500/50'
                           }`}
                         >
+                            {/* Decorative Top */}
+                            <div className="h-2 bg-gradient-to-r from-rose-500 to-orange-500" />
+
+                            <button
+                                onClick={() => setSelectedTicket(null)}
+                                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 transition-colors p-1 hover:bg-zinc-100 rounded-full"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+
+                            <div className="p-6 bg-white">
+                                <div ref={ticketRef}>
+                                    <div className="text-center mb-6">
+                                        <h3 className="text-xl font-bold mb-1 text-rose-600">
+                                            EventOne Ticket
+                                        </h3>
+                                        <p className="text-xs text-zinc-500 uppercase tracking-widest">Admit One</p>
+                                    </div>
+
+                                    {/* Event Info */}
+                                    <div className="space-y-4 mb-6">
+                                        <div className="flex items-start gap-4 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
+                                            <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
+                                                {selectedTicket.event?.posterUrl && (
+                                                    <img src={selectedTicket.event.posterUrl} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-semibold text-sm line-clamp-1">{selectedTicket.event?.title}</h4>
+                                                <p className="text-xs text-zinc-500 mt-1 flex items-center">
+                                                    <Calendar className="w-3 h-3 mr-1" />
+                                                    {selectedTicket.event?.date ? new Date(selectedTicket.event.date).toLocaleDateString() : 'TBA'}
+                                                </p>
+                                                <p className="text-xs text-zinc-500 mt-0.5 flex items-center">
+                                                    <MapPin className="w-3 h-3 mr-1" />
+                                                    {selectedTicket.event?.location || 'TBA'}
+                                                </p>
+                                            </div>
+                            <X className="w-5 h-5" />
+                        </button>
+                        <div className="p-6 bg-white">
+                            <div ref={ticketRef}>
+                                <div className="text-center mb-6">
+                                    <h3 className="text-xl font-bold mb-1 text-rose-600">EventOne Ticket</h3>
+                                    <p className="text-xs text-zinc-500 uppercase tracking-widest">Admit One</p>
                           <div className="flex flex-col md:flex-row gap-6">
                             <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden shrink-0 bg-muted relative">
                               {evt.posterUrl ? (

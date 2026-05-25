@@ -133,6 +133,8 @@ export default function FeatureSteps() {
                         className="h-full w-full transform object-cover transition-transform hover:scale-105"
                         width={1000}
                         height={500}
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="from-background via-background/50 absolute right-0 bottom-0 left-0 h-2/3 bg-gradient-to-t to-transparent" />
 
