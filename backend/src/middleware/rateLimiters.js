@@ -12,6 +12,8 @@ export const authLimiter = rateLimit({
 
   skipSuccessfulRequests: true,
 
+  skip: () => process.env.NODE_ENV === 'test',
+
   message: {
     message:
       'Too many login attempts. Please try again after 15 minutes.',
@@ -30,6 +32,8 @@ export const registrationLimiter = rateLimit({
   max:
     Number(process.env.REGISTRATION_RATE_LIMIT_MAX) || 5,
 
+  skip: () => process.env.NODE_ENV === 'test',
+
   message: {
     message:
       'Too many accounts created from this IP. Please try again after an hour.',
@@ -38,3 +42,6 @@ export const registrationLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+// Kept for backward compatibility
+export const authRateLimiter = authLimiter;
