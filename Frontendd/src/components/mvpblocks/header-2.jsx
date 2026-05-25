@@ -17,6 +17,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import NotificationBell from "../ui/NotificationBell";
 
 const navItems = [
   { name: "Home", href: "/" },
@@ -254,7 +255,9 @@ export default function Header2() {
               </motion.button>
 
               {user ? (
-                <div className="relative">
+                <div className="flex items-center space-x-3">
+                  <NotificationBell />
+                  <div className="relative">
                   <motion.button
                     className="flex items-center space-x-2 text-foreground/80 hover:text-foreground px-4 py-2 text-sm font-medium transition-colors duration-200 bg-muted/30 hover:bg-muted/50 rounded-full"
                     onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
@@ -333,6 +336,7 @@ export default function Header2() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
                 </div>
               ) : (
                 <>

@@ -1,23 +1,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import CountdownTimer from '../../components/CountdownTimer';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Calendar,
-    MapPin,
-    Users,
-    Plus,
-    Upload,
-    Tag,
-    Search,
-    IndianRupee,
-    AlertCircle,
-    Download,
-    CheckCircle,
-    Clock,
-    XCircle,
-    Trash2
-} from 'lucide-react';import { useAuth } from '../../context/AuthContext';
+import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, UserPlus } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import CoOrganizerPanel from '../../components/CoOrganizerPanel';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -136,6 +123,20 @@ export default function OrganizerDashboard() {
 
                 setEvents(myEvents);
                 calculateStats(myEvents);
+                // Fetch co-organized events
+                try {
+                    const coRes = await fetch(`${API_BASE_URL}/api/events`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (coRes.ok) {
+                        const coData = await coRes.json();
+                        const coEvents = (coData.events || []).filter(
+                            e => e.organizer?._id !== user?.id && e.organizer !== user?.id &&
+                            (e.coOrganizers || []).some(co => co._id === user?.id || co === user?.id)
+                        ).map(e => ({ ...e, _isCoOrganized: true }));
+                        if (coEvents.length > 0) setEvents(prev => [...prev, ...coEvents]);
+                    }
+                } catch (_) {}
             }
         } catch (error) {
             console.error("Failed to fetch events", error);
@@ -529,6 +530,9 @@ const handleCreateSubmit = async (e) => {
                                                             <div className="flex justify-between items-start">
                                                                 <h3 className="text-lg font-semibold text-foreground group-hover:text-purple-500 transition-colors">
                                                                     {event.title}
+                                                                    {event._isCoOrganized && (
+                                                                        <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium align-middle">Co-organizing</span>
+                                                                    )}
                                                                 </h3>
                                                                 <span className="flex items-center text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
                                                                     <Tag className="w-3 h-3 mr-1" />
@@ -1082,6 +1086,13 @@ const handleCreateSubmit = async (e) => {
                                         >
                                             Download
                                         </Button>
+                                    </div>
+
+                                    <div className="p-3 bg-secondary/20 rounded-lg border border-border/50">
+                                        <CoOrganizerPanel
+                                            eventId={selectedEvent._id}
+                                            isOwner={selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id}
+                                        />
                                     </div>
 
                                     <div className="flex items-center justify-between p-3 bg-red-500/5 rounded-lg border border-red-500/10">
