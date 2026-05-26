@@ -63,7 +63,7 @@ app.use((err, req, res, next) => {
 });
 
 async function start() {
-  //await connectDB();
+  await connectDB();
 
   server.listen(env.port, () => {
     console.log(`Server running on http://localhost:${env.port}`);

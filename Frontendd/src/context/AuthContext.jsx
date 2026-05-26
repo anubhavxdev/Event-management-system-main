@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         let mounted = true;
+        mountedRef.current = true;
 
         const initializeUser = async () => {
             const token = localStorage.getItem('token');
