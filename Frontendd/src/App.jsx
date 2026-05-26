@@ -4,10 +4,11 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { useEffect } from "react";
 
 import "./index.css";
 
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import Home from "./pages/Home";
@@ -27,6 +28,7 @@ import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
 import Support from "./pages/Support";
+import QRScanner from "./pages/dashboard/QRScanner";
 import ScrollToTop from "./components/ScrollToTop";
 import { useAuth } from "./context/AuthContext";
 
@@ -57,6 +59,20 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 
 const App = () => {
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handleOnline = () => toast.success("You are back online!");
+    const handleOffline = () =>
+      toast.error("You are offline. Viewing cached data.");
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
 
   return (
     <BrowserRouter>
@@ -98,11 +114,20 @@ const App = () => {
             <Route path="/contact" element={<Contact />} />
             <Route path="/support" element={<Support />} />
             <Route path="/about-us" element={<About />} />
-            <Route path="/login" element={user ? <Navigate to="/" replace /> : <SignIn />} />
-            <Route path="/signup" element={user ? <Navigate to="/" replace /> : <SignUp />} />
+            <Route
+              path="/login"
+              element={user ? <Navigate to="/" replace /> : <SignIn />}
+            />
+            <Route
+              path="/signup"
+              element={user ? <Navigate to="/" replace /> : <SignUp />}
+            />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/thank-you" element={<ThankYou />} />
-            <Route path="/auth/google/callback" element={<GoogleCallback />} />
+            <Route
+              path="/auth/google/callback"
+              element={<GoogleCallback />}
+            />
             <Route
               path="/profile"
               element={
@@ -114,7 +139,7 @@ const App = () => {
             <Route
               path="/customer/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['attendee']}>
+                <ProtectedRoute allowedRoles={["attendee", "customer"]}>
                   <CustomerDashboard />
                 </ProtectedRoute>
               }
@@ -124,6 +149,14 @@ const App = () => {
               element={
                 <ProtectedRoute allowedRoles={["organizer"]}>
                   <OrganizerDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/organizer/scan/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={["organizer"]}>
+                  <QRScanner />
                 </ProtectedRoute>
               }
             />
