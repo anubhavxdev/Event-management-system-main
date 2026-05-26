@@ -20,20 +20,18 @@ import { Input } from "../ui/input";
 const data = () => ({
   navigation: {
     product: [
-      { name: "Features", href: "#features" },
-      { name: "Pricing", href: "#pricing" },
+      { name: "Features", href: "/features" },
+      { name: "Pricing", href: "/pricing" },
     ],
 
     company: [
-      { name: "About", href: "/about" },
+      { name: "About", href: "/about-us" },        // fixed: route is /about-us, not /about
       { name: "Contact", href: "/contact" },
     ],
 
     resources: [
-      { name: "Documentation", href: "#" },
-      { name: "API Reference", href: "#" },
-      // { name: "Community", href: "/community" },
-      // { name: "Status", href: "/status" },
+      { name: "Documentation", href: "/support" },   // using existing /support page
+      { name: "API Reference", href: "/support" },   // using existing /support page (or you can create new routes)
     ],
 
     legal: [
@@ -43,10 +41,10 @@ const data = () => ({
   },
 
   socialLinks: [
-    { icon: Twitter, label: "Twitter", href: "#" },
-    { icon: Github, label: "GitHub", href: "#" },
-    { icon: MessageCircle, label: "Discord", href: "#" },
-    { icon: Linkedin, label: "LinkedIn", href: "#" },
+    { icon: Twitter, label: "Twitter", href: "https://twitter.com/eventone" },
+    { icon: Github, label: "GitHub", href: "https://github.com/eventone" },
+    { icon: MessageCircle, label: "Discord", href: "https://discord.gg/eventone" },
+    { icon: Linkedin, label: "LinkedIn", href: "https://linkedin.com/company/eventone" },
   ],
 
   bottomLinks: [
@@ -124,7 +122,7 @@ export default function FooterStandard() {
                       asChild
                       className="hover:bg-primary dark:hover:bg-primary !border-primary/30 cursor-pointer shadow-none transition-all duration-500 hover:scale-110 hover:-rotate-12 hover:text-white hover:shadow-md"
                     >
-                      <a href={href}>
+                      <a href={href} target="_blank" rel="noopener noreferrer">
                         {React.createElement(icon, { className: "h-4 w-4" })}
                       </a>
                     </Button>
