@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+"use client";
+
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import { Calendar, MapPin, Ticket, X, Download, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { io } from "socket.io-client";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+=======
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Ticket, X, Download, Search } from 'lucide-react';
@@ -12,8 +22,24 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { generateCertificate } from '../../utils/generateCertificate';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+>>>>>>> main
 
-const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Music', 'Other'];
+import { Button } from "../../components/ui/button";
+import { useAuth } from "../../context/AuthContext";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../../config";
+import ConfirmationModal from "../../components/ui/confirmation-modal";
+import CountdownTimer from "../../components/CountdownTimer";
+import { useDebounce } from "../../hooks/useDebounce";
+import { generateCertificate } from "../../utils/generateCertificate";
+
+// Fallback toast system if not explicitly imported globally
+const toast = {
+  success: (msg) => alert(`Success: ${msg}`),
+  error: (msg) => alert(`Error: ${msg}`),
+};
+
+const CATEGORIES = ["Tech", "Sports", "Cultural", "Workshop", "Music", "Other"];
 
 const getEventDate = (registration) => {
   if (!registration?.event?.date) return null;
@@ -27,6 +53,34 @@ const isActiveRegistration = (registration) =>
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
+<<<<<<< HEAD
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // =========================
+  // States
+  // =========================
+  const [registrations, setRegistrations] = useState([]);
+  const [availableEvents, setAvailableEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
+  const [activeTab, setActiveTab] = useState("Upcoming Tickets");
+
+  // Modals & Selections
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const [refundInfo, setRefundInfo] = useState(null);
+  const [highlightedEvents, setHighlightedEvents] = useState({});
+
+  // Filters & Search
+  const [searchQuery, setSearchQuery] = useState(
+    () => searchParams.get("q") || "",
+  );
+  const [selectedCategory, setSelectedCategory] = useState(
+    () => searchParams.get("category") || "",
+  );
+=======
   const [searchParams, setSearchParams] = useSearchParams();
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,12 +94,21 @@ export default function CustomerDashboard() {
   const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
   const [isFetching, setIsFetching] = useState(false);
   const [registrationsError, setRegistrationsError] = useState('');
+>>>>>>> main
 
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
+  // =========================
+  // Refs
+  // =========================
+  const ticketRefs = useRef({});
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
   const socketRef = useRef(null);
   const joinedEventIdsRef = useRef([]);
   const highlightTimeoutsRef = useRef({});
+<<<<<<< HEAD
+=======
 
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -58,7 +121,9 @@ export default function CustomerDashboard() {
       setSelectedCategory((current) => (current === nextCategory ? current : nextCategory));
     });
   }, [searchParams]);
+>>>>>>> main
 
+  // Clean-up on unmount
   useEffect(() => {
     return () => {
       mountedRef.current = false;
@@ -69,30 +134,58 @@ export default function CustomerDashboard() {
     };
   }, []);
 
+  // =========================
+  // Sync Search & Filters URL params
+  // =========================
   useEffect(() => {
-    if (activeTab !== 'Browse Events') return;
+    if (activeTab !== "Browse Events") return;
 
     const next = new URLSearchParams(searchParams);
 
     if (debouncedSearch.trim()) {
-      next.set('q', debouncedSearch.trim());
+      next.set("q", debouncedSearch.trim());
     } else {
-      next.delete('q');
+      next.delete("q");
     }
 
     if (selectedCategory) {
-      next.set('category', selectedCategory);
+      next.set("category", selectedCategory);
     } else {
-      next.delete('category');
+      next.delete("category");
     }
 
-    next.delete('page');
+    next.delete("page");
 
     if (next.toString() !== searchParams.toString()) {
       setSearchParams(next, { replace: true });
     }
-  }, [activeTab, debouncedSearch, searchParams, selectedCategory, setSearchParams]);
+  }, [
+    activeTab,
+    debouncedSearch,
+    selectedCategory,
+    searchParams,
+    setSearchParams,
+  ]);
 
+<<<<<<< HEAD
+  // Tab switcher
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === "Browse Events") {
+      setSearchQuery(searchParams.get("q") || "");
+      setSelectedCategory(searchParams.get("category") || "");
+    }
+  };
+
+  // =========================
+  // API Core Logic Methods
+  // =========================
+  const fetchRegistrations = useCallback(async () => {
+    try {
+      if (mountedRef.current) setLoading(true);
+      const token = localStorage.getItem("token");
+
+=======
   const fetchAvailableEvents = useCallback(async () => {
     try {
       await Promise.resolve();
@@ -135,6 +228,7 @@ export default function CustomerDashboard() {
   const fetchRegistrations = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
+>>>>>>> main
       const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -150,23 +244,84 @@ export default function CustomerDashboard() {
         setRegistrations(Array.isArray(data.registrations) ? data.registrations : []);
       }
     } catch (error) {
+<<<<<<< HEAD
+      console.error("Failed to fetch registrations:", error);
+=======
       console.error('Failed to fetch registrations', error);
       if (mountedRef.current) {
         setRegistrationsError('Unable to load your registered events. Please try again later.');
         setRegistrations([]);
       }
+>>>>>>> main
     } finally {
       if (mountedRef.current) setLoading(false);
     }
   }, []);
 
+  const fetchAvailableEvents = useCallback(async () => {
+    try {
+      if (mountedRef.current) setIsFetching(true);
+
+      const params = new URLSearchParams();
+      params.set("status", "approved");
+      params.set("page", searchParams.get("page") || "1");
+      params.set("limit", "12");
+
+      const q = searchParams.get("q");
+      const category = searchParams.get("category");
+
+      if (q) params.set("q", q);
+      if (category) params.set("category", category);
+
+      const url = `${API_BASE_URL}/api/events?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (!res.ok) throw new Error("Failed to fetch events");
+
+      const data = await res.json();
+      const upcoming = (data.events || []).filter(
+        (evt) => new Date(evt.date) >= new Date(),
+      );
+
+      if (mountedRef.current) {
+        setAvailableEvents(upcoming);
+      }
+    } catch (error) {
+      console.error("Failed to fetch events:", error);
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+        setIsFetching(false);
+      }
+    }
+  }, [searchParams]);
+
   useEffect(() => {
+<<<<<<< HEAD
+    const timer = setTimeout(() => {
+      if (activeTab === "Browse Events") {
+        void fetchAvailableEvents();
+      } else {
+        void fetchRegistrations();
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [activeTab, searchParams, fetchAvailableEvents, fetchRegistrations]);
+=======
     queueMicrotask(() => {
       fetchRegistrations();
     });
   }, [fetchRegistrations]);
+>>>>>>> main
 
+  // =========================
+  // Socket.io Realtime Logic
+  // =========================
   useEffect(() => {
+<<<<<<< HEAD
+    if (activeTab !== "Browse Events" || availableEvents.length === 0) {
+=======
     if (activeTab === 'Browse Events') {
       queueMicrotask(() => {
         fetchAvailableEvents();
@@ -181,23 +336,26 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     if (activeTab !== 'Browse Events' || availableEventIds.length === 0) {
+>>>>>>> main
       return undefined;
     }
 
     const socket = io(API_BASE_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ["websocket", "polling"],
       reconnection: true,
     });
 
     socketRef.current = socket;
 
+<<<<<<< HEAD
+    const eventIds = availableEvents.map((evt) => evt?._id).filter(Boolean);
+    joinedEventIdsRef.current = eventIds;
+=======
     joinedEventIdsRef.current = availableEventIds;
+>>>>>>> main
 
     const pulseEvent = (eventId) => {
-      setHighlightedEvents((prev) => ({
-        ...prev,
-        [eventId]: true,
-      }));
+      setHighlightedEvents((prev) => ({ ...prev, [eventId]: true }));
 
       if (highlightTimeoutsRef.current[eventId]) {
         clearTimeout(highlightTimeoutsRef.current[eventId]);
@@ -214,62 +372,47 @@ export default function CustomerDashboard() {
     };
 
     const joinRooms = () => {
+<<<<<<< HEAD
+      eventIds.forEach((eventId) => {
+        socket.emit("event:join", { eventId });
+=======
       availableEventIds.forEach((eventId) => {
         socket.emit('event:join', { eventId });
+>>>>>>> main
       });
     };
 
     const handleRegistrationCount = ({ eventId, count } = {}) => {
-      if (!eventId || typeof count !== 'number') {
-        return;
-      }
+      if (!eventId || typeof count !== "number") return;
 
       setAvailableEvents((prev) => {
         let changed = false;
-
         const next = prev.map((evt) => {
-          if (evt._id !== eventId) {
-            return evt;
-          }
-
-          if (evt.registeredCount === count) {
-            return evt;
-          }
+          if (evt._id !== eventId) return evt;
+          if (evt.registeredCount === count) return evt;
 
           changed = true;
-
-          return {
-            ...evt,
-            registeredCount: count,
-          };
+          return { ...evt, registeredCount: count };
         });
 
-        if (changed) {
-          pulseEvent(eventId);
-        }
-
+        if (changed) pulseEvent(eventId);
         return next;
       });
     };
 
-    socket.on('connect', joinRooms);
-    socket.on('registration:count', handleRegistrationCount);
-    socket.on('connect_error', () => {});
+    socket.on("connect", joinRooms);
+    socket.on("registration:count", handleRegistrationCount);
 
-    if (socket.connected) {
-      joinRooms();
-    }
+    if (socket.connected) joinRooms();
 
     return () => {
       const joinedEventIds = joinedEventIdsRef.current;
-
       joinedEventIds.forEach((eventId) => {
-        socket.emit('event:leave', { eventId });
+        socket.emit("event:leave", { eventId });
       });
 
-      socket.off('connect', joinRooms);
-      socket.off('registration:count', handleRegistrationCount);
-      socket.off('connect_error');
+      socket.off("connect", joinRooms);
+      socket.off("registration:count", handleRegistrationCount);
       socket.disconnect();
       socketRef.current = null;
       joinedEventIdsRef.current = [];
@@ -281,69 +424,127 @@ export default function CustomerDashboard() {
     };
   }, [activeTab, availableEventIds]);
 
+  // =========================
+  // Actions: Handlers
+  // =========================
   const handleRegister = async (eventId) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/registrations/${eventId}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${API_BASE_URL}/api/registrations/${eventId}/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         },
-      });
+      );
 
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message || 'Successfully registered!');
-        setActiveTab('Upcoming Tickets');
+        toast.success(data.message || "Successfully registered!");
+        setActiveTab("Upcoming Tickets");
         fetchRegistrations();
       } else {
-        toast.error(data.message || 'Registration failed');
+        toast.error(data.message || "Registration failed");
       }
     } catch (error) {
-      console.error('Registration failed', error);
-      toast.error('Something went wrong');
+      console.error("Registration failed:", error);
+      toast.error("Something went wrong");
     }
   };
 
   const handleCancelRegistration = async () => {
     try {
+<<<<<<< HEAD
+      const token = localStorage.getItem("token");
+=======
       const token = localStorage.getItem('token');
+>>>>>>> main
       const response = await fetch(
         `${API_BASE_URL}/api/registrations/${selectedRegistrationId}/cancel`,
         {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
+<<<<<<< HEAD
+            "Content-Type": "application/json",
+          },
+        },
+=======
             'Content-Type': 'application/json',
           },
         }
+>>>>>>> main
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to cancel registration');
+        throw new Error(data.message || "Failed to cancel registration");
       }
 
       setRegistrations((prev) =>
         prev.map((reg) =>
           reg._id === selectedRegistrationId
-            ? { ...reg, status: 'cancelled' }
-            : reg
-        )
+            ? { ...reg, status: "cancelled" }
+            : reg,
+        ),
       );
 
       setIsModalOpen(false);
       setSelectedRegistrationId(null);
-      toast.success('Registration cancelled successfully!');
+      setRefundInfo(null);
+      toast.success("Registration cancelled successfully!");
     } catch (error) {
-      console.error(error);
-      toast.error('Something went wrong');
+      console.error("Cancellation error:", error);
+      toast.error("Something went wrong");
     }
   };
 
+<<<<<<< HEAD
+  const fetchRefundPolicy = async (registrationId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${API_BASE_URL}/api/registrations/${registrationId}/refund-policy`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(data.message || "Failed to fetch refund policy");
+
+      setRefundInfo(data);
+    } catch (error) {
+      console.error("Failed to fetch refund policy:", error);
+    }
+  };
+
+  const handleDownloadTicket = async () => {
+    try {
+      const el = ticketRef.current;
+      if (!el) {
+        toast.error("Ticket asset view layer missing!");
+        return;
+      }
+
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+=======
   const handleDownloadTicket = async () => {
     try {
       if (!ticketRef.current || !selectedTicket) return;
@@ -356,10 +557,11 @@ export default function CustomerDashboard() {
 
       const imgData = canvas.toDataURL('image/png');
 
+>>>>>>> main
       const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4',
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
       });
 
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -368,7 +570,7 @@ export default function CustomerDashboard() {
 
       pdf.setFontSize(20);
       pdf.setTextColor(244, 63, 94);
-      pdf.text('EventOne Ticket', 15, 15);
+      pdf.text("EventOne Pass", 15, 15);
 
       const maxHeight = 250;
       let finalWidth = pdfWidth - 20;
@@ -380,20 +582,42 @@ export default function CustomerDashboard() {
         finalWidth = finalWidth * scaleFactor;
       }
 
-      pdf.addImage(imgData, 'PNG', 10, 25, finalWidth, finalHeight);
+      pdf.addImage(imgData, "PNG", 10, 25, finalWidth, finalHeight);
 
-      const safeEventName = selectedTicket.event?.title
-        ?.replace(/\s+/g, '-')
-        ?.replace(/[^a-zA-Z0-9-_]/g, '')
+      const safeEventName = selectedTicket?.event?.title
+        ?.replace(/\s+/g, "-")
+        ?.replace(/[^a-zA-Z0-9-_]/g, "")
         ?.toUpperCase();
 
-      const fileName = `ticket-${safeEventName || 'EVENT'}-${selectedTicket._id.slice(-6).toUpperCase()}.pdf`;
+      const fileName = `ticket-${safeEventName || "EVENT"}-${selectedTicket?._id
+        .slice(-6)
+        .toUpperCase()}.pdf`;
       pdf.save(fileName);
+      toast.success("Ticket downloaded successfully!");
     } catch (error) {
-      console.error('PDF generation failed:', error);
+      console.error("PDF download crashed:", error);
+      toast.error("Failed to save digital copy");
     }
   };
 
+<<<<<<< HEAD
+  // =========================
+  // Dataset Compilations
+  // =========================
+  const upcomingEvents = registrations.filter(
+    (reg) =>
+      reg.event &&
+      reg.status !== "cancelled" &&
+      new Date(reg.event.date) >= new Date(),
+  );
+
+  const pastEvents = registrations.filter(
+    (reg) =>
+      reg.event &&
+      reg.status !== "cancelled" &&
+      new Date(reg.event.date) < new Date(),
+  );
+=======
   const { upcomingEvents, pastEvents } = useMemo(() => {
     const now = new Date();
 
@@ -421,6 +645,7 @@ export default function CustomerDashboard() {
       { upcomingEvents: [], pastEvents: [] }
     );
   }, [registrations]);
+>>>>>>> main
 
   if (loading) {
     return (
@@ -430,8 +655,15 @@ export default function CustomerDashboard() {
     );
   }
 
+<<<<<<< HEAD
+  // =========================
+  // UI Render
+  // =========================
+=======
+>>>>>>> main
   return (
     <div className="min-h-screen bg-background text-foreground pt-32 px-4 sm:px-6 lg:px-8 font-sans selection:bg-purple-500/30 relative overflow-hidden">
+      {/* Background Gradients */}
       <div className="absolute inset-0 z-0 pointer-events-none">
         <div className="from-primary/20 via-background to-background absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))]" />
         <div className="bg-primary/5 absolute top-0 left-1/2 -z-10 h-[1000px] w-[1000px] -translate-x-1/2 rounded-full blur-3xl" />
@@ -439,10 +671,12 @@ export default function CustomerDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
+        {/* Header */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-12">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
-              Welcome back, <span className="text-rose-500">{user?.name || 'User'}</span>
+              Welcome back,{" "}
+              <span className="text-rose-500">{user?.name || "User"}</span>
             </h1>
             <p className="text-muted-foreground mt-2 text-base">
               Manage your tickets and view your event history.
@@ -455,16 +689,17 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
+        {/* Tabs Bar */}
         <div className="mb-8 border-b border-border">
           <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-            {['Upcoming Tickets', 'Past Events', 'Browse Events'].map((tab) => (
+            {["Upcoming Tickets", "Past Events", "Browse Events"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${
                   activeTab === tab
-                    ? 'text-orange-500'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? "text-orange-500"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab}
@@ -479,21 +714,22 @@ export default function CustomerDashboard() {
           </div>
         </div>
 
+        {/* Dashboard Container Box */}
         <div className="bg-card/50 backdrop-blur-sm rounded-3xl p-6 md:p-8 min-h-[500px] border border-border shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl font-semibold text-foreground">
-              {activeTab === 'Upcoming Tickets'
-                ? 'Your Upcoming Tickets'
-                : activeTab === 'Past Events'
-                  ? 'Event History'
-                  : 'Browse Events'}
+              {activeTab === "Upcoming Tickets"
+                ? "Your Upcoming Tickets"
+                : activeTab === "Past Events"
+                ? "Event History"
+                : "Browse Upcoming Events"}
             </h2>
-            {activeTab === 'Upcoming Tickets' && (
+            {activeTab === "Upcoming Tickets" && (
               <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-xs font-medium rounded-full border border-rose-500/20">
-                {upcomingEvents.filter((event) => event.status !== 'cancelled').length} Active
+                {upcomingEvents.length} Active
               </span>
             )}
-            {activeTab === 'Past Events' && (
+            {activeTab === "Past Events" && (
               <span className="px-3 py-1 bg-purple-500/10 text-purple-500 text-xs font-medium rounded-full border border-purple-500/20">
                 {pastEvents.length} Past
               </span>
@@ -501,6 +737,10 @@ export default function CustomerDashboard() {
           </div>
 
           <AnimatePresence mode="popLayout">
+<<<<<<< HEAD
+            {/* TAB 1: UPCOMING TICKETS */}
+            {activeTab === "Upcoming Tickets" && (
+=======
             {registrationsError && activeTab !== 'Browse Events' && (
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
@@ -512,6 +752,7 @@ export default function CustomerDashboard() {
             )}
 
             {activeTab === 'Upcoming Tickets' && (
+>>>>>>> main
               <div className="space-y-6">
                 {upcomingEvents.length === 0 ? (
                   <motion.div
@@ -522,12 +763,18 @@ export default function CustomerDashboard() {
                     <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
                       <Ticket className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground">No upcoming tickets</h3>
+                    <h3 className="text-lg font-medium text-foreground">
+                      No upcoming tickets
+                    </h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
-                      You haven't registered for any upcoming events yet. Check out what's happening!
+                      You haven't registered for any upcoming events yet. Check
+                      out what's happening!
                     </p>
-                    <Button asChild className="mt-6 bg-rose-600 hover:bg-rose-700">
-                      <Link to="/#events">Browse Events</Link>
+                    <Button
+                      onClick={() => setActiveTab("Browse Events")}
+                      className="mt-6 bg-rose-600 hover:bg-rose-700 text-white"
+                    >
+                      Browse Events
                     </Button>
                   </motion.div>
                 ) : (
@@ -547,7 +794,7 @@ export default function CustomerDashboard() {
                             {reg.event?.posterUrl ? (
                               <img
                                 src={reg.event.posterUrl}
-                                alt={reg.event.title}
+                                alt=""
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                             ) : (
@@ -555,73 +802,66 @@ export default function CustomerDashboard() {
                                 <Calendar className="w-8 h-8" />
                               </div>
                             )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                             <span className="absolute bottom-2 left-2 text-xs text-white/90 font-medium px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded">
-                              {reg.event?.category || 'Event'}
+                              {reg.event?.category || "Event"}
                             </span>
                           </div>
+
                           <div className="flex-1 flex flex-col justify-between">
                             <div>
                               <div className="flex justify-between items-start">
                                 <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
-                                  {reg.event?.title || 'Unknown Event'}
+                                  {reg.event?.title}
                                 </h3>
-                                <span
-                                  className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${
-                                    reg.status === 'attended'
-                                      ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                      : reg.status === 'cancelled'
-                                        ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                        : 'bg-green-500/10 text-green-500 border-green-500/20'
-                                  }`}
-                                >
-                                  {reg.status === 'attended'
-                                    ? 'Attended'
-                                    : reg.status === 'cancelled'
-                                      ? 'Cancelled'
-                                      : 'Confirmed'}
+                                <span className="text-xs px-2 py-1 rounded-full border bg-green-500/10 text-green-500 border-green-500/20">
+                                  Confirmed
                                 </span>
                               </div>
-                              <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
+                              <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
                                 {reg.event?.description}
                               </p>
+
                               <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                                 <span className="flex items-center">
                                   <Calendar className="w-3 h-3 mr-1.5" />
-                                  {reg.event?.date ? new Date(reg.event.date).toLocaleDateString() : 'TBA'}
+                                  {reg.event?.date
+                                    ? new Date(
+                                        reg.event.date,
+                                      ).toLocaleDateString()
+                                    : "TBA"}
                                 </span>
                                 <span className="flex items-center">
                                   <MapPin className="w-3 h-3 mr-1.5" />
-                                  {reg.event?.location || 'TBA'}
-                                </span>
-                                <span className="flex items-center">
-                                  <Ticket className="w-3 h-3 mr-1.5" />
-                                  Ticket ID: {reg._id.slice(-6).toUpperCase()}
+                                  {reg.event?.location}
                                 </span>
                               </div>
-                            </div>
-                            <div className="flex justify-between pt-4 md:pt-0 gap-2">
-                              {reg.status === 'cancelled' ? null : (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    className="text-xs h-8 border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
-                                    onClick={() => setSelectedTicket(reg)}
-                                  >
-                                    View Details
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    className="text-xs h-8 bg-rose-600 border-rose-500/30 text-white hover:bg-red-400"
-                                    onClick={() => {
-                                      setSelectedRegistrationId(reg._id);
-                                      setIsModalOpen(true);
-                                    }}
-                                  >
-                                    Cancel Registration
-                                  </Button>
-                                </>
+
+                              {reg.event?.date && (
+                                <div className="mt-3">
+                                  <CountdownTimer eventDate={reg.event.date} />
+                                </div>
                               )}
+                            </div>
+
+                            <div className="flex justify-end pt-4 md:pt-0 gap-2">
+                              <Button
+                                variant="outline"
+                                className="text-xs h-8 border-rose-500/30 text-rose-500 hover:bg-rose-500/10"
+                                onClick={() => setSelectedTicket(reg)}
+                              >
+                                View Details
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="text-xs h-8 bg-rose-600 border-none text-white hover:bg-red-500 transition-colors"
+                                onClick={async () => {
+                                  setSelectedRegistrationId(reg._id);
+                                  await fetchRefundPolicy(reg._id);
+                                  setIsModalOpen(true);
+                                }}
+                              >
+                                Cancel Registration
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -632,7 +872,8 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            {activeTab === 'Past Events' && (
+            {/* TAB 2: PAST EVENTS */}
+            {activeTab === "Past Events" && (
               <div className="space-y-6">
                 {pastEvents.length === 0 ? (
                   <motion.div
@@ -643,7 +884,9 @@ export default function CustomerDashboard() {
                     <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4">
                       <Calendar className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground">No past events</h3>
+                    <h3 className="text-lg font-medium text-foreground">
+                      No past events
+                    </h3>
                     <p className="text-muted-foreground mt-2 max-w-sm">
                       You haven't attended any past events yet.
                     </p>
@@ -656,33 +899,68 @@ export default function CustomerDashboard() {
                         layout
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        transition={{ delay: idx * 0.05 }}
-                        className="group relative bg-card/60 border border-border rounded-2xl p-4 transition-colors shadow-sm opacity-75 hover:opacity-100"
+                        className="group relative bg-card/60 border border-border rounded-2xl p-4 shadow-sm opacity-85 hover:opacity-100"
                       >
                         <div className="flex flex-col md:flex-row gap-6">
                           <div className="w-full md:w-40 h-24 rounded-xl overflow-hidden shrink-0 bg-muted grayscale group-hover:grayscale-0 transition-all">
                             {reg.event?.posterUrl ? (
-                              <img src={reg.event.posterUrl} alt={reg.event.title} className="w-full h-full object-cover" />
+                              <img
+                                src={reg.event.posterUrl}
+                                alt=""
+                                className="w-full h-full object-cover"
+                              />
                             ) : (
-                              <div className="flex items-center justify-center h-full text-muted-foreground">
+                              <div className="flex items-center justify-center h-full">
                                 <Calendar className="w-6 h-6" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1 flex flex-col justify-center">
                             <div className="flex justify-between items-start">
-                              <h3 className="text-base font-semibold text-foreground">{reg.event?.title}</h3>
-                              <span
-                                className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${
-                                  reg.status === 'attended'
-                                    ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                    : 'bg-secondary text-muted-foreground'
-                                }`}
-                              >
-                                {reg.status === 'attended' ? 'Attended' : 'Completed'}
+                              <div>
+                                <h3 className="text-base font-semibold text-foreground">
+                                  {reg.event?.title}
+                                </h3>
+                                <p className="text-muted-foreground text-xs mt-1">
+                                  {reg.event?.date
+                                    ? new Date(
+                                        reg.event.date,
+                                      ).toLocaleDateString()
+                                    : "TBA"}{" "}
+                                  • {reg.event?.location}
+                                </p>
+                              </div>
+                              <span className="inline-flex items-center text-xs px-2 py-1 rounded-full border bg-purple-500/10 text-purple-500 border-purple-500/20">
+                                {reg.status === "attended"
+                                  ? "Attended"
+                                  : "Completed"}
                               </span>
                             </div>
+<<<<<<< HEAD
+
+                            {reg.status === "attended" && (
+                              <div className="mt-4">
+                                <Button
+                                  className="bg-green-600 hover:bg-green-700 text-white text-xs h-8 gap-1"
+                                  onClick={() =>
+                                    generateCertificate({
+                                      attendeeName: user?.name || "Participant",
+                                      eventTitle: reg.event?.title || "Event",
+                                      eventDate: reg.event?.date
+                                        ? new Date(
+                                            reg.event.date,
+                                          ).toLocaleDateString()
+                                        : "TBA",
+                                      organizerName: "EventOne",
+                                      registrationId: reg._id,
+                                    })
+                                  }
+                                >
+                                  <Download className="w-3 h-3" /> Download
+                                  Certificate
+                                </Button>
+                              </div>
+=======
                         )}
 
             {activeTab === 'Past Events' && (
@@ -717,6 +995,7 @@ export default function CustomerDashboard() {
                                 <div className="flex justify-center py-6">
                                     <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
                                 </div>
+>>>>>>> main
                             )}
                           </div>
                         </div>
@@ -727,8 +1006,10 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            {activeTab === 'Browse Events' && (
+            {/* TAB 3: BROWSE EVENTS */}
+            {activeTab === "Browse Events" && (
               <div className="space-y-6">
+                {/* Search Bar */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <input
@@ -736,25 +1017,29 @@ export default function CustomerDashboard() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search events by title or description..."
-                    className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
+                    className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
                   />
                   {searchQuery && (
                     <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
+<<<<<<< HEAD
+                {/* Category Filters */}
+=======
+>>>>>>> main
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setSelectedCategory('')}
+                    onClick={() => setSelectedCategory("")}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      selectedCategory === ''
-                        ? 'bg-rose-500 text-white border-rose-500'
-                        : 'bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50'
+                      selectedCategory === ""
+                        ? "bg-rose-500 text-white border-rose-500"
+                        : "bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50"
                     }`}
                   >
                     All
@@ -762,11 +1047,13 @@ export default function CustomerDashboard() {
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() => setSelectedCategory(selectedCategory === cat ? '' : cat)}
+                      onClick={() =>
+                        setSelectedCategory(selectedCategory === cat ? "" : cat)
+                      }
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                         selectedCategory === cat
-                          ? 'bg-rose-500 text-white border-rose-500'
-                          : 'bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50'
+                          ? "bg-rose-500 text-white border-rose-500"
+                          : "bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50"
                       }`}
                     >
                       {cat}
@@ -774,13 +1061,11 @@ export default function CustomerDashboard() {
                   ))}
                 </div>
 
-                {isFetching && (
-                  <div className="flex justify-center py-6">
+                {isFetching ? (
+                  <div className="flex justify-center py-10">
                     <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
                   </div>
-                )}
-
-                {!isFetching && availableEvents.length === 0 && (
+                ) : availableEvents.length === 0 ? (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -790,32 +1075,29 @@ export default function CustomerDashboard() {
                       <Calendar className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium text-foreground">
-                      No events found matching your search
+                      No events found matching criteria
                     </h3>
-                    <p className="text-muted-foreground mt-2 max-w-sm text-sm">
-                      Try a different keyword or remove the category filter.
-                    </p>
                     <Button
-                      className="mt-6 bg-rose-600 hover:bg-rose-700 text-white text-xs"
+                      className="mt-4 bg-rose-600 text-white text-xs"
                       onClick={() => {
-                        setSearchQuery('');
-                        setSelectedCategory('');
+                        setSearchQuery("");
+                        setSelectedCategory("");
                       }}
                     >
                       Clear Filters
                     </Button>
                   </motion.div>
-                )}
-
-                {!isFetching && availableEvents.length > 0 && (
+                ) : (
                   <div className="grid grid-cols-1 gap-6">
                     {availableEvents.map((evt, idx) => {
-                      const isRegistered = registrations.some(
-                        (r) => r.status === 'registered' && r.event?._id === evt._id
+                      const isAlreadyRegistered = registrations.some(
+                        (r) =>
+                          r.status === "registered" && r.event?._id === evt._id,
                       );
-                      const registeredCount = evt.registeredCount ?? 0;
-                      const isHighlighted = !!highlightedEvents[evt._id];
-                      const isEventFullBooked = evt.registeredCount === evt.capacity;
+                      const isEventFullBooked =
+                        (evt.registeredCount ?? 0) >=
+                        (evt.capacity ?? Infinity);
+                      const isPulseActive = !!highlightedEvents[evt._id];
 
                       return (
                         <motion.div
@@ -825,20 +1107,20 @@ export default function CustomerDashboard() {
                           animate={{
                             opacity: 1,
                             y: 0,
-                            scale: isHighlighted ? [1, 1.01, 1] : 1,
-                            boxShadow: isHighlighted
+                            scale: isPulseActive ? [1, 1.01, 1] : 1,
+                            boxShadow: isPulseActive
                               ? [
-                                  '0 0 0 rgba(34, 197, 94, 0)',
-                                  '0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 28px rgba(34, 197, 94, 0.12)',
-                                  '0 0 0 rgba(34, 197, 94, 0)',
+                                  "0 0 0 rgba(34,197,94,0)",
+                                  "0 0 0 1px rgba(34,197,94,0.4), 0 0 20px rgba(34,197,94,0.15)",
+                                  "0 0 0 rgba(34,197,94,0)",
                                 ]
-                              : '0 0 0 rgba(34, 197, 94, 0)',
+                              : "0 0 0 rgba(0,0,0,0)",
                           }}
                           transition={{ delay: idx * 0.05 }}
-                          className={`group relative bg-card border rounded-2xl p-4 transition-colors shadow-sm ${
-                            isHighlighted
-                              ? 'border-green-500/50'
-                              : 'border-border hover:border-rose-500/50'
+                          className={`group relative bg-card border rounded-2xl p-4 transition-all ${
+                            isPulseActive
+                              ? "border-green-500/60"
+                              : "border-border hover:border-rose-500/50"
                           }`}
                         >
                           <div className="flex flex-col md:flex-row gap-6">
@@ -846,40 +1128,39 @@ export default function CustomerDashboard() {
                               {evt.posterUrl ? (
                                 <img
                                   src={evt.posterUrl}
-                                  alt={evt.title}
+                                  alt=""
                                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                 />
                               ) : (
-                                <div className="flex items-center justify-center h-full text-muted-foreground">
+                                <div className="flex items-center justify-center h-full">
                                   <Calendar className="w-8 h-8" />
                                 </div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                               <span className="absolute bottom-2 left-2 text-xs text-white/90 font-medium px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded">
                                 {evt.category}
                               </span>
                             </div>
+
                             <div className="flex-1 flex flex-col justify-between">
                               <div>
-                                <div className="flex justify-between items-start">
+                                <div className="flex justify-between items-start gap-4">
                                   <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
                                     {evt.title}
                                   </h3>
                                   <span
-                                    className={`inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full border transition-colors ${
-                                      isHighlighted
-                                        ? 'bg-green-500/10 text-green-600 border-green-500/30'
-                                        : 'bg-blue-500/10 text-blue-500 border-blue-500/20'
+                                    className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border ${
+                                      isPulseActive
+                                        ? "bg-green-500/10 text-green-500 border-green-500/20"
+                                        : "bg-blue-500/10 text-blue-500 border-blue-500/20"
                                     }`}
                                   >
-                                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-                                    <span>
-                                      {registeredCount} registered
-                                      {evt.capacity ? ` / ${evt.capacity}` : ''}
-                                    </span>
+                                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    {evt.registeredCount ?? 0}{" "}
+                                    {evt.capacity ? `/ ${evt.capacity}` : ""}{" "}
+                                    Registered
                                   </span>
                                 </div>
-                                <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
+                                <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
                                   {evt.description}
                                 </p>
                                 <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
@@ -895,12 +1176,19 @@ export default function CustomerDashboard() {
                               </div>
 
                               <div className="flex justify-end pt-4 md:pt-0">
-                                {isRegistered ? (
-                                  <Button disabled variant="success" className="text-xs h-8 bg-green-600 text-white opacity-75">
+                                {isAlreadyRegistered ? (
+                                  <Button
+                                    disabled
+                                    className="text-xs h-8 bg-green-600 text-white opacity-75"
+                                  >
                                     Registered
                                   </Button>
                                 ) : isEventFullBooked ? (
-                                  <Button disabled variant="secondary" className="text-xs h-8">
+                                  <Button
+                                    disabled
+                                    variant="secondary"
+                                    className="text-xs h-8"
+                                  >
                                     Fully Booked
                                   </Button>
                                 ) : (
@@ -925,6 +1213,7 @@ export default function CustomerDashboard() {
         </div>
       </div>
 
+      {/* VIEW MODAL: DETAIL TICKET COPY WITH QR CODE */}
       <AnimatePresence>
         {selectedTicket && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -941,57 +1230,90 @@ export default function CustomerDashboard() {
               >
                 <X className="w-5 h-5" />
               </button>
+
               <div className="p-6 bg-white">
                 <div ref={ticketRef}>
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold mb-1 text-rose-600">EventOne Ticket</h3>
-                    <p className="text-xs text-zinc-500 uppercase tracking-widest">Admit One</p>
+                    <h3 className="text-xl font-bold mb-1 text-rose-600">
+                      EventOne Pass
+                    </h3>
+                    <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                      Admit One
+                    </p>
                   </div>
+
                   <div className="space-y-4 mb-6">
                     <div className="flex items-start gap-4 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
                       <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
                         {selectedTicket.event?.posterUrl && (
-                          <img src={selectedTicket.event.posterUrl} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={selectedTicket.event.posterUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         )}
                       </div>
                       <div>
-                        <h4 className="font-semibold text-sm line-clamp-1">{selectedTicket.event?.title}</h4>
+                        <h4 className="font-semibold text-sm line-clamp-1">
+                          {selectedTicket.event?.title}
+                        </h4>
                         <p className="text-xs text-zinc-500 mt-1 flex items-center">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {selectedTicket.event?.date ? new Date(selectedTicket.event.date).toLocaleDateString() : 'TBA'}
+                          {selectedTicket.event?.date
+                            ? new Date(
+                                selectedTicket.event.date,
+                              ).toLocaleDateString()
+                            : "TBA"}
                         </p>
                         <p className="text-xs text-zinc-500 mt-0.5 flex items-center">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {selectedTicket.event?.location || 'TBA'}
+                          {selectedTicket.event?.location || "TBA"}
                         </p>
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3 text-sm">
                       <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-                        <span className="text-xs text-zinc-500 block mb-1">Attendee</span>
+                        <span className="text-xs text-zinc-500 block mb-1">
+                          Attendee
+                        </span>
                         <div className="font-medium truncate">{user?.name}</div>
                       </div>
                       <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
-                        <span className="text-xs text-zinc-500 block mb-1">Ticket ID</span>
-                        <div className="font-medium font-mono text-xs">{selectedTicket._id.slice(-8).toUpperCase()}</div>
+                        <span className="text-xs text-zinc-500 block mb-1">
+                          Ticket ID
+                        </span>
+                        <div className="font-medium font-mono text-xs">
+                          {selectedTicket._id.slice(-8).toUpperCase()}
+                        </div>
                       </div>
                     </div>
                   </div>
+
                   <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-dashed border-zinc-300 mb-6 relative">
                     <div className="absolute top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,transparent_50%,#000_50%)] bg-[size:10px_10px]" />
                     {selectedTicket.qrCodeDataUrl ? (
-                      <img src={selectedTicket.qrCodeDataUrl} alt="Ticket QR Code" className="w-48 h-48 object-contain" />
+                      <img
+                        src={selectedTicket.qrCodeDataUrl}
+                        alt="Ticket QR Code"
+                        className="w-48 h-48 object-contain"
+                      />
                     ) : (
                       <div className="w-48 h-48 flex items-center justify-center bg-zinc-100 text-zinc-400 text-xs">
                         QR Code Unavailable
                       </div>
                     )}
-                    <p className="text-[10px] text-zinc-500 mt-2 font-mono">SCAN AT ENTRANCE</p>
+                    <p className="text-[10px] text-zinc-500 mt-2 font-mono">
+                      SCAN AT ENTRANCE
+                    </p>
                   </div>
                 </div>
-                <Button onClick={handleDownloadTicket} className="w-full bg-rose-600 hover:bg-rose-700 text-white">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download / Print Ticket
+
+                <Button
+                  onClick={handleDownloadTicket}
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white gap-2"
+                >
+                  <Download className="w-4 h-4" /> Download / Print Ticket
                 </Button>
               </div>
             </motion.div>
@@ -999,15 +1321,23 @@ export default function CustomerDashboard() {
         )}
       </AnimatePresence>
 
+      {/* CONFIRMATION CANCELLATION MODAL */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
           setSelectedRegistrationId(null);
+          setRefundInfo(null);
         }}
         onConfirm={handleCancelRegistration}
         title="Cancel Registration"
-        message="Are you sure you want to cancel your registration? This action cannot be undone."
+        description={
+          refundInfo
+            ? `Are you sure you want to cancel? According to the policy, you will receive a refund of ₹${
+                refundInfo.refundAmount || 0
+              }.`
+            : "Are you sure you want to cancel your registration? This action cannot be undone."
+        }
       />
     </div>
   );
