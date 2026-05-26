@@ -45,6 +45,13 @@ const eventSchema = new mongoose.Schema(
       required: true,
     },
 
+    coOrganizers: [
+  {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+],
+
     posterUrl: {
       type: String,
     },

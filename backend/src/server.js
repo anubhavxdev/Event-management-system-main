@@ -1,5 +1,16 @@
+
+
+
+import authRoutes from './routes/authRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
+import registrationRoutes from './routes/registrationRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import statsRoutes from './routes/statsRoutes.js';
 import http from 'http';
-import express from 'express';
+import helmet from 'helmet';
+import app from './app.js';
+import cors from 'cors';
 import helmet from 'helmet';
 import cors from 'cors';
 import morgan from 'morgan';
@@ -12,7 +23,9 @@ import app from './app.js';
 import { env } from './config/env.js';
 import { connectDB } from './config/db.js';
 
-// routes (only if needed here, otherwise keep in app.js)
+import { initSocket } from './services/socket.js';
+ 
+
 import authRoutes from './routes/authRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import registrationRoutes from './routes/registrationRoutes.js';

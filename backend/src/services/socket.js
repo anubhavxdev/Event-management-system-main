@@ -36,6 +36,12 @@ export function initSocket(server, clientOrigin) {
       }
 
       socket.leave(getEventRoom(eventId));
+    socket.on('user:join', (payload = {}) => {
+      const userId = payload?.userId;
+      if (!userId) {
+        return;
+      }
+      socket.join(`user_${userId}`);
     });
   });
 
@@ -51,5 +57,12 @@ export function emitRegistrationCount(eventId, count) {
     eventId: String(eventId),
     count,
   });
+}
+
+export function emitNotification(userId, notificationData) {
+  if (!ioInstance || !userId) {
+    return;
+  }
+  ioInstance.to(`user_${userId}`).emit('notification:new', notificationData);
 }
 

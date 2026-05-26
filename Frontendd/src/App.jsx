@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "./index.css";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import ScrollToTop from "./components/ui/ScrollToTop";
@@ -66,6 +66,20 @@ const App = () => {
       document.documentElement.classList.remove("dark");
     } 
   },[darkMode]);
+
+  useEffect(() => {
+    const handleOnline = () => toast.success("You are back online!");
+    const handleOffline = () => toast.error("You are offline. Viewing cached data.");
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <ScrollToTop />

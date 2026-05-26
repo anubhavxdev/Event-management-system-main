@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 "use client";
 
 import React, { useEffect, useState, useRef, useCallback } from "react";
@@ -6,6 +7,22 @@ import { motion, AnimatePresence } from "framer-motion";
 import { io } from "socket.io-client";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+=======
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, MapPin, Ticket, X, Download, Search } from 'lucide-react';
+import { io } from 'socket.io-client';
+import { Button } from '../../components/ui/button';
+import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
+import { Link, useSearchParams } from 'react-router-dom';
+import { API_BASE_URL } from '../../config';
+import ConfirmationModal from '../../components/ui/confirmation-modal';
+import { useDebounce } from '../../hooks/useDebounce';
+import { generateCertificate } from '../../utils/generateCertificate';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+>>>>>>> main
 
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../context/AuthContext";
@@ -24,8 +41,19 @@ const toast = {
 
 const CATEGORIES = ["Tech", "Sports", "Cultural", "Workshop", "Music", "Other"];
 
+const getEventDate = (registration) => {
+  if (!registration?.event?.date) return null;
+
+  const eventDate = new Date(registration.event.date);
+  return Number.isNaN(eventDate.getTime()) ? null : eventDate;
+};
+
+const isActiveRegistration = (registration) =>
+  registration?.event && registration.status !== 'cancelled';
+
 export default function CustomerDashboard() {
   const { user } = useAuth();
+<<<<<<< HEAD
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -52,6 +80,21 @@ export default function CustomerDashboard() {
   const [selectedCategory, setSelectedCategory] = useState(
     () => searchParams.get("category") || "",
   );
+=======
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [registrations, setRegistrations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('Upcoming Tickets');
+  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [availableEvents, setAvailableEvents] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const [highlightedEvents, setHighlightedEvents] = useState({});
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
+  const [isFetching, setIsFetching] = useState(false);
+  const [registrationsError, setRegistrationsError] = useState('');
+>>>>>>> main
 
   const debouncedSearch = useDebounce(searchQuery, 400);
 
@@ -64,6 +107,21 @@ export default function CustomerDashboard() {
   const socketRef = useRef(null);
   const joinedEventIdsRef = useRef([]);
   const highlightTimeoutsRef = useRef({});
+<<<<<<< HEAD
+=======
+
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
+  useEffect(() => {
+    const nextSearch = searchParams.get('q') || '';
+    const nextCategory = searchParams.get('category') || '';
+
+    queueMicrotask(() => {
+      setSearchQuery((current) => (current === nextSearch ? current : nextSearch));
+      setSelectedCategory((current) => (current === nextCategory ? current : nextCategory));
+    });
+  }, [searchParams]);
+>>>>>>> main
 
   // Clean-up on unmount
   useEffect(() => {
@@ -109,6 +167,7 @@ export default function CustomerDashboard() {
     setSearchParams,
   ]);
 
+<<<<<<< HEAD
   // Tab switcher
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -126,16 +185,74 @@ export default function CustomerDashboard() {
       if (mountedRef.current) setLoading(true);
       const token = localStorage.getItem("token");
 
+=======
+  const fetchAvailableEvents = useCallback(async () => {
+    try {
+      await Promise.resolve();
+      setIsFetching(true);
+
+      const params = new URLSearchParams();
+      params.set('status', 'approved');
+      params.set('page', searchParams.get('page') || '1');
+      params.set('limit', '12');
+
+      const q = searchParams.get('q');
+      const category = searchParams.get('category');
+
+      if (q) params.set('q', q);
+      if (category) params.set('category', category);
+
+      const url = `${API_BASE_URL}/api/events?${params.toString()}`;
+      const res = await fetch(url);
+
+      if (!res.ok) {
+        throw new Error('Failed to fetch events');
+      }
+
+      const data = await res.json();
+      const upcoming = (data.events || []).filter((evt) => new Date(evt.date) >= new Date());
+
+      if (mountedRef.current) {
+        setAvailableEvents(upcoming);
+      }
+    } catch (error) {
+      console.error('Failed to fetch events:', error);
+    } finally {
+      if (mountedRef.current) {
+        setIsFetching(false);
+        setLoading(false);
+      }
+    }
+  }, [searchParams]);
+
+  const fetchRegistrations = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+>>>>>>> main
       const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (res.ok && mountedRef.current) {
-        const data = await res.json();
-        setRegistrations(data.registrations || []);
+      if (!res.ok) {
+        throw new Error('Failed to fetch registrations');
+      }
+
+      const data = await res.json();
+
+      if (mountedRef.current) {
+        setRegistrationsError('');
+        setRegistrations(Array.isArray(data.registrations) ? data.registrations : []);
       }
     } catch (error) {
+<<<<<<< HEAD
       console.error("Failed to fetch registrations:", error);
+=======
+      console.error('Failed to fetch registrations', error);
+      if (mountedRef.current) {
+        setRegistrationsError('Unable to load your registered events. Please try again later.');
+        setRegistrations([]);
+      }
+>>>>>>> main
     } finally {
       if (mountedRef.current) setLoading(false);
     }
@@ -180,6 +297,7 @@ export default function CustomerDashboard() {
   }, [searchParams]);
 
   useEffect(() => {
+<<<<<<< HEAD
     const timer = setTimeout(() => {
       if (activeTab === "Browse Events") {
         void fetchAvailableEvents();
@@ -190,12 +308,35 @@ export default function CustomerDashboard() {
 
     return () => clearTimeout(timer);
   }, [activeTab, searchParams, fetchAvailableEvents, fetchRegistrations]);
+=======
+    queueMicrotask(() => {
+      fetchRegistrations();
+    });
+  }, [fetchRegistrations]);
+>>>>>>> main
 
   // =========================
   // Socket.io Realtime Logic
   // =========================
   useEffect(() => {
+<<<<<<< HEAD
     if (activeTab !== "Browse Events" || availableEvents.length === 0) {
+=======
+    if (activeTab === 'Browse Events') {
+      queueMicrotask(() => {
+        fetchAvailableEvents();
+      });
+    }
+  }, [activeTab, fetchAvailableEvents]);
+
+  const availableEventIds = useMemo(
+    () => availableEvents.map((evt) => evt?._id).filter(Boolean),
+    [availableEvents]
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'Browse Events' || availableEventIds.length === 0) {
+>>>>>>> main
       return undefined;
     }
 
@@ -206,8 +347,12 @@ export default function CustomerDashboard() {
 
     socketRef.current = socket;
 
+<<<<<<< HEAD
     const eventIds = availableEvents.map((evt) => evt?._id).filter(Boolean);
     joinedEventIdsRef.current = eventIds;
+=======
+    joinedEventIdsRef.current = availableEventIds;
+>>>>>>> main
 
     const pulseEvent = (eventId) => {
       setHighlightedEvents((prev) => ({ ...prev, [eventId]: true }));
@@ -227,8 +372,13 @@ export default function CustomerDashboard() {
     };
 
     const joinRooms = () => {
+<<<<<<< HEAD
       eventIds.forEach((eventId) => {
         socket.emit("event:join", { eventId });
+=======
+      availableEventIds.forEach((eventId) => {
+        socket.emit('event:join', { eventId });
+>>>>>>> main
       });
     };
 
@@ -272,7 +422,7 @@ export default function CustomerDashboard() {
       });
       highlightTimeoutsRef.current = {};
     };
-  }, [activeTab, availableEvents]);
+  }, [activeTab, availableEventIds]);
 
   // =========================
   // Actions: Handlers
@@ -308,16 +458,26 @@ export default function CustomerDashboard() {
 
   const handleCancelRegistration = async () => {
     try {
+<<<<<<< HEAD
       const token = localStorage.getItem("token");
+=======
+      const token = localStorage.getItem('token');
+>>>>>>> main
       const response = await fetch(
         `${API_BASE_URL}/api/registrations/${selectedRegistrationId}/cancel`,
         {
-          method: "DELETE",
+          method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
+<<<<<<< HEAD
             "Content-Type": "application/json",
           },
         },
+=======
+            'Content-Type': 'application/json',
+          },
+        }
+>>>>>>> main
       );
 
       const data = await response.json();
@@ -344,6 +504,7 @@ export default function CustomerDashboard() {
     }
   };
 
+<<<<<<< HEAD
   const fetchRefundPolicy = async (registrationId) => {
     try {
       const token = localStorage.getItem("token");
@@ -383,6 +544,20 @@ export default function CustomerDashboard() {
       });
 
       const imgData = canvas.toDataURL("image/png");
+=======
+  const handleDownloadTicket = async () => {
+    try {
+      if (!ticketRef.current || !selectedTicket) return;
+
+      const canvas = await html2canvas(ticketRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+>>>>>>> main
       const pdf = new jsPDF({
         orientation: "portrait",
         unit: "mm",
@@ -425,6 +600,7 @@ export default function CustomerDashboard() {
     }
   };
 
+<<<<<<< HEAD
   // =========================
   // Dataset Compilations
   // =========================
@@ -441,6 +617,35 @@ export default function CustomerDashboard() {
       reg.status !== "cancelled" &&
       new Date(reg.event.date) < new Date(),
   );
+=======
+  const { upcomingEvents, pastEvents } = useMemo(() => {
+    const now = new Date();
+
+    return registrations.reduce(
+      (groupedEvents, registration) => {
+        if (!isActiveRegistration(registration)) {
+          return groupedEvents;
+        }
+
+        const eventDate = getEventDate(registration);
+
+        if (!eventDate) {
+          groupedEvents.upcomingEvents.push(registration);
+          return groupedEvents;
+        }
+
+        if (eventDate >= now) {
+          groupedEvents.upcomingEvents.push(registration);
+        } else {
+          groupedEvents.pastEvents.push(registration);
+        }
+
+        return groupedEvents;
+      },
+      { upcomingEvents: [], pastEvents: [] }
+    );
+  }, [registrations]);
+>>>>>>> main
 
   if (loading) {
     return (
@@ -450,9 +655,12 @@ export default function CustomerDashboard() {
     );
   }
 
+<<<<<<< HEAD
   // =========================
   // UI Render
   // =========================
+=======
+>>>>>>> main
   return (
     <div className="min-h-screen bg-background text-foreground pt-32 px-4 sm:px-6 lg:px-8 font-sans selection:bg-purple-500/30 relative overflow-hidden">
       {/* Background Gradients */}
@@ -487,7 +695,7 @@ export default function CustomerDashboard() {
             {["Upcoming Tickets", "Past Events", "Browse Events"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => handleTabChange(tab)}
+                onClick={() => setActiveTab(tab)}
                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${
                   activeTab === tab
                     ? "text-orange-500"
@@ -529,8 +737,22 @@ export default function CustomerDashboard() {
           </div>
 
           <AnimatePresence mode="popLayout">
+<<<<<<< HEAD
             {/* TAB 1: UPCOMING TICKETS */}
             {activeTab === "Upcoming Tickets" && (
+=======
+            {registrationsError && activeTab !== 'Browse Events' && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-500"
+              >
+                {registrationsError}
+              </motion.div>
+            )}
+
+            {activeTab === 'Upcoming Tickets' && (
+>>>>>>> main
               <div className="space-y-6">
                 {upcomingEvents.length === 0 ? (
                   <motion.div
@@ -714,6 +936,7 @@ export default function CustomerDashboard() {
                                   : "Completed"}
                               </span>
                             </div>
+<<<<<<< HEAD
 
                             {reg.status === "attended" && (
                               <div className="mt-4">
@@ -737,6 +960,42 @@ export default function CustomerDashboard() {
                                   Certificate
                                 </Button>
                               </div>
+=======
+                        )}
+
+            {activeTab === 'Past Events' && (
+              <div className="space-y-6">
+                {pastEvents.length === 0 ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full h-80 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center p-6">
+                    <div className="w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center mb-4"><Calendar className="w-8 h-8 text-muted-foreground" /></div>
+                    <h3 className="text-lg font-medium text-foreground">No past events</h3>
+                    <p className="text-muted-foreground mt-2 max-w-sm">You haven't attended any past events yet.</p>
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                    {pastEvents.map((reg, idx) => (
+                      <motion.div key={reg._id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ delay: idx * 0.05 }} className="group relative bg-card/60 border border-border rounded-2xl p-4 transition-colors shadow-sm opacity-75 hover:opacity-100">
+                        <div className="flex flex-col md:flex-row gap-6">
+                          <div className="w-full md:w-40 h-24 rounded-xl overflow-hidden shrink-0 bg-muted grayscale group-hover:grayscale-0 transition-all">{reg.event?.posterUrl ? <img src={reg.event.posterUrl} alt={reg.event.title} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-muted-foreground"><Calendar className="w-6 h-6" /></div>}</div>
+                        
+                        <div className="flex-1 flex flex-col justify-center">
+                          <div className="flex justify-between items-start"><h3 className="text-base font-semibold text-foreground">{reg.event?.title}</h3><span className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${reg.status === 'attended' ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' : 'bg-secondary text-muted-foreground'}`}>{reg.status === 'attended' ? 'Attended' : 'Completed'}</span></div>
+                          <p className="text-muted-foreground text-xs mt-1">{reg.event?.date ? new Date(reg.event.date).toLocaleDateString() : 'TBA'} • {reg.event?.location}</p>
+                        </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+                            {/* Subtle loading spinner during debounce + fetch */}
+                            {isFetching && (
+                                <div className="flex justify-center py-6">
+                                    <div className="w-6 h-6 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+                                </div>
+>>>>>>> main
                             )}
                           </div>
                         </div>
@@ -770,7 +1029,10 @@ export default function CustomerDashboard() {
                   )}
                 </div>
 
+<<<<<<< HEAD
                 {/* Category Filters */}
+=======
+>>>>>>> main
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedCategory("")}
