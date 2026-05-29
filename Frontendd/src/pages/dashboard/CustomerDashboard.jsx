@@ -10,7 +10,15 @@ import ConfirmationModal from '../../components/ui/confirmation-modal';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
-const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Music', 'Other'];
+const localizer = momentLocalizer(moment);
+
+const categoryColors = {
+  Tech: '#2563eb',
+  Sports: '#16a34a',
+  Cultural: '#9333ea',
+  Workshop: '#ea580c',
+  Business: '#dc2626',
+};
 
 export default function CustomerDashboard() {
     const { user } = useAuth();

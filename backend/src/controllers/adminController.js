@@ -1,7 +1,9 @@
+import mongoose from 'mongoose';
 import Event from '../models/Event.js';
 import User from '../models/User.js';
 import { sendEventRejectionEmail } from '../utils/email.js';
 import { createNotification } from './notificationController.js';
+import { deleteFromCloudinary } from '../config/cloudinary.js';
 
 export const approveEvent = async (req, res) => {
   try {
@@ -122,6 +124,199 @@ export const updateUserRole = async (req, res) => {
     const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// --- Bulk Action Helpers ---
+
+const getBulkEventIds = (eventIds = []) => {
+  const uniqueIds = [...new Set(eventIds.filter(Boolean))];
+  const invalidIds = uniqueIds.filter(
+    (id) => !mongoose.Types.ObjectId.isValid(id)
+  );
+  return { uniqueIds, invalidIds };
+};
+
+const buildBulkSummary = (results, eventIds) => {
+  let succeeded = 0;
+  let failed = 0;
+  const errors = [];
+
+  results.forEach((result, index) => {
+    const eventId = eventIds[index];
+    if (result.status === 'fulfilled') {
+      succeeded += 1;
+      return;
+    }
+    failed += 1;
+    errors.push({
+      eventId,
+      error: result.reason?.message || 'Unknown error',
+    });
+  });
+
+  return { succeeded, failed, errors };
+};
+
+// --- Bulk Approve ---
+
+export const bulkApproveEvents = async (req, res) => {
+  try {
+    const { eventIds } = req.body || {};
+
+    if (!Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ message: 'eventIds must be a non-empty array' });
+    }
+
+    const { uniqueIds, invalidIds } = getBulkEventIds(eventIds);
+
+    if (invalidIds.length > 0) {
+      return res.status(400).json({
+        message: 'One or more eventIds are invalid',
+        invalidIds,
+      });
+    }
+
+    const results = await Promise.allSettled(
+      uniqueIds.map(async (eventId) => {
+        const event = await Event.findByIdAndUpdate(
+          eventId,
+          { status: 'approved', rejectionReason: '' },
+          { new: true }
+        ).populate('organizer', 'name email');
+
+        if (!event) {
+          throw new Error('Event not found');
+        }
+
+        if (event.organizer) {
+          try {
+            await createNotification(
+              event.organizer._id,
+              'event_approved',
+              `Your event ${event.title} has been approved`,
+              `/events/${event._id}`
+            );
+          } catch (notifErr) {
+            console.error('Failed to create bulk approval notification:', notifErr);
+          }
+        }
+      })
+    );
+
+    res.json(buildBulkSummary(results, uniqueIds));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// --- Bulk Reject ---
+
+export const bulkRejectEvents = async (req, res) => {
+  try {
+    const { eventIds, rejectionReason } = req.body || {};
+    const reason = rejectionReason?.trim();
+
+    if (!Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ message: 'eventIds must be a non-empty array' });
+    }
+
+    if (!reason || reason.length < 20) {
+      return res.status(400).json({
+        message: 'Rejection reason is required and must be at least 20 characters long',
+      });
+    }
+
+    const { uniqueIds, invalidIds } = getBulkEventIds(eventIds);
+
+    if (invalidIds.length > 0) {
+      return res.status(400).json({
+        message: 'One or more eventIds are invalid',
+        invalidIds,
+      });
+    }
+
+    const results = await Promise.allSettled(
+      uniqueIds.map(async (eventId) => {
+        const event = await Event.findById(eventId).populate('organizer', 'name email');
+
+        if (!event) {
+          throw new Error('Event not found');
+        }
+
+        event.status = 'rejected';
+        event.rejectionReason = reason;
+        await event.save();
+
+        if (event.organizer?.email) {
+          try {
+            await sendEventRejectionEmail(event.organizer.email, event, reason);
+          } catch (emailError) {
+            console.warn(`Failed to send rejection email for event ${event._id}: ${emailError.message}`);
+          }
+        }
+
+        if (event.organizer) {
+          try {
+            await createNotification(
+              event.organizer._id,
+              'event_rejected',
+              `Your event ${event.title} was not approved`,
+              `/events/${event._id}`
+            );
+          } catch (notifErr) {
+            console.error('Failed to create bulk rejection notification:', notifErr);
+          }
+        }
+      })
+    );
+
+    res.json(buildBulkSummary(results, uniqueIds));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// --- Bulk Delete ---
+
+export const bulkDeleteEvents = async (req, res) => {
+  try {
+    const { eventIds } = req.body || {};
+
+    if (!Array.isArray(eventIds) || eventIds.length === 0) {
+      return res.status(400).json({ message: 'eventIds must be a non-empty array' });
+    }
+
+    const { uniqueIds, invalidIds } = getBulkEventIds(eventIds);
+
+    if (invalidIds.length > 0) {
+      return res.status(400).json({
+        message: 'One or more eventIds are invalid',
+        invalidIds,
+      });
+    }
+
+    const results = await Promise.allSettled(
+      uniqueIds.map(async (eventId) => {
+        const deleted = await Event.findByIdAndDelete(eventId);
+
+        if (!deleted) {
+          throw new Error('Event not found');
+        }
+
+        if (deleted.posterUrl) {
+          try {
+            await deleteFromCloudinary(deleted.posterUrl);
+          } catch (cloudinaryError) {
+            console.warn(`Failed to delete poster for event ${deleted._id}: ${cloudinaryError.message}`);
+          }
+        }
+      })
+    );
+
+    res.json(buildBulkSummary(results, uniqueIds));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
