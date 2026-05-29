@@ -136,7 +136,9 @@ export default function OrganizerDashboard() {
                         ).map(e => ({ ...e, _isCoOrganized: true }));
                         if (coEvents.length > 0) setEvents(prev => [...prev, ...coEvents]);
                     }
-                } catch (_) {}
+                } catch {
+                  // Co-organizer events are optional
+                }
             }
         } catch (error) {
             console.error("Failed to fetch events", error);

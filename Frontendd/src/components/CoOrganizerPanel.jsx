@@ -16,10 +16,15 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
       });
       const data = await res.json();
       setCoOrgs(data.event?.coOrganizers || []);
-    } catch (_) {}
+    } catch {
+      // Ignore co-organizer fetch failures
+    }
   };
 
-  useEffect(() => { fetchCoOrgs(); }, [eventId]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchCoOrgs();
+  }, [eventId]);
 
   const addCoOrg = async () => {
     setLoading(true); setMsg({ text: '', ok: true });

@@ -3,8 +3,6 @@
   "version": "1.0.0",
   "description": "Backend API for eventone",
   "main": "index.js",
-  "type": "module",
-
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -22,7 +20,6 @@
   "author": "anubhavxdev",
   "license": "MIT",
   "type": "module",
-
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cloudinary": "^1.41.3",
@@ -31,15 +28,19 @@
     "cors": "^2.8.5",
     "csv-writer": "^1.6.0",
     "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "express-rate-limit": "^8.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "express-session": "^1.19.0",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mongodb": "^7.2.0",
     "mongoose": "^8.18.0",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "nodemailer": "^7.0.6",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "qrcode": "^1.5.4",
     "socket.io": "^4.8.1",
     "validator": "^13.15.15"

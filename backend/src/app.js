@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import passport from './config/passport.js';
 import { secureUploads } from './middleware/secureUploads.js';
 
 import { env } from './config/env.js';
@@ -21,13 +22,21 @@ import notificationRoutes from './routes/notificationRoutes.js';
 const app = express();
 
 // Security & utils
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+      'img-src': ["'self'", 'data:', 'https://lh3.googleusercontent.com', 'https://res.cloudinary.com', 'blob:'],
+    },
+  },
+}));
 app.use(cors({ origin: env.clientUrl, credentials: true }));
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(compression());
+app.use(passport.initialize());
 
 // Basic rate limit
 app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));

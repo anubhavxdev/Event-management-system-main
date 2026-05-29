@@ -24,6 +24,8 @@ export const SocketProvider = ({ children }) => {
         newSocket.emit('user:join', { userId: user._id || user.id });
       });
 
+      // Socket must be stored after creation so consumers can subscribe to events.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSocket(newSocket);
     }
 
