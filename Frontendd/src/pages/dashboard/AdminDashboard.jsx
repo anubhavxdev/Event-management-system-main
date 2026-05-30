@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Calendar, MapPin, Building, Shield, Users, Activity, TrendingUp, Download, Trash2, MessageSquare, AlertTriangle, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -6,60 +6,49 @@ import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
-
 import { API_BASE_URL } from '../../config';
 
 export default function AdminDashboard() {
     const { user } = useAuth();
     const [pendingEvents, setPendingEvents] = useState([]);
-    const [, setStats] = useState({ totalUsers: 0, totalEvents: 0, pendingCount: 0 });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('Pending Reviews');
     const [allEvents, setAllEvents] = useState([]);
     const [allUsers, setAllUsers] = useState([]);
+    const [stats, setStats] = useState({
+        pendingCount: 0,
+        totalEvents: 0,
+        totalUsers: 0,
+    });
 
     const [rejectingEvent, setRejectingEvent] = useState(null);
     const [rejectReason, setRejectReason] = useState('');
     const [rejectLoading, setRejectLoading] = useState(false);
-    const mountedRef = useRef(true);
-
-    // Bulk action state
-    const [selectedIds, setSelectedIds] = useState(new Set());
-    const [bulkLoading, setBulkLoading] = useState(null);
-    const [bulkProgress, setBulkProgress] = useState({ action: '', completed: 0, total: 0 });
-    const [bulkRejectOpen, setBulkRejectOpen] = useState(false);
-    const [bulkRejectReason, setBulkRejectReason] = useState('');
-
-    useEffect(() => {
-        return () => {
-            mountedRef.current = false;
-        };
-    }, []);
-
     const fetchPendingEvents = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
             const res = await fetch(`${API_BASE_URL}/api/admin/events/pending`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok && mountedRef.current) {
+            if (res.ok) {
                 const data = await res.json();
                 setPendingEvents(data.events || []);
             }
         } catch (error) {
             console.error("Failed to fetch pending events", error);
         } finally {
-            if (mountedRef.current) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
     }, []);
 
     const fetchAllEvents = useCallback(async () => {
         try {
-            // Fetch all events for management
-            const res = await fetch(`${API_BASE_URL}/api/events`); // Helper endpoint that returns all without filter if no params
-            if (res.ok && mountedRef.current) {
+            const token = localStorage.getItem('token');
+            // Fetch all events for management (any status)
+            const res = await fetch(`${API_BASE_URL}/api/events?status=all&limit=1000`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
                 const data = await res.json();
                 setAllEvents(data.events || []);
             }
@@ -74,7 +63,7 @@ export default function AdminDashboard() {
             const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok && mountedRef.current) {
+            if (res.ok) {
                 const data = await res.json();
                 setAllUsers(data.users || []);
             }
@@ -86,7 +75,7 @@ export default function AdminDashboard() {
     const fetchStats = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/stats/dashboard`);
-            if (res.ok && mountedRef.current) {
+            if (res.ok) {
                 const data = await res.json();
                 setStats(data);
             }
@@ -96,26 +85,14 @@ export default function AdminDashboard() {
     }, []);
 
     useEffect(() => {
-        let mounted = true;
-
-        const loadData = async () => {
-            if (activeTab === 'Pending Reviews') {
-                await fetchPendingEvents();
-            } else if (activeTab === 'All Events & Management') {
-                await fetchAllEvents();
-            } else if (activeTab === 'User Management') {
-                await fetchUsers();
-            }
-            await fetchStats();
-        };
-
-        if (mounted) {
-            loadData();
+        if (activeTab === 'Pending Reviews') {
+            fetchPendingEvents();
+        } else if (activeTab === 'All Events & Management') {
+            fetchAllEvents();
+        } else if (activeTab === 'User Management') {
+            fetchUsers();
         }
-
-        return () => {
-            mounted = false;
-        };
+        fetchStats();
     }, [activeTab, fetchPendingEvents, fetchAllEvents, fetchUsers, fetchStats]);
 
     const handleAction = async (eventId, action, reason) => {

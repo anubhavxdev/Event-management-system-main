@@ -9,8 +9,8 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
-
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
 import ConfirmationModal from '../../components/ui/confirmation-modal';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -47,13 +47,27 @@ export default function CustomerDashboard() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const socketRef = useRef(null);
+  const joinedEventIdsRef = useRef([]);
+  const highlightTimeoutsRef = useRef({});
 
-  const [availableEvents, setAvailableEvents] = useState([]);
-  const [viewMode, setViewMode] = useState('grid');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const navigate = useNavigate();
+  const debouncedSearch = useDebounce(searchQuery, 400);
+
+  // Initialize search and category from URL params on mount
+  useEffect(() => {
+    setSearchQuery(searchParams.get('q') || '');
+    setSelectedCategory(searchParams.get('category') || '');
+  }, []);
+
+  // Watch search params for changes
+  useEffect(() => {
+    // Only update if params actually changed from initial load
+    const qParam = searchParams.get('q');
+    const categoryParam = searchParams.get('category');
+    if (qParam !== null) setSearchQuery(qParam);
+    if (categoryParam !== null) setSelectedCategory(categoryParam);
+  }, [searchParams.toString()]);
 
   useEffect(() => {
     mountedRef.current = true;

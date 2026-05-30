@@ -43,8 +43,8 @@ export default function Header2() {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const isDark = theme === "dark";
 
@@ -124,13 +124,9 @@ export default function Header2() {
         initial="hidden"
         animate="visible"
       >
-        <div
-          className={`mx-auto max-w-6xl transition-all duration-500 rounded-full ${
-            isScrolled
-              ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
-              : "bg-transparent"
-          }`}
-        >
+        <div className={`mx-auto max-w-6xl transition-all duration-500 rounded-full ${isScrolled 
+          ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)]" 
+          : "bg-transparent"}`}>
           <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
             <motion.div
               className="flex items-center space-x-3"

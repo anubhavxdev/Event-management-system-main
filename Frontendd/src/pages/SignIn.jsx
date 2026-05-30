@@ -30,27 +30,31 @@ const handleSubmit = async (e) => {
             body: JSON.stringify({ email, password })
         });
 
-        const data = await res.json();
+        // Attempt to parse JSON response, but handle non-JSON responses gracefully
+        let data = {};
+        try {
+            data = await res.json();
+        } catch (parseErr) {
+            // Non-JSON response (server error page, etc.)
+            data = { message: res.statusText || `HTTP ${res.status}` };
+        }
 
         if (res.ok) {
             login(data.token, data.user);
 
-            toast.success("Login successful!", {
-                id: loadingToast,
-            });
-
+            toast.success('Login successful!', { id: loadingToast });
             navigate('/');
         } else {
-            toast.error(data.message || 'Login failed', {
-                id: loadingToast,
-            });
+            // Surface server-provided message when available
+            const msg = data?.message || `Login failed (status ${res.status})`;
+            console.warn('Login failed response:', res.status, data);
+            toast.error(msg, { id: loadingToast });
         }
     } catch (error) {
-        console.error("Login error", error);
-
-        toast.error("Something went wrong", {
-            id: loadingToast,
-        });
+        // Network / CORS / unexpected errors land here. Show useful message to user and log full error.
+        console.error('Login error (network or CORS):', error);
+        const friendly = error?.message ? `Network error: ${error.message}` : 'Network error: request failed';
+        toast.error(`${friendly}. Check backend is running and CORS allows the frontend origin.`, { id: loadingToast });
     } finally {
         setIsLoading(false);
     }

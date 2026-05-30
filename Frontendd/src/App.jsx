@@ -1,15 +1,13 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { Toaster } from "react-hot-toast";
 import "./index.css";
-import toast, { Toaster } from "react-hot-toast";
+
 import Footer from "./components/mvpblocks/footer-standard";
 import Header2 from "./components/mvpblocks/header-2";
 import ScrollToTop from "./components/ui/ScrollToTop";
+
 import Home from "./pages/Home";
 import Features from "./pages/Features";
 import Pricing from "./pages/Pricing";
@@ -21,15 +19,16 @@ import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
-import DashboardLayout from "./components/DashboardLayout";
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
+import QRScanner from "./pages/dashboard/QRScanner";
 import ThankYou from "./pages/ThankYou";
+import EventDetail from "./pages/EventDetail";
+
 import { useAuth } from "./context/AuthContext";
 
-import QRScanner from "./pages/dashboard/QRScanner";
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
@@ -127,8 +126,10 @@ const App = () => {
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/thank-you" element={<ThankYou />} />
+            
+            {/* Event Details View */}
+            <Route path="/events/:id" element={<EventDetail />} />
 
-            {/* Protected Profile Route */}
             <Route
               path="/profile"
               element={
@@ -178,6 +179,14 @@ const App = () => {
 
             {/* Admin Dashboard */}
             <Route
+              path="/organizer/edit-event/:id"
+              element={
+                <ProtectedRoute allowedRoles={["organizer"]}>
+                  <CreateEvent />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/admin/dashboard"
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
@@ -196,7 +205,7 @@ const App = () => {
               }
             />
 
-            {/* Fallback to 404 */}
+            {/* Fallback Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

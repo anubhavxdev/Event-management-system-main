@@ -268,6 +268,6 @@ export default function FooterStandard() {
           }
         }
       `}</style>
-    </footer>
+  </footer>
   );
 }

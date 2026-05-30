@@ -146,7 +146,6 @@ export default function SignUp() {
         }
     } catch (error) {
         console.error("Signup error", error);
-
         toast.error("Something went wrong", {
             id: loadingToast,
         });
@@ -154,7 +153,6 @@ export default function SignUp() {
         setIsLoading(false);
     }
 };
-
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
             {/* Background Grid */}

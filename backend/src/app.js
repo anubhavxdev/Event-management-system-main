@@ -22,7 +22,22 @@ const app = express();
 
 // Security & utils
 app.use(helmet());
-app.use(cors({ origin: env.clientUrl, credentials: true }));
+// Allow the configured client URL and the common Vite dev port 5174 during development
+const allowedOrigins = [env.clientUrl];
+if (env.nodeEnv !== 'production') {
+  // Vite may pick a different port (5173/5174/5175) — allow localhost:5174 used by local dev
+  allowedOrigins.push('http://localhost:5174');
+}
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // allow non-browser requests like curl
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  })
+);
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));

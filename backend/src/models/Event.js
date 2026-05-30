@@ -8,60 +8,52 @@ const eventSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-
     description: {
       type: String,
       required: true,
     },
-
     category: {
       type: String,
       required: true,
     },
-
     date: {
       type: Date,
       required: true,
     },
-
     location: {
       type: String,
       required: true,
     },
-
     capacity: {
       type: Number,
       default: 0,
     },
-
     registeredCount: {
       type: Number,
       default: 0,
     },
-
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-
-    coOrganizers: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-],
-
     posterUrl: {
       type: String,
     },
-
+    gallery: {
+      type: [String],
+      default: [],
+      validate: [arr => arr.length <= 6, 'Max 6 gallery images']
+    },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
-
+    rejectionReason: {
+      type: String,
+      default: '',
+    },
     tags: {
       type: [String],
       default: [],
@@ -78,7 +70,6 @@ const eventSchema = new mongoose.Schema(
           'Maximum 10 tags allowed and each tag must be under 30 characters',
       },
     },
-
     averageRating: {
       type: Number,
       default: 0,

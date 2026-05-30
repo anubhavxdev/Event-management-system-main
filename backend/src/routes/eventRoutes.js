@@ -2,17 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { upload } from '../utils/upload.js';
-import {
-  createEvent,
-  updateEvent,
-  deleteEvent,
-  listEvents,
-  getEvent,
-  sendEventReminders,
-  getPopularTags,
-  addCoOrganizer,
-removeCoOrganizer
-} from '../controllers/eventController.js';
+import { createEvent, updateEvent, deleteEvent, listEvents, getEvent, sendEventReminders, uploadGalleryImages, deleteGalleryImage, getPopularTags } from '../controllers/eventController.js';
 
 const router = Router();
 
@@ -34,6 +24,9 @@ router.delete(
 );
 router.put('/:id', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), updateEvent);
 router.delete('/:id', authenticate, authorizeRoles('organizer', 'admin'), deleteEvent);
+
+router.post('/:id/gallery', authenticate, authorizeRoles('organizer'), upload.array('gallery', 6), uploadGalleryImages);
+router.delete('/:id/gallery/:imageIndex', authenticate, authorizeRoles('organizer'), deleteGalleryImage);
 
 export default router;
 

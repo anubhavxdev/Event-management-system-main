@@ -66,12 +66,8 @@ export default function TestimonialsCarousel({
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 
   return (
-    <section
-      className={cn(
-        "relative py-24 bg-black border-t border-zinc-800 overflow-hidden",
-        className
-      )}
-    >
+    <section className={cn("relative py-24 bg-black border-t border-zinc-800 overflow-hidden", className)}>
+      {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] -translate-y-1/2" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-[128px] translate-y-1/2" />
@@ -101,14 +97,21 @@ export default function TestimonialsCarousel({
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           viewport={{ once: true }}
-          className="mb-16 text-center"
+          className="relative mb-12 text-center md:mb-16"
         >
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
+          <h1 className="text-foreground mb-4 text-3xl font-bold md:text-5xl lg:text-6xl">
             {title}
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-lg text-zinc-400">
+          </h1>
+
+          <motion.p
+            className="text-muted-foreground mx-auto max-w-2xl text-base md:text-lg"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            viewport={{ once: true }}
+          >
             {subtitle}
-          </p>
+          </motion.p>
         </motion.div>
       </div>
 

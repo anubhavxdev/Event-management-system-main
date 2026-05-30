@@ -198,8 +198,7 @@ async function run() {
       capacity: 100,
       organizer: organizer._id,
       status: 'approved',
-      posterUrl:
-        '/uploads/poster-1.jpg',
+      posterUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000',
       tags: ['mern', 'javascript'],
       isFree: false,
       price: 1000,
@@ -219,8 +218,7 @@ async function run() {
       capacity: 60,
       organizer: organizer._id,
       status: 'approved',
-      posterUrl:
-        '/uploads/poster-2.jpg',
+      posterUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&q=80&w=1000',
       tags: ['outdoor'],
       isFree: false,
       price: 1500,
@@ -239,9 +237,8 @@ async function run() {
       location: 'Lab 204',
       capacity: 30,
       organizer: organizer._id,
-      status: 'approved',
-      posterUrl:
-        '/uploads/poster-3.jpg',
+      status: 'pending',
+      posterUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&q=80&w=1000',
       tags: ['creative'],
       isFree: false,
       price: 500,
@@ -262,8 +259,7 @@ async function run() {
       capacity: 200,
       organizer: organizer._id,
       status: 'approved',
-      posterUrl:
-        '/uploads/poster-5.jpg',
+      posterUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&q=80&w=1000',
       tags: ['fest'],
       isFree: true,
       price: 0,
@@ -284,11 +280,20 @@ async function run() {
       capacity: 80,
       organizer: organizer._id,
       status: 'approved',
-      posterUrl:
-        '/uploads/poster-6.jpg',
+      posterUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=1000',
       tags: ['hackathon'],
-      isFree: false,
-      price: 2000,
+    },
+    {
+      title: 'Wellness Yoga Morning',
+      description: 'Relaxing yoga session for all students.',
+      category: 'Workshop',
+      date: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+      location: 'Campus Lawn',
+      capacity: 50,
+      organizer: organizer._id,
+      status: 'approved',
+      posterUrl: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&q=80&w=1000',
+      tags: ['health'],
     },
   ]);
 

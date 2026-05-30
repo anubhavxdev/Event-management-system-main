@@ -79,4 +79,4 @@ const deleteFromCloudinary = async (cloudinaryUrl) => {
   }
 };
 
-export { uploadOnCloudinary, deleteFromCloudinary };
+export { uploadOnCloudinary, deleteFromCloudinary, cloudinary };

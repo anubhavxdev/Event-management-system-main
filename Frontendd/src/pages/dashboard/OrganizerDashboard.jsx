@@ -1,10 +1,8 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
-import CountdownTimer from '../../components/CountdownTimer';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, UserPlus } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import CoOrganizerPanel from '../../components/CoOrganizerPanel';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, Pencil, Eye } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -12,6 +10,7 @@ import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
 
 import { API_BASE_URL } from '../../config';
+import CountdownTimer from '../../components/CountdownTimer';
 // Manual Check-In: helper debounce delay
 const SEARCH_DEBOUNCE_MS = 150;
 
@@ -53,42 +52,7 @@ export default function OrganizerDashboard() {
         byCategory: {}
     });
 
-    const mountedRef = useRef(true);
-
-    useEffect(() => {
-        return () => {
-            mountedRef.current = false;
-        };
-    }, []);
-
-    // Debounce searchQuery -> debouncedQuery
-    useEffect(() => {
-        const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), SEARCH_DEBOUNCE_MS);
-        return () => clearTimeout(t);
-    }, [searchQuery]);
-
-    // Fetch participants when selectedEvent changes
-    useEffect(() => {
-        let cancelled = false;
-        const fetchParticipants = async () => {
-            if (!selectedEvent) return;
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API_BASE_URL}/api/registrations/${selectedEvent._id}/participants`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                if (!res.ok) return;
-                const data = await res.json();
-                if (!cancelled) setParticipants(data.participants || data || []);
-            } catch (err) {
-                console.error('Failed to fetch participants', err);
-            }
-        };
-        fetchParticipants();
-        return () => { cancelled = true; };
-    }, [selectedEvent]);
-
-    const calculateStats = (events) => {
+    const calculateStats = useCallback((events) => {
         const newStats = {
             approved: events.filter(e => e.status === 'approved').length,
             pending: events.filter(e => e.status === 'pending').length,
@@ -101,26 +65,21 @@ export default function OrganizerDashboard() {
             const cat = e.category || 'Uncategorized';
             newStats.byCategory[cat] = (newStats.byCategory[cat] || 0) + 1;
         });
-        if (mountedRef.current) {
-            setStats(newStats);
-        }
-    };
+        setStats(newStats);
+    }, []);
 
     const fetchMyEvents = useCallback(async () => {
         try {
             const token = localStorage.getItem('token');
+            const organizerId = user?.id || user?._id;
+            if (!organizerId) return;
 
-            const res = await fetch(`${API_BASE_URL}/api/events`, {
+            const res = await fetch(`${API_BASE_URL}/api/events?organizer=${organizerId}&status=all&limit=1000`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            if (res.ok && mountedRef.current) {
+            if (res.ok) {
                 const data = await res.json();
-                // Filter events where the organizer matches the current user
-                // Adjust logic based on how your backend returns data (populated organizer object vs id)
-                const myEvents = (data.events || []).filter(
-                    e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
-                );
-
+                const myEvents = data.events || [];
                 setEvents(myEvents);
                 calculateStats(myEvents);
                 // Fetch co-organized events
@@ -141,18 +100,14 @@ export default function OrganizerDashboard() {
         } catch (error) {
             console.error("Failed to fetch events", error);
         } finally {
-            if (mountedRef.current) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
-    }, [user]);
+    }, [user?.id, user?._id, calculateStats]);
 
     useEffect(() => {
         document.title = 'Organizer Dashboard | Event.One';
         if (user) {
-            (async () => {
-                await fetchMyEvents();
-            })();
+            fetchMyEvents();
         }
     }, [user, fetchMyEvents]);
 
@@ -268,19 +223,7 @@ const handleDeleteEvent = async (eventId) => {
     };
 
     const handleEditResubmit = (event) => {
-        setEditingEventId(event._id);
-        const eventDate = new Date(event.date);
-        setFormData({
-            title: event.title || '',
-            description: event.description || '',
-            date: eventDate.toISOString().split('T')[0],
-            time: eventDate.toTimeString().slice(0, 5),
-            location: event.location || '',
-            category: event.category || '',
-            price: event.price || '',
-            capacity: event.capacity || '',
-            poster: null,
-        });
+        navigate(`/organizer/edit-event/${event._id}`);
     };
 
     const handleInputChange = (e) => {
@@ -384,6 +327,7 @@ const handleCreateSubmit = async (e) => {
 
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date());
     const pastEvents = events.filter(e => new Date(e.date) < new Date());
+    const myEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
 
     return (
         <div className="min-h-screen bg-background text-foreground pt-24 px-4 sm:px-6 lg:px-8 font-sans selection:bg-purple-500/30 relative overflow-hidden">
@@ -418,7 +362,13 @@ const handleCreateSubmit = async (e) => {
                         {['My Events', 'Past Events', 'Create New Event', 'Analytics'].map((tab) => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab)}
+                                onClick={() => {
+                                    if (tab === 'Create New Event') {
+                                        navigate('/organizer/create-event');
+                                    } else {
+                                        setActiveTab(tab);
+                                    }
+                                }}
                                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
                                     ? 'text-orange-500' // Keeping orange accent for Organizer distinction
                                     : 'text-muted-foreground hover:text-foreground'
@@ -441,7 +391,7 @@ const handleCreateSubmit = async (e) => {
                     {/* Content Header based on Tab */}
                     <div className="flex justify-between items-center mb-8">
                         <h2 className="text-xl font-semibold text-foreground">
-                            {activeTab === 'My Events' && 'Your Upcoming Events'}
+                            {activeTab === 'My Events' && 'Your Events'}
                             {activeTab === 'Past Events' && 'Past Events History'}
                             {activeTab === 'Create New Event' && 'Create a New Event'}
                             {activeTab === 'Analytics' && 'Performance Overview'}
@@ -468,7 +418,7 @@ const handleCreateSubmit = async (e) => {
                         {/* MY EVENTS TAB */}
                         {activeTab === 'My Events' && (
                             <div className="space-y-6">
-                                {upcomingEvents.length === 0 ? (
+                                {myEvents.length === 0 ? (
                                     <motion.div
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
@@ -487,7 +437,7 @@ const handleCreateSubmit = async (e) => {
                                     </motion.div>
                                 ) : (
                                     <div className="grid grid-cols-1 gap-6">
-                                        {upcomingEvents.map((event, idx) => (
+                                        {myEvents.map((event, idx) => (
                                             <motion.div
                                                 key={event._id}
                                                 layout
@@ -1088,11 +1038,48 @@ const handleCreateSubmit = async (e) => {
                                         </Button>
                                     </div>
 
-                                    <div className="p-3 bg-secondary/20 rounded-lg border border-border/50">
-                                        <CoOrganizerPanel
-                                            eventId={selectedEvent._id}
-                                            isOwner={selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id}
-                                        />
+                                    <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg border border-border/50">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-green-500/10 rounded-full text-green-500">
+                                                <Eye className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-sm">View Event Page</div>
+                                                <div className="text-xs text-muted-foreground">Go to public event details page</div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setSelectedEvent(null);
+                                                navigate(`/events/${selectedEvent._id}`);
+                                            }}
+                                        >
+                                            View Page
+                                        </Button>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-3 bg-secondary/20 rounded-lg border border-border/50">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-orange-500/10 rounded-full text-orange-500">
+                                                <Pencil className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <div className="font-medium text-sm">Edit Event Details</div>
+                                                <div className="text-xs text-muted-foreground">Modify details & add gallery photos</div>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => {
+                                                setSelectedEvent(null);
+                                                navigate(`/organizer/edit-event/${selectedEvent._id}`);
+                                            }}
+                                        >
+                                            Edit Event
+                                        </Button>
                                     </div>
 
                                     <div className="flex items-center justify-between p-3 bg-red-500/5 rounded-lg border border-red-500/10">
