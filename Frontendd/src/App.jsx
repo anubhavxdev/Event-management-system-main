@@ -118,11 +118,11 @@ const App = () => {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
+            {/* <Route path="/features" element={<Features />} /> */}
             <Route path="/pricing" element={<Pricing />} />
-            <Route path="/contact" element={<Contact />} />
+            {/* <Route path="/contact" element={<Contact />} /> */}
             <Route path="/support" element={<Support />} />
-            <Route path="/about-us" element={<About />} />
+            {/* <Route path="/about-us" element={<About />} /> */}
             <Route path="/login" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

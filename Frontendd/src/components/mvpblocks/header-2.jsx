@@ -20,8 +20,8 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import NotificationBell from "../ui/NotificationBell";
 
 const navItems = [
-  { name: "Home", href: "/" },
-  { name: "Features", href: "/features" },
+  { name: "Home", id: "home", href: "/" },
+  { name: "Features", id: "features" },
   { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about-us" },
   { name: "Contact", href: "/contact" },

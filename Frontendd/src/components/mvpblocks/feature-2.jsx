@@ -57,7 +57,7 @@ export default function FeatureSteps() {
     return () => clearInterval(timer);
   }, [progress]);
   return (
-    <div className={"p-8 md:p-12"}>
+    <div id = "features" className={"p-8 md:p-12"}>
       <div className="mx-auto w-full max-w-7xl">
         <div className="relative mx-auto mb-12 max-w-2xl sm:text-center">
           <div className="relative z-10">
