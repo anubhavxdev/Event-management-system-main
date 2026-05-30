@@ -25,7 +25,9 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 347 77% 48%;
   }
-
+html {
+  scroll-behavior: smooth;
+}
   .dark {
     color-scheme: dark;
     --background: 222.2 84% 4.9%;

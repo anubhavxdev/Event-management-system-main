@@ -5,6 +5,7 @@ import Features from "../components/mvpblocks/feature-2";
 import TestimonialsCarousel from "../components/mvpblocks/testimonials-carousel";
 import FAQ from "../components/mvpblocks/faq-3";
 import Sparkles from "../components/mvpblocks/sparkles-logo";
+import About from "./About";
 
 const Home = () => {
     return (
@@ -16,9 +17,11 @@ const Home = () => {
             />
             <Hero />
             <Features />
+            <About />
             <TestimonialsCarousel />
-            <FAQ />
             <Sparkles />
+            <FAQ />
+            
         </>
     );
 };

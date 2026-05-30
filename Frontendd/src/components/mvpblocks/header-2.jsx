@@ -20,21 +20,23 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import NotificationBell from "../ui/NotificationBell";
 
 const navItems = [
-  { name: "Home", id: "home", href: "/" },
-  { name: "Features", id: "features" },
-  { name: "Pricing", href: "/pricing" },
-  { name: "About", href: "/about-us" },
-  { name: "Contact", href: "/contact" },
+  { name: "Home", href: "/#home"},
+  { name: "Features", href: "/#features" },
+  { name: "About", href: "/#about" },
+  { name: "Feedbacks", href: "/#testimonials" },
+  { name: "F&Q", href: "/#fq" },
+  { name: "Contact", href: "/#contact" },
+  { name: "Pricing", href: "/pricing" }
 ];
 
 function isNavActive(pathname, hash, href) {
-  if (href === "/") {
-    return pathname === "/";
+  const [path, hashPart] = href.split("#");
+
+  if (href.includes("#")) {
+    return pathname === path && hash === `#${hashPart}`;
   }
-  if (href.startsWith("#")) {
-    return pathname === "/" && hash === href;
-  }
-  return pathname === href || pathname.startsWith(`${href}/`);
+
+  return pathname === href;
 }
 
 export default function Header2() {
@@ -115,7 +117,7 @@ export default function Header2() {
   return (
     <>
       <motion.header
-        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 px-4 sm:px-6 lg:px-8 pt-4 ${
+        className={`fixed top-0 right-0 left-0 z-50 transition-all duration-500 px-4  sm:px-6 lg:px-8 pt-4 ${
           isScrolled
             ? "border-border/50"
             : ""
@@ -125,7 +127,7 @@ export default function Header2() {
         animate="visible"
       >
         <div
-          className={`mx-auto max-w-6xl transition-all duration-500 rounded-full ${
+          className={`mx-auto max-w-7xl transition-all duration-500 rounded-full ${
             isScrolled
               ? "bg-background/80 backdrop-blur-xl border border-border shadow-[0_8px_30px_rgb(0,0,0,0.04)]"
               : "bg-transparent"
@@ -174,8 +176,8 @@ export default function Header2() {
                     onMouseEnter={() => setHoveredItem(item.name)}
                     onMouseLeave={() => setHoveredItem(null)}
                   >
-                    <Link
-                      to={item.href}
+                    <a
+                      href={item.href}
                       aria-current={isActive ? "page" : undefined}
                       className={`relative block rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                         isActive
@@ -221,7 +223,7 @@ export default function Header2() {
                           }}
                         />
                       )}
-                    </Link>
+                    </a>
                   </motion.div>
                 );
               })}
