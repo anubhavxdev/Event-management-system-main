@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Rocket, Code, Paintbrush } from "lucide-react";
+import Feature3 from "./feature-3";
 const features = [
   {
     step: "Step 1",
@@ -148,6 +149,7 @@ export default function FeatureSteps() {
           </div>
         </div>
       </div>
+      <Feature3/>
     </div>
   );
 }
