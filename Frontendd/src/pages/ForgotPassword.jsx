@@ -87,7 +87,7 @@ export default function ForgotPassword() {
               <button
                 type="button"
                 className="text-xs text-white/70 hover:text-white transition-colors"
-                onClick={() => setToast(null)}
+                onClick={() = aria-label="button"> setToast(null)}
               >
                 Dismiss
               </button>
@@ -148,7 +148,7 @@ export default function ForgotPassword() {
                 type="submit"
                 disabled={isSubmitting}
                 className="w-full mt-6 py-3.5 px-4 bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-600/20 hover:shadow-red-600/30 transform hover:-translate-y-0.5"
-              >
+               aria-label="Submit">
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

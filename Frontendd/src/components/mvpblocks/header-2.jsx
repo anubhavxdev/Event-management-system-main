@@ -323,7 +323,7 @@ export default function Header2() {
                           <div className="border-t border-border/50 my-1" />
 
                           <button
-                            onClick={() => {
+                            onClick={() = aria-label="button"> {
                               setIsProfileMenuOpen(false);
                               logout(navigate);
                             }}
@@ -469,7 +469,7 @@ export default function Header2() {
                         <span>Dashboard</span>
                       </Link>
                       <button
-                        onClick={() => {
+                        onClick={() = aria-label="button"> {
                           setIsMobileMenuOpen(false);
                           logout(navigate);
                         }}

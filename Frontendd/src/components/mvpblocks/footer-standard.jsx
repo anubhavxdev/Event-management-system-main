@@ -94,7 +94,7 @@ export default function FooterStandard() {
         <div className="container m-auto grid grid-cols-1 gap-12 py-12 md:grid-cols-2 lg:grid-cols-5">
           {/* Company Info */}
           <div className="space-y-6 lg:col-span-2">
-            <a href="/" className="inline-flex items-center gap-3">
+            <a href="/" className="inline-flex items-center gap-3" aria-label="link">
               <div className="relative">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 via-rose-600 to-rose-700 shadow-lg">
                   <Zap className="h-5 w-5 text-white" />
@@ -124,7 +124,7 @@ export default function FooterStandard() {
                       asChild
                       className="hover:bg-primary dark:hover:bg-primary !border-primary/30 cursor-pointer shadow-none transition-all duration-500 hover:scale-110 hover:-rotate-12 hover:text-white hover:shadow-md"
                     >
-                      <a href={href}>
+                      <a href={href} aria-label="link">
                         {React.createElement(icon, { className: "h-4 w-4" })}
                       </a>
                     </Button>
@@ -219,7 +219,7 @@ export default function FooterStandard() {
               <a
                 key={label}
                 href={href}
-                onClick={(e) => handleLegalClick(e, href)}
+                onClick={(e) = aria-label="link"> handleLegalClick(e, href)}
                 className="hover:text-rose-600 transition-colors cursor-pointer"
               >
                 {label}

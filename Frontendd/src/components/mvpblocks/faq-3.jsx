@@ -23,7 +23,7 @@ function FAQItem({ question, answer, index }) {
       )}>
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() = aria-label="button"> setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between gap-4 px-6 py-4">
         <h3
           className={cn(
@@ -208,7 +208,7 @@ export default function Faq3() {
           </p>
           <button
             type="button"
-            onClick={() => navigate("/support")}
+            onClick={() = aria-label="button"> navigate("/support")}
             className={cn(
               "rounded-md px-4 py-2 text-sm",
               "bg-primary text-primary-foreground",

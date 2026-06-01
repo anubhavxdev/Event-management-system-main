@@ -418,7 +418,7 @@ const handleCreateSubmit = async (e) => {
                         {['My Events', 'Past Events', 'Create New Event', 'Analytics'].map((tab) => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab)}
+                                onClick={() = aria-label="button"> setActiveTab(tab)}
                                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
                                     ? 'text-orange-500' // Keeping orange accent for Organizer distinction
                                     : 'text-muted-foreground hover:text-foreground'
@@ -586,7 +586,7 @@ const handleCreateSubmit = async (e) => {
                                                                     <button
                                                                         key={tag}
                                                                         type="button"
-                                                                        onClick={() => navigate(`/?tags=${tag}`)}
+                                                                        onClick={() = aria-label="button"> navigate(`/?tags=${tag}`)}
                                                                         className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
                                                                     >
                                                                         #{tag}
@@ -719,7 +719,7 @@ const handleCreateSubmit = async (e) => {
                                                                     <button
                                                                         key={tag}
                                                                         type="button"
-                                                                        onClick={() => navigate(`/?tags=${tag}`)}
+                                                                        onClick={() = aria-label="button"> navigate(`/?tags=${tag}`)}
                                                                         className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
                                                                     >
                                                                         #{tag}
@@ -1021,7 +1021,7 @@ const handleCreateSubmit = async (e) => {
                             className="bg-white text-black w-full max-w-lg rounded-2xl border border-border shadow-2xl overflow-hidden relative"
                         >
                             <button
-                                onClick={() => setSelectedEvent(null)}
+                                onClick={() = aria-label="button"> setSelectedEvent(null)}
                                 className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1 hover:bg-secondary rounded-full z-10"
                             >
                                 <XCircle className="w-6 h-6" />
@@ -1108,7 +1108,7 @@ const handleCreateSubmit = async (e) => {
                                                                                         <div className="text-sm text-muted-foreground">{participants.filter(p=>p.checkedIn).length} / {participants.length} checked in</div>
                                                                                         <button
                                                                                             className="text-sm text-muted-foreground hover:text-foreground"
-                                                                                            onClick={() => setManualOpen(!manualOpen)}
+                                                                                            onClick={() = aria-label="button"> setManualOpen(!manualOpen)}
                                                                                         >
                                                                                             {manualOpen ? 'Hide' : 'Show'}
                                                                                         </button>
@@ -1129,15 +1129,15 @@ const handleCreateSubmit = async (e) => {
                                                                                             <div className="flex items-center gap-2">
                                                                                                 <button
                                                                                                     className={`px-3 py-1 rounded ${filterMode==='all'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('all')}
+                                                                                                    onClick={() = aria-label="button"> setFilterMode('all')}
                                                                                                 >All</button>
                                                                                                 <button
                                                                                                     className={`px-3 py-1 rounded ${filterMode==='checked'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('checked')}
+                                                                                                    onClick={() = aria-label="button"> setFilterMode('checked')}
                                                                                                 >Checked In</button>
                                                                                                 <button
                                                                                                     className={`px-3 py-1 rounded ${filterMode==='pending'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('pending')}
+                                                                                                    onClick={() = aria-label="button"> setFilterMode('pending')}
                                                                                                 >Pending</button>
                                                                                             </div>
                                                                                         </div>

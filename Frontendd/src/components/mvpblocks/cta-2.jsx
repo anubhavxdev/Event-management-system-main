@@ -22,11 +22,11 @@ export default function CTA2() {
         </p>
 
         <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
-          <button className="flex w-full items-center justify-between rounded-full bg-black px-5 py-3 text-white sm:w-[240px]">
+          <button className="flex w-full items-center justify-between rounded-full bg-black px-5 py-3 text-white sm:w-[240px]" aria-label="button">
             <span className="font-medium">Book a discovery call</span>
             <span className="h-5 w-5 flex-shrink-0 rounded-full bg-white"></span>
           </button>
-          <button className="flex w-full items-center justify-between rounded-full bg-black px-5 py-3 text-white sm:w-[240px]">
+          <button className="flex w-full items-center justify-between rounded-full bg-black px-5 py-3 text-white sm:w-[240px]" aria-label="button">
             <span className="font-medium">Test Your Samples</span>
             <span className="h-5 w-5 flex-shrink-0 rounded-full bg-white"></span>
           </button>
