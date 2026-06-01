@@ -33,9 +33,7 @@ export const addCoOrganizer = async (req, res) => {
     }
 
     // avoid duplicate
-    if (
-      event.coOrganizers.includes(user._id)
-    ) {
+    if (event.coOrganizers.includes(user._id)) {
       return res.status(400).json({
         message: "Already a co-organizer",
       });
@@ -104,6 +102,29 @@ export const createEvent = async (req, res) => {
       req.body.tags = JSON.parse(req.body.tags);
     }
 
+    // --- FIX: Validate that endDate is after date (start) ---
+    const startDate = new Date(req.body.date);
+    const endDate = new Date(req.body.endDate);
+
+    if (!req.body.endDate) {
+      return res.status(400).json({
+        message: 'End date/time is required.',
+      });
+    }
+
+    if (isNaN(endDate.getTime())) {
+      return res.status(400).json({
+        message: 'Invalid end date/time format.',
+      });
+    }
+
+    if (endDate <= startDate) {
+      return res.status(400).json({
+        message: 'End date/time must be after start date/time.',
+      });
+    }
+    // --- END FIX ---
+
     const event = await Event.create({
       ...req.body,
       organizer: req.user.id,
@@ -118,13 +139,28 @@ export const createEvent = async (req, res) => {
 
 export const updateEvent = async (req, res) => {
   try {
-
     // Parse tags string into array
     if (req.body.tags) {
       req.body.tags = JSON.parse(req.body.tags);
     }
 
     const update = { ...req.body };
+
+    // --- FIX: Validate end date/time on update as well ---
+    if (update.date || update.endDate) {
+      // Fetch old event to fill in missing values for partial updates
+      const existing = await Event.findById(req.params.id).lean();
+
+      const startDate = new Date(update.date || existing?.date);
+      const endDate = new Date(update.endDate || existing?.endDate);
+
+      if (update.endDate && endDate <= startDate) {
+        return res.status(400).json({
+          message: 'End date/time must be after start date/time.',
+        });
+      }
+    }
+    // --- END FIX ---
 
     if (req.file) {
       // Upload new poster to Cloudinary
@@ -201,6 +237,7 @@ export const deleteEvent = async (req, res) => {
     });
   }
 };
+
 export const listEvents = async (req, res) => {
   try {
     const { q, category, status, organizer } = req.query;
@@ -255,6 +292,7 @@ export const listEvents = async (req, res) => {
     });
   }
 };
+
 export const getPopularTags = async (req, res) => {
   try {
     const tags = await Event.aggregate([
@@ -333,18 +371,18 @@ export const sendEventReminders = async (req, res) => {
 
     // Only organizer can send reminders
     const isOwner =
-  event.organizer.toString() === req.user.id;
+      event.organizer.toString() === req.user.id;
 
-const isCoOrganizer =
-  event.coOrganizers?.some(
-    (id) => id.toString() === req.user.id
-  );
+    const isCoOrganizer =
+      event.coOrganizers?.some(
+        (id) => id.toString() === req.user.id
+      );
 
-if (!isOwner && !isCoOrganizer) {
-  return res.status(403).json({
-    message: "Not authorized",
-  });
-} 
+    if (!isOwner && !isCoOrganizer) {
+      return res.status(403).json({
+        message: "Not authorized",
+      });
+    }
 
     const registrations = await Registration.find({
       event: event._id,

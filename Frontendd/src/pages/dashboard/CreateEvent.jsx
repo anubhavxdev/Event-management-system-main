@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -29,6 +28,8 @@ export default function CreateEvent() {
         description: '',
         date: '',
         time: '',
+        endDate: '',
+        endTime: '',
         location: '',
         category: 'General',
         price: '',
@@ -75,74 +76,100 @@ export default function CreateEvent() {
             setTagInput('');
         }
     };
-    
-const removeTag = (tagToRemove) => {
-  setFormData({
-    ...formData,
-    tags: formData.tags.filter(
-      (tag) => tag !== tagToRemove
-    ),
-  });
-};
 
- const handleSubmit = async (e) => {
-    e.preventDefault();
+    const removeTag = (tagToRemove) => {
+        setFormData({
+            ...formData,
+            tags: formData.tags.filter(
+                (tag) => tag !== tagToRemove
+            ),
+        });
+    };
 
-    setLoading(true);
-
-    const loadingToast = toast.loading("Creating event...");
-
-    try {
-        const data = new FormData();
-
-        // Combine date and time
-        const fullDate = new Date(`${formData.date}T${formData.time}`);
-
-        data.append('title', formData.title);
-        data.append('description', formData.description);
-        data.append('date', fullDate.toISOString());
-        data.append('location', formData.location);
-        data.append('category', formData.category);
-        data.append('price', formData.price);
-        data.append('capacity', formData.capacity);
-
-        if (formData.poster) {
-            data.append('poster', formData.poster);
+    // --- FIX: Validate that end datetime is after start datetime ---
+    const validateDateTimes = () => {
+        if (!formData.date || !formData.time || !formData.endDate || !formData.endTime) {
+            return true; // Let required-field HTML validation handle empty fields
         }
 
-        const token = localStorage.getItem('token');
+        const startDateTime = new Date(`${formData.date}T${formData.time}`);
+        const endDateTime = new Date(`${formData.endDate}T${formData.endTime}`);
 
-        const res = await fetch(`${API_BASE_URL}/api/events`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-            },
-            body: data
-        });
-
-        if (res.ok) {
-            toast.success("Event created successfully!", {
-                id: loadingToast,
-            });
-
-            navigate('/organizer/dashboard');
-        } else {
-            const err = await res.json();
-
-            toast.error(err.message || "Failed to create event", {
-                id: loadingToast,
-            });
+        if (endDateTime <= startDateTime) {
+            toast.error('End date/time must be after start date/time.');
+            return false;
         }
-    } catch (error) {
-        console.error("Failed to create event", error);
 
-        toast.error("Something went wrong", {
-            id: loadingToast,
-        });
-    } finally {
-        setLoading(false);
-    }
-};
+        return true;
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // --- FIX: Run datetime validation before submitting ---
+        if (!validateDateTimes()) {
+            return;
+        }
+
+        setLoading(true);
+
+        const loadingToast = toast.loading("Creating event...");
+
+        try {
+            const data = new FormData();
+
+            // Combine start date and time
+            const fullStartDate = new Date(`${formData.date}T${formData.time}`);
+
+            // Combine end date and time
+            const fullEndDate = new Date(`${formData.endDate}T${formData.endTime}`);
+
+            data.append('title', formData.title);
+            data.append('description', formData.description);
+            data.append('date', fullStartDate.toISOString());
+            data.append('endDate', fullEndDate.toISOString());
+            data.append('location', formData.location);
+            data.append('category', formData.category);
+            data.append('price', formData.price);
+            data.append('capacity', formData.capacity);
+
+            if (formData.poster) {
+                data.append('poster', formData.poster);
+            }
+
+            const token = localStorage.getItem('token');
+
+            const res = await fetch(`${API_BASE_URL}/api/events`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: data
+            });
+
+            if (res.ok) {
+                toast.success("Event created successfully!", {
+                    id: loadingToast,
+                });
+
+                navigate('/organizer/dashboard');
+            } else {
+                const err = await res.json();
+
+                toast.error(err.message || "Failed to create event", {
+                    id: loadingToast,
+                });
+            }
+        } catch (error) {
+            console.error("Failed to create event", error);
+
+            toast.error("Something went wrong", {
+                id: loadingToast,
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <div className="relative min-h-screen pt-24 px-4">
@@ -199,10 +226,11 @@ const removeTag = (tagToRemove) => {
                             />
                         </div>
 
+                        {/* --- FIX: Start Date & Time --- */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <Label htmlFor="date">
-                                    Date
+                                    Start Date
                                 </Label>
 
                                 <div className="relative mt-2">
@@ -221,7 +249,7 @@ const removeTag = (tagToRemove) => {
 
                             <div>
                                 <Label htmlFor="time">
-                                    Time
+                                    Start Time
                                 </Label>
 
                                 <Input
@@ -234,6 +262,53 @@ const removeTag = (tagToRemove) => {
                                 />
                             </div>
                         </div>
+
+                        {/* --- FIX: End Date & Time fields added --- */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <Label htmlFor="endDate">
+                                    End Date
+                                </Label>
+
+                                <div className="relative mt-2">
+                                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+
+                                    <Input
+                                        type="date"
+                                        id="endDate"
+                                        name="endDate"
+                                        className="pl-9"
+                                        required
+                                        min={formData.date || undefined}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
+
+                            <div>
+                                <Label htmlFor="endTime">
+                                    End Time
+                                </Label>
+
+                                <Input
+                                    type="time"
+                                    id="endTime"
+                                    name="endTime"
+                                    className="mt-2"
+                                    required
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+
+                        {/* --- FIX: Inline warning shown when end is not after start --- */}
+                        {formData.date && formData.time && formData.endDate && formData.endTime &&
+                            new Date(`${formData.endDate}T${formData.endTime}`) <= new Date(`${formData.date}T${formData.time}`) && (
+                                <p className="text-sm text-red-500 -mt-2">
+                                    ⚠ End date/time must be after start date/time.
+                                </p>
+                            )
+                        }
 
                         <div>
                             <Label htmlFor="location">
@@ -269,29 +344,12 @@ const removeTag = (tagToRemove) => {
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm pl-9"
                                         onChange={handleChange}
                                     >
-                                        <option value="General">
-                                            General
-                                        </option>
-
-                                        <option value="Music">
-                                            Music
-                                        </option>
-
-                                        <option value="Technology">
-                                            Technology
-                                        </option>
-
-                                        <option value="Workshop">
-                                            Workshop
-                                        </option>
-
-                                        <option value="Sports">
-                                            Sports
-                                        </option>
-
-                                        <option value="Arts">
-                                            Arts
-                                        </option>
+                                        <option value="General">General</option>
+                                        <option value="Music">Music</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Workshop">Workshop</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Arts">Arts</option>
                                     </select>
                                 </div>
                             </div>

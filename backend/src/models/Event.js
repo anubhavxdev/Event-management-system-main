@@ -2,7 +2,6 @@ import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema(
   {
-   
     title: {
       type: String,
       required: true,
@@ -23,6 +22,24 @@ const eventSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+
+    // --- FIX: Added endDate field ---
+    endDate: {
+      type: Date,
+      required: [true, 'End date/time is required.'],
+      validate: {
+        validator: function (value) {
+          // `this` refers to the document being validated
+          // Ensure endDate is strictly after date (start)
+          if (this.date && value) {
+            return value > this.date;
+          }
+          return true;
+        },
+        message: 'End date/time must be after start date/time.',
+      },
+    },
+    // --- END FIX ---
 
     location: {
       type: String,
@@ -46,11 +63,11 @@ const eventSchema = new mongoose.Schema(
     },
 
     coOrganizers: [
-  {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-],
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
 
     posterUrl: {
       type: String,
@@ -83,10 +100,10 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    
-    // Event price fields (temporary optional)
+
+    // Event price fields
     price: { type: Number, default: 0 },
-    isFree: {type:Boolean, default:true}
+    isFree: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
@@ -94,4 +111,3 @@ const eventSchema = new mongoose.Schema(
 export const Event = mongoose.model('Event', eventSchema);
 
 export default Event;
-
