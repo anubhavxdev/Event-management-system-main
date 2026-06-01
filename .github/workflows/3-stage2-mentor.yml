@@ -27,11 +27,8 @@ jobs:
 
             // ── EVENTONE MENTOR POOL ──
             const ALL_MENTORS = [
-              'topshe23',
-              'Ajayrazz',
               'Nitya-003',
-              'srinadhtadikonda',
-              'the-matrixneo',
+              'anubhavxdev'
             ];
 
             // Don't assign the PR author as their own mentor

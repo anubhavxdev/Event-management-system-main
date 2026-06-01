@@ -16,6 +16,7 @@ import registrationRoutes from './routes/registrationRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 // 404 handler

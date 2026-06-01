@@ -1,10 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Ticket } from 'lucide-react';
-import {
-  Calendar as BigCalendar,
-  momentLocalizer,
-} from 'react-big-calendar';
+import { Calendar, MapPin, Ticket, X, Download, Search, Heart, Calendar, MapPin, Ticket } from 'lucide-react';
+import { io } from 'socket.io-client';
+import  {Calendar as BigCalendar,momentLocalizer,} from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '../../components/ui/button';
@@ -35,7 +33,7 @@ const getEventDate = (registration) => {
 };
 
 const isActiveRegistration = (registration) =>
-  registration?.event && registration.status !== 'cancelled';
+  registration?.event && registration.status !== "cancelled";
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -44,15 +42,34 @@ export default function CustomerDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('Upcoming Tickets');
   const [selectedTicket, setSelectedTicket] = useState(null);
-  const ticketRef = useRef(null);
-  const mountedRef = useRef(true);
-  const navigate = useNavigate();
-
   const [availableEvents, setAvailableEvents] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const [highlightedEvents, setHighlightedEvents] = useState({});
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
+  const [isFetching, setIsFetching] = useState(false);
   const [registrationsError, setRegistrationsError] = useState('');
+  const [savedEvents, setSavedEvents] = useState([]);
+  const ticketRef = useRef(null);
+  const mountedRef = useRef(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const nextSearch = searchParams.get("q") || "";
+    const nextCategory = searchParams.get("category") || "";
+
+    queueMicrotask(() => {
+      setSearchQuery((current) =>
+        current === nextSearch ? current : nextSearch,
+      );
+      setSelectedCategory((current) =>
+        current === nextCategory ? current : nextCategory,
+      );
+    });
+  }, [searchParams]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -60,6 +77,36 @@ export default function CustomerDashboard() {
       mountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== "Browse Events") return;
+
+    const next = new URLSearchParams(searchParams);
+
+    if (debouncedSearch.trim()) {
+      next.set("q", debouncedSearch.trim());
+    } else {
+      next.delete("q");
+    }
+
+    if (selectedCategory) {
+      next.set("category", selectedCategory);
+    } else {
+      next.delete("category");
+    }
+
+    next.delete("page");
+
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [
+    activeTab,
+    debouncedSearch,
+    searchParams,
+    selectedCategory,
+    setSearchParams,
+  ]);
 
   const fetchAvailableEvents = useCallback(async () => {
     const tags = searchParams.get('tags');
@@ -90,19 +137,23 @@ export default function CustomerDashboard() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to fetch registrations');
+        throw new Error("Failed to fetch registrations");
       }
 
       const data = await res.json();
 
       if (mountedRef.current) {
-        setRegistrationsError('');
-        setRegistrations(Array.isArray(data.registrations) ? data.registrations : []);
+        setRegistrationsError("");
+        setRegistrations(
+          Array.isArray(data.registrations) ? data.registrations : [],
+        );
       }
     } catch (error) {
       console.error('Failed to fetch registrations', error);
       if (mountedRef.current) {
-        setRegistrationsError('Unable to load your registered events. Please try again later.');
+        setRegistrationsError(
+          "Unable to load your registered events. Please try again later.",
+        );
         setRegistrations([]);
       }
     } finally {
@@ -111,34 +162,191 @@ export default function CustomerDashboard() {
   }, []);
 
   useEffect(() => {
-    fetchRegistrations();
-    fetchAvailableEvents();
-  }, [fetchRegistrations, fetchAvailableEvents]);
+    queueMicrotask(() => {
+      fetchRegistrations();
+    });
+  }, [fetchRegistrations]);
+
+  useEffect(() => {
+    if (activeTab === 'Browse Events') {
+      queueMicrotask(() => {
+        fetchAvailableEvents();
+      });
+    }
+  }, [activeTab, fetchAvailableEvents]);
+
+  const availableEventIds = useMemo(
+    () => availableEvents.map((evt) => evt?._id).filter(Boolean),
+    [availableEvents],
+  );
+
+  useEffect(() => {
+    if (activeTab !== 'Browse Events' || availableEventIds.length === 0) {
+      return undefined;
+    }
+
+    const socket = io(API_BASE_URL, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+
+    socketRef.current = socket;
+
+    joinedEventIdsRef.current = availableEventIds;
+
+    const pulseEvent = (eventId) => {
+      setHighlightedEvents((prev) => ({
+        ...prev,
+        [eventId]: true,
+      }));
+
+      if (highlightTimeoutsRef.current[eventId]) {
+        clearTimeout(highlightTimeoutsRef.current[eventId]);
+      }
+
+      highlightTimeoutsRef.current[eventId] = window.setTimeout(() => {
+        setHighlightedEvents((prev) => {
+          const next = { ...prev };
+          delete next[eventId];
+          return next;
+        });
+        delete highlightTimeoutsRef.current[eventId];
+      }, 1800);
+    };
+
+    const joinRooms = () => {
+      availableEventIds.forEach((eventId) => {
+        socket.emit('event:join', { eventId });
+      });
+    };
+
+    const handleRegistrationCount = ({ eventId, count } = {}) => {
+      if (!eventId || typeof count !== "number") {
+        return;
+      }
+
+      setAvailableEvents((prev) => {
+        let changed = false;
+
+        const next = prev.map((evt) => {
+          if (evt._id !== eventId) {
+            return evt;
+          }
+
+          if (evt.registeredCount === count) {
+            return evt;
+          }
+
+          changed = true;
+
+          return {
+            ...evt,
+            registeredCount: count,
+          };
+        });
+
+        if (changed) {
+          pulseEvent(eventId);
+        }
+
+        return next;
+      });
+    };
+
+    socket.on("connect", joinRooms);
+    socket.on("registration:count", handleRegistrationCount);
+    socket.on("connect_error", () => {});
+
+    if (socket.connected) {
+      joinRooms();
+    }
+
+    return () => {
+      const joinedEventIds = joinedEventIdsRef.current;
+
+      joinedEventIds.forEach((eventId) => {
+        socket.emit("event:leave", { eventId });
+      });
+
+      socket.off("connect", joinRooms);
+      socket.off("registration:count", handleRegistrationCount);
+      socket.off("connect_error");
+      socket.disconnect();
+      socketRef.current = null;
+      joinedEventIdsRef.current = [];
+
+      Object.values(highlightTimeoutsRef.current).forEach((timeoutId) => {
+        clearTimeout(timeoutId);
+      });
+      highlightTimeoutsRef.current = {};
+    };
+  }, [activeTab, availableEventIds]);
 
   const handleRegister = async (eventId) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE_URL}/api/registrations/${eventId}/register`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
+
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || 'Registered');
-        setActiveTab('Upcoming Tickets');
+        toast.success(data.message || "Successfully registered!");
+        setActiveTab("Upcoming Tickets");
         fetchRegistrations();
+        fetchSavedEvents();
       } else {
-        alert(data.message || 'Registration failed');
+        toast.error(data.message || "Registration failed");
       }
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong');
+    } catch (error) {
+      console.error("Registration failed", error);
+      toast.error("Something went wrong");
+    }
+  };
+
+  const handleToggleSave = async (eventId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const isAlreadySaved = savedEvents.some((evt) => evt._id === eventId);
+
+      // Optimistic UI
+      if (isAlreadySaved) {
+        setSavedEvents((prev) => prev.filter((evt) => evt._id !== eventId));
+      } else {
+        const eventToAdd = availableEvents.find((evt) => evt._id === eventId);
+
+        if (eventToAdd) {
+          setSavedEvents((prev) => [...prev, eventToAdd]);
+        }
+      }
+
+      const res = await fetch(
+        `${API_BASE_URL}/api/users/save-event/${eventId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update saved events");
+      }
+
+      await fetchSavedEvents();
+    } catch (error) {
+      console.error("Failed to update saved events", error);
+      toast.error("Something went wrong");
     }
   };
 
@@ -153,20 +361,27 @@ export default function CustomerDashboard() {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to cancel');
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to cancel registration");
+      }
+
       setRegistrations((prev) =>
-        prev.map((r) =>
-          r._id === selectedRegistrationId ? { ...r, status: 'cancelled' } : r
-        )
+        prev.map((reg) =>
+          reg._id === selectedRegistrationId
+            ? { ...reg, status: "cancelled" }
+            : reg,
+        ),
       );
       setSelectedRegistrationId(null);
-      setIsModalOpen(false);
-    } catch (err) {
-      console.error(err);
-      alert('Something went wrong');
+      toast.success("Registration cancelled successfully!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong");
     }
   };
 
@@ -176,16 +391,24 @@ export default function CustomerDashboard() {
       const canvas = await html2canvas(ticketRef.current, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#fff',
+        backgroundColor: "#ffffff",
       });
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const imgData = canvas.toDataURL("image/png");
+
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const imgProps = pdf.getImageProperties(imgData);
       const pdfHeight = (imgProps.height * (pdfWidth - 20)) / imgProps.width;
       pdf.setFontSize(20);
       pdf.setTextColor(244, 63, 94);
-      pdf.text('EventOne Ticket', 15, 15);
+      pdf.text("EventOne Ticket", 15, 15);
+
       const maxHeight = 250;
       let finalWidth = pdfWidth - 20;
       let finalHeight = pdfHeight;
@@ -194,17 +417,18 @@ export default function CustomerDashboard() {
         finalHeight = maxHeight;
         finalWidth = finalWidth * scale;
       }
-      pdf.addImage(imgData, 'PNG', 10, 25, finalWidth, finalHeight);
-      const safe = selectedTicket.event?.title
-        ?.replace(/\s+/g, '-')
-        ?.replace(/[^a-zA-Z0-9-_]/g, '')
+
+      pdf.addImage(imgData, "PNG", 10, 25, finalWidth, finalHeight);
+
+      const safeEventName = selectedTicket.event?.title
+        ?.replace(/\s+/g, "-")
+        ?.replace(/[^a-zA-Z0-9-_]/g, "")
         ?.toUpperCase();
-      const fileName = `ticket-${safe || 'EVENT'}-${selectedTicket._id
-        .slice(-6)
-        .toUpperCase()}.pdf`;
+
+      const fileName = `ticket-${safeEventName || "EVENT"}-${selectedTicket._id.slice(-6).toUpperCase()}.pdf`;
       pdf.save(fileName);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("PDF generation failed:", error);
     }
   };
 
@@ -267,14 +491,19 @@ export default function CustomerDashboard() {
         {/* Tabs */}
         <div className="mb-8 border-b border-border">
           <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-            {['Upcoming Tickets', 'Past Events', 'Browse Events'].map((tab) => (
+            {[
+              "Upcoming Tickets",
+              "Past Events",
+              "Browse Events",
+              "Saved Events",
+            ].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${
                   activeTab === tab
-                    ? 'text-orange-500'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? "text-orange-500"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {tab}
@@ -293,20 +522,31 @@ export default function CustomerDashboard() {
         <div className="bg-card/50 backdrop-blur-sm rounded-3xl p-6 md:p-8 min-h-[500px] border border-border shadow-sm">
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl font-semibold text-foreground">
-              {activeTab === 'Upcoming Tickets'
-                ? 'Your Upcoming Tickets'
-                : activeTab === 'Past Events'
-                ? 'Event History'
-                : 'Browse Events'}
+              {activeTab === "Upcoming Tickets"
+                ? "Your Upcoming Tickets"
+                : activeTab === "Past Events"
+                  ? "Event History"
+                  : activeTab === "Saved Events"
+                    ? "Saved Events"
+                    : "Browse Events"}
             </h2>
-            {activeTab === 'Upcoming Tickets' && (
+            {activeTab === "Upcoming Tickets" && (
               <span className="px-3 py-1 bg-rose-500/10 text-rose-500 text-xs font-medium rounded-full border border-rose-500/20">
-                {upcomingEvents.length} Active
+                {
+                  upcomingEvents.filter((event) => event.status !== "cancelled")
+                    .length
+                }{" "}
+                Active
               </span>
             )}
-            {activeTab === 'Past Events' && (
+            {activeTab === "Past Events" && (
               <span className="px-3 py-1 bg-purple-500/10 text-purple-500 text-xs font-medium rounded-full border border-purple-500/20">
                 {pastEvents.length} Past
+              </span>
+            )}
+            {activeTab === "Saved Events" && (
+              <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-medium rounded-full border border-blue-500/20">
+                {savedEvents.length} Saved
               </span>
             )}
           </div>
@@ -331,7 +571,10 @@ export default function CustomerDashboard() {
                       You haven't registered for any upcoming events yet. Check
                       out what's happening!
                     </p>
-                    <Button asChild className="mt-6 bg-rose-600 hover:bg-rose-700">
+                    <Button
+                      asChild
+                      className="mt-6 bg-rose-600 hover:bg-rose-700"
+                    >
                       <Link to="/#events">Browse Events</Link>
                     </Button>
                   </motion.div>
@@ -362,7 +605,7 @@ export default function CustomerDashboard() {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                             <span className="absolute bottom-2 left-2 text-xs text-white/90 font-medium px-2 py-0.5 bg-black/40 backdrop-blur-sm rounded">
-                              {reg.event?.category || 'Event'}
+                              {reg.event?.category || "Event"}
                             </span>
                           </div>
 
@@ -370,22 +613,22 @@ export default function CustomerDashboard() {
                             <div>
                               <div className="flex justify-between items-start">
                                 <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
-                                  {reg.event?.title || 'Unknown Event'}
+                                  {reg.event?.title || "Unknown Event"}
                                 </h3>
                                 <span
                                   className={`inline-flex items-center text-xs px-2 py-1 rounded-full border ${
-                                    reg.status === 'attended'
-                                      ? 'bg-purple-500/10 text-purple-500 border-purple-500/20'
-                                      : reg.status === 'cancelled'
-                                      ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                      : 'bg-green-500/10 text-green-500 border-green-500/20'
+                                    reg.status === "attended"
+                                      ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                                      : reg.status === "cancelled"
+                                        ? "bg-red-500/10 text-red-500 border-red-500/20"
+                                        : "bg-green-500/10 text-green-500 border-green-500/20"
                                   }`}
                                 >
-                                  {reg.status === 'attended'
-                                    ? 'Attended'
-                                    : reg.status === 'cancelled'
-                                    ? 'Cancelled'
-                                    : 'Confirmed'}
+                                  {reg.status === "attended"
+                                    ? "Attended"
+                                    : reg.status === "cancelled"
+                                      ? "Cancelled"
+                                      : "Confirmed"}
                                 </span>
                               </div>
                               <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
@@ -395,12 +638,14 @@ export default function CustomerDashboard() {
                                 <span className="flex items-center">
                                   <Calendar className="w-3 h-3 mr-1.5" />
                                   {reg.event?.date
-                                    ? new Date(reg.event.date).toLocaleDateString()
-                                    : 'TBA'}
+                                    ? new Date(
+                                        reg.event.date,
+                                      ).toLocaleDateString()
+                                    : "TBA"}
                                 </span>
                                 <span className="flex items-center">
                                   <MapPin className="w-3 h-3 mr-1.5" />
-                                  {reg.event?.location || 'TBA'}
+                                  {reg.event?.location || "TBA"}
                                 </span>
                                 <span className="flex items-center">
                                   <Ticket className="w-3 h-3 mr-1.5" />
@@ -529,39 +774,69 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            {/* ── Browse Events ── */}
-            {activeTab === 'Browse Events' && (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between flex-wrap gap-4">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    Browse Events
-                  </h2>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'outline'}
-                      onClick={() => setViewMode('grid')}
-                    >
-                      Grid
-                    </Button>
-                    <Button
-                      variant={viewMode === 'calendar' ? 'default' : 'outline'}
-                      onClick={() => setViewMode('calendar')}
-                    >
-                      Calendar
-                    </Button>
-                  </div>
-                </div>
+            <div className="space-y-6">
+  <div className="flex gap-3 items-center">
+    <div className="relative flex-1">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
 
-                {/* Category legend */}
-                <div className="flex flex-wrap gap-4">
-                  {Object.entries(categoryColors).map(([category, color]) => (
-                    <div key={category} className="flex items-center gap-2 text-sm">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                      <span>{category}</span>
-                    </div>
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search events by title or description..."
+        className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
+      />
+
+      {searchQuery && (
+        <button
+          onClick={() => setSearchQuery("")}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+
+    <Button
+      variant={viewMode === "grid" ? "default" : "outline"}
+      onClick={() => setViewMode("grid")}
+    >
+      Grid
+    </Button>
+
+    <Button
+      variant={viewMode === "calendar" ? "default" : "outline"}
+      onClick={() => setViewMode("calendar")}
+    >
+      Calendar
+    </Button>
+  </div>
+
+  <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setSelectedCategory("")}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      selectedCategory === ""
+                        ? "bg-rose-500 text-white border-rose-500"
+                        : "bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50"
+                    }`}
+                  >
+                    All
+                  </button>
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() =>
+                        setSelectedCategory(selectedCategory === cat ? "" : cat)
+                      }
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        selectedCategory === cat
+                          ? "bg-rose-500 text-white border-rose-500"
+                          : "bg-muted/50 text-muted-foreground border-border hover:border-rose-500/50"
+                      }`}
+                    >
+                      {cat}
+                    </button>
                   ))}
                 </div>
 
@@ -580,6 +855,15 @@ export default function CustomerDashboard() {
                     <p className="text-muted-foreground mt-2 max-w-sm">
                       Check back later for new events!
                     </p>
+                    <Button
+                      className="mt-6 bg-rose-600 hover:bg-rose-700 text-white text-xs"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setSelectedCategory("");
+                      }}
+                    >
+                      Clear Filters
+                    </Button>
                   </motion.div>
                 ) : viewMode === 'calendar' ? (
                   <div className="bg-white text-black rounded-2xl p-4 overflow-x-auto">
@@ -612,19 +896,36 @@ export default function CustomerDashboard() {
                     {availableEvents.map((evt, idx) => {
                       const isRegistered = registrations.some(
                         (r) =>
-                          r.status === 'registered' && r.event?._id === evt._id
+                          r.status === "registered" && r.event?._id === evt._id,
                       );
+                      const registeredCount = evt.registeredCount ?? 0;
+                      const isHighlighted = !!highlightedEvents[evt._id];
                       const isEventFullBooked =
-                        evt.registeredCount >= evt.capacity;
+                        evt.registeredCount === evt.capacity;
 
                       return (
                         <motion.div
                           key={evt._id}
                           layout
                           initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
+                          animate={{
+                            opacity: 1,
+                            y: 0,
+                            scale: isHighlighted ? [1, 1.01, 1] : 1,
+                            boxShadow: isHighlighted
+                              ? [
+                                  "0 0 0 rgba(34, 197, 94, 0)",
+                                  "0 0 0 1px rgba(34, 197, 94, 0.35), 0 0 28px rgba(34, 197, 94, 0.12)",
+                                  "0 0 0 rgba(34, 197, 94, 0)",
+                                ]
+                              : "0 0 0 rgba(34, 197, 94, 0)",
+                          }}
                           transition={{ delay: idx * 0.05 }}
-                          className="group relative bg-card border border-border rounded-2xl p-4 hover:border-rose-500/50 transition-colors shadow-sm"
+                          className={`group relative bg-card border rounded-2xl p-4 transition-colors shadow-sm ${
+                            isHighlighted
+                              ? "border-green-500/50"
+                              : "border-border hover:border-rose-500/50"
+                          }`}
                         >
                           <div className="flex flex-col md:flex-row gap-6">
                             <div className="w-full md:w-56 h-36 rounded-xl overflow-hidden shrink-0 bg-muted relative">
@@ -650,8 +951,44 @@ export default function CustomerDashboard() {
                                   <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
                                     {evt.title}
                                   </h3>
-                                  <span className="inline-flex items-center text-xs px-2 py-1 rounded-full border bg-blue-500/10 text-blue-500 border-blue-500/20">
-                                    {evt.capacity ? `${evt.capacity} Spots` : 'Open'}
+                                  <div className="flex items-center gap-3">
+                                    {/* Wishlist Button */}
+                                    <button
+                                      onClick={() => handleToggleSave(evt._id)}
+                                      className="flex items-center gap-1 text-xs transition-transform hover:scale-105"
+                                    >
+                                      {savedEvents.some(
+                                        (e) => e._id === evt._id,
+                                      ) ? (
+                                        <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
+                                      ) : (
+                                        <Heart className="w-5 h-5 text-muted-foreground" />
+                                      )}
+
+                                      <span className="text-muted-foreground font-bold">
+                                        Wishlist
+                                      </span>
+                                    </button>
+
+                                    {/* Spots Badge */}
+                                    <span className="inline-flex items-center text-xs px-2 py-1 rounded-full border bg-blue-500/10 text-blue-500 border-blue-500/20">
+                                      {evt.capacity
+                                        ? `${evt.capacity} Spots`
+                                        : "Open"}
+                                    </span>
+                                  </div>
+                                  <span
+                                    className={`inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full border transition-colors ${
+                                      isHighlighted
+                                        ? "bg-green-500/10 text-green-600 border-green-500/30"
+                                        : "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                                    }`}
+                                  >
+                                    <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                                    <span>
+                                      {registeredCount} registered
+                                      {evt.capacity ? ` / ${evt.capacity}` : ""}
+                                    </span>
                                   </span>
                                 </div>
                                 <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
@@ -673,12 +1010,17 @@ export default function CustomerDashboard() {
                                 {isRegistered ? (
                                   <Button
                                     disabled
+                                    variant="success"
                                     className="text-xs h-8 bg-green-600 text-white opacity-75"
                                   >
                                     Registered
                                   </Button>
                                 ) : isEventFullBooked ? (
-                                  <Button disabled variant="secondary" className="text-xs h-8">
+                                  <Button
+                                    disabled
+                                    variant="secondary"
+                                    className="text-xs h-8"
+                                  >
                                     Fully Booked
                                   </Button>
                                 ) : (
@@ -698,20 +1040,221 @@ export default function CustomerDashboard() {
                   </div>
                 )}
               </div>
+            
+
+            {activeTab === "Saved Events" && (
+              <div className="space-y-6">
+                {savedEvents.filter((evt) => evt && evt.status === "approved")
+                  .length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="w-full h-80 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center p-6"
+                  >
+                    <Heart className="w-10 h-10 text-rose-500 mb-4" />
+
+                    <h3 className="text-lg font-medium text-foreground">
+                      No Saved Events Yet
+                    </h3>
+
+                    <p className="text-muted-foreground mt-2">
+                      Browse events and save your favorites!
+                    </p>
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                    {savedEvents
+                      .filter((evt) => evt && evt.status === "approved")
+                      .map((evt, idx) => (
+                        <motion.div
+                          key={evt._id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="group relative bg-card border border-border rounded-2xl p-5 hover:border-rose-500/50 transition-all shadow-sm hover:shadow-md"
+                        >
+                          {/* Header */}
+                          <div className="flex items-start justify-between gap-4">
+                            <div>
+                              <h3 className="text-lg font-semibold text-foreground group-hover:text-rose-500 transition-colors">
+                                {evt.title}
+                              </h3>
+
+                              <p className="text-muted-foreground text-sm mt-2 line-clamp-2">
+                                {evt.description}
+                              </p>
+                            </div>
+
+                            {/* Saved Button */}
+                            <button
+                              onClick={() => handleToggleSave(evt._id)}
+                              className="flex items-center gap-2 text-sm text-rose-500 hover:scale-105 transition-transform"
+                            >
+                              <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
+
+                              <span className="hidden sm:block">Saved</span>
+                            </button>
+                          </div>
+
+                          {/* Footer */}
+                          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                            {/* Event Meta */}
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span className="px-2 py-1 rounded-full bg-rose-500/10 text-rose-500">
+                                {evt.category}
+                              </span>
+
+                              <span>
+                                {new Date(evt.date).toLocaleDateString()}
+                              </span>
+
+                              <span>{evt.location}</span>
+                            </div>
+
+                            {/* Register Button */}
+                            {registrations.some(
+                              (reg) => reg.event?._id === evt._id,
+                            ) ? (
+                              <Button
+                                disabled
+                                variant="secondary"
+                                className="cursor-not-allowed bg-green-500 text-white"
+                              >
+                                Already Registered
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => handleRegister(evt._id)}
+                                className="bg-rose-600 hover:bg-rose-700 text-white"
+                              >
+                                Register Now
+                              </Button>
+                            )}
+                          </div>
+                        </motion.div>
+                      ))}
+                  </div>
+                )}
+              </div>
             )}
           </AnimatePresence>
-
-          <div className="mt-6">
-            <ConfirmationModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onConfirm={handleCancelRegistration}
-              title="Cancel registration"
-              description="Are you sure you want to cancel this registration?"
-            />
-          </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedTicket && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white text-zinc-950 w-full max-w-md rounded-2xl border border-zinc-200 shadow-2xl overflow-hidden relative"
+            >
+              <div className="h-2 bg-gradient-to-r from-rose-500 to-orange-500" />
+              <button
+                onClick={() => setSelectedTicket(null)}
+                className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 transition-colors p-1 hover:bg-zinc-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="p-6 bg-white">
+                <div ref={ticketRef}>
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold mb-1 text-rose-600">
+                      EventOne Ticket
+                    </h3>
+                    <p className="text-xs text-zinc-500 uppercase tracking-widest">
+                      Admit One
+                    </p>
+                  </div>
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-start gap-4 p-3 bg-zinc-50 border border-zinc-100 rounded-lg">
+                      <div className="h-16 w-16 rounded-md overflow-hidden bg-zinc-200 shrink-0">
+                        {selectedTicket.event?.posterUrl && (
+                          <img
+                            src={selectedTicket.event.posterUrl}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-sm line-clamp-1">
+                          {selectedTicket.event?.title}
+                        </h4>
+                        <p className="text-xs text-zinc-500 mt-1 flex items-center">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {selectedTicket.event?.date
+                            ? new Date(
+                                selectedTicket.event.date,
+                              ).toLocaleDateString()
+                            : "TBA"}
+                        </p>
+                        <p className="text-xs text-zinc-500 mt-0.5 flex items-center">
+                          <MapPin className="w-3 h-3 mr-1" />
+                          {selectedTicket.event?.location || "TBA"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                        <span className="text-xs text-zinc-500 block mb-1">
+                          Attendee
+                        </span>
+                        <div className="font-medium truncate">{user?.name}</div>
+                      </div>
+                      <div className="p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                        <span className="text-xs text-zinc-500 block mb-1">
+                          Ticket ID
+                        </span>
+                        <div className="font-medium font-mono text-xs">
+                          {selectedTicket._id.slice(-8).toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center justify-center bg-white p-4 rounded-xl border border-dashed border-zinc-300 mb-6 relative">
+                    <div className="absolute top-0 left-0 w-full h-1 bg-[linear-gradient(to_right,transparent_50%,#000_50%)] bg-[size:10px_10px]" />
+                    {selectedTicket.qrCodeDataUrl ? (
+                      <img
+                        src={selectedTicket.qrCodeDataUrl}
+                        alt="Ticket QR Code"
+                        className="w-48 h-48 object-contain"
+                      />
+                    ) : (
+                      <div className="w-48 h-48 flex items-center justify-center bg-zinc-100 text-zinc-400 text-xs">
+                        QR Code Unavailable
+                      </div>
+                    )}
+                    <p className="text-[10px] text-zinc-500 mt-2 font-mono">
+                      SCAN AT ENTRANCE
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleDownloadTicket}
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download / Print Ticket
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedRegistrationId(null);
+        }}
+        onConfirm={handleCancelRegistration}
+        title="Cancel Registration"
+        message="Are you sure you want to cancel your registration? This action cannot be undone."
+      />
     </div>
   );
 }

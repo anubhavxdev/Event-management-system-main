@@ -21,11 +21,10 @@
 
   "author": "anubhavxdev",
   "license": "MIT",
-  "type": "module",
 
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "cloudinary": "^1.41.3",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.10.0",
     "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -35,22 +34,22 @@
     "express-rate-limit": "^8.0.1",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.18.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.24.0",
     "morgan": "^1.10.1",
-    "multer": "^2.0.2",
-    "nodemailer": "^7.0.6",
+    "multer": "^2.1.1",
+    "nodemailer": "^8.0.7",
     "qrcode": "^1.5.4",
-    "socket.io": "^4.8.1",
-    "validator": "^13.15.15"
+    "socket.io": "^4.8.3",
+    "validator": "^13.15.35"
   },
 
   "devDependencies": {
-    "cross-env": "^10.0.0",
-    "jest": "^30.0.5",
-    "mongodb-memory-server": "^10.2.0",
-    "nodemon": "^3.1.10",
-    "supertest": "^7.1.4"
+    "cross-env": "^10.1.0",
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   },
 
   "jest": {

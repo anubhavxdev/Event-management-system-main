@@ -44,10 +44,24 @@ export const rejectEvent = async (req, res) => {
     }
 
     const event = await Event.findById(req.params.id).populate('organizer', 'name email');
-    if (!event) return res.status(404).json({ message: 'Not found' });
+
+    if (!event) {
+      return res.status(404).json({ message: 'Not found' });
+    }
+
+    // Remove event from all users savedEvents
+    await User.updateMany(
+      {},
+      {
+        $pull: {
+          savedEvents: req.params.id
+        }
+      }
+    );
 
     event.status = 'rejected';
     event.rejectionReason = reason;
+
     await event.save();
 
     if (event.organizer?.email) {
