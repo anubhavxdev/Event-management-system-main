@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middleware/auth.js';
+import { authenticate } from '../middleware/auth.js';
 import {
   getNotifications,
   markNotificationAsRead,
@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-router.use(protect); // All routes below are protected
+router.use(authenticate); // All routes below are protected
 
 router.get('/', getNotifications);
 router.get('/unread-count', getUnreadCount);

@@ -14,39 +14,7 @@ import { createNotification } from './notificationController.js';
 
 export const registerForEvent = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
-    if (!event || event.status !== 'approved') return res.status(400).json({ message: 'Event not available' });
-    const payload = JSON.stringify({ userId: req.user.id, eventId: event._id, at: Date.now() });
-    const qrCodeDataUrl = await generateQRCodeDataUrl(payload);
-
-    // Current implementation includes : 
-    // Checks for an existing cancelled registration
-    // Reactivating the existing registration instead of inserting a new record
-    // Capacity validation on event registration
-    // Keeps the audit trail intact while avoiding unique index conflicts
-
-    // Check active registration
-    const activeRegistrations = await Registration.countDocuments({
-      event: req.params.id,
-      status: { $ne: "cancelled" },
-    });
-
-    // Capacity validation
-    if (activeRegistrations >= event.capacity && event.capacity > 0) {
-      return res.status(400).json({
-        message: "Event is fully booked"
-      })
-    }
-
-    // To reinitiate the existing registered event
-    const existingRegistration = await Registration.findOne({ user: req.user.id, event: req.params.id });
-
-    if (existingRegistration) {
-      if (existingRegistration.status === "cancelled") {
-        existingRegistration.status = 'registered';
-      }
-
-    if (!event || event.status !== 'approved') {
+    const event = await Event.findById(req.params.id);    if (!event || event.status !== 'approved') {
       return res.status(400).json({
         message: 'Event not available',
       });
@@ -88,17 +56,6 @@ export const registerForEvent = async (req, res) => {
         new: true,
       }
     );
-
-      return res.status(201).json({
-        registration: existingRegistration,
-      })
-    }
-
-    else {
-      const reg = await Registration.create({ user: req.user.id, event: event._id, qrCodeDataUrl });
-      try {
-        await sendEmail({ to: req.user.email, subject: `Registered: ${event.title}`, html: `<p>You are registered for ${event.title}.</p>` });
-      } catch (_) { }
     // Event is full — reject immediately, no registration created
     if (!updatedEvent) {
       return res.status(400).json({
@@ -204,58 +161,7 @@ export const myRegistrations = async (
 ) => {
   try {
     const regs = await Registration.find({ user: req.user.id }).populate('event');
-
-    
-    const payload = JSON.stringify({ userId: req.user.id, eventId: event._id, at: Date.now() });
-    const qrCodeDataUrl = await generateQRCodeDataUrl(payload);
-    
-    // Current implementation includes : 
-    // Checks for an existing cancelled registration
-    // Reactivating the existing registration instead of inserting a new record
-    // Capacity validation on event registration
-    // Keeps the audit trail intact while avoiding unique index conflicts
-
-    // Check active registration
-    const activeRegistrations = await Registration.countDocuments({
-      event: req.params.id,
-      status: { $ne: "cancelled" },
-    });
-
-    // Capacity validation
-    if (activeRegistrations>=event.capacity && event.capacity>0){
-      return res.status(400).json({
-        message:"Event is fully booked"
-      })
-    }
-
-    // To reinitiate the existing registered event
-    const existingRegistration = await Registration.findOne({user:req.user.id,event:req.params.id});
-
-    if (existingRegistration){
-      if (existingRegistration.status==="cancelled"){
-          existingRegistration.status = 'registered';
-      }
-
-      await existingRegistration.save();
-      try {
-        await sendEmail({ to: req.user.email, subject: `Registered: ${event.title}`, html: `<p>You are registered for ${event.title}.</p>` });
-      } catch (_) { }
-
-      return res.status(201).json({
-        registration:existingRegistration,
-      })
-    }
-
-    else{
-      const reg = await Registration.create({ user: req.user.id, event: event._id, qrCodeDataUrl });
-      try {
-        await sendEmail({ to: req.user.email, subject: `Registered: ${event.title}`, html: `<p>You are registered for ${event.title}.</p>` });
-      } catch (_) { }
-
-      res.status(201).json({ registration: reg });
-    }
-
-    
+    res.json({ registrations: regs });
 
   } catch (err) {
     console.error("ERROR:", err);
@@ -264,26 +170,6 @@ export const myRegistrations = async (
 };
 
 // fetching registrations with waiting position
-
-
-export const participantsForEvent = async (req, res) => {
-  try {
-    const regs = await Registration.find({
-      event: req.params.id,
-    }).populate('user', 'name email');
-
-    res.json({
-      participants: regs,
-    });
-
-  } catch (err) {
-    console.error('ERROR:', err);
-
-    res.status(500).json({
-      message: err.message,
-    });
-  }
-};
 
 // Get participants for organizer/admin
 export const participantsForEvent =
@@ -385,12 +271,9 @@ export const exportParticipantsCsv = async (req, res) => {
     console.error('ERROR:', err);
     res.status(500).json({ message: err.message });
   }
-};
-
-        isWaitlisted:
-          registration?.status ===
-          'waitlisted',
-
+};export const checkRegistrationStatus = async (req, res) => {
+  try {
+    const registration = await Registration.findOne({ user: req.user.id, event: req.params.id });
     res.json({
       isRegistered: registration?.status === 'registered',
       isWaitlisted: registration?.status === 'waitlisted',

@@ -36,6 +36,8 @@ export function initSocket(server, clientOrigin) {
       }
 
       socket.leave(getEventRoom(eventId));
+    });
+    
     socket.on('user:join', (payload = {}) => {
       const userId = payload?.userId;
       if (!userId) {

@@ -6,6 +6,7 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SocketProvider } from "./context/SocketContext";
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { registerSW } from 'virtual:pwa-register';
 
 // Register the PWA service worker
@@ -15,11 +16,13 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <HelmetProvider>
       <ThemeProvider>
-        <AuthProvider>
-          <SocketProvider>
-            <App />
-          </SocketProvider>
-        </AuthProvider>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your_google_client_id'}>
+          <AuthProvider>
+            <SocketProvider>
+              <App />
+            </SocketProvider>
+          </AuthProvider>
+        </GoogleOAuthProvider>
       </ThemeProvider>
     </HelmetProvider>
   </StrictMode>,

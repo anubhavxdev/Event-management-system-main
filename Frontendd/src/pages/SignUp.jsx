@@ -1,11 +1,14 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import { LegalModal } from "../components/ui/legal-modal";
 import { legalContent } from "../data/legalContent";
+import { useGoogleLogin } from '@react-oauth/google';
+import { FcGoogle } from "react-icons/fc";
+import { FaGithub } from "react-icons/fa";
 
 import { API_BASE_URL } from "../config";
 
@@ -37,6 +40,16 @@ export default function SignUp() {
 
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const code = searchParams.get('code');
+    const processedCode = useRef(false);
+
+    useEffect(() => {
+        if (code && !processedCode.current) {
+            processedCode.current = true;
+            handleGithubCallback(code);
+        }
+    }, [code]);
 
     const toggleVisibility = () => setIsVisible(!isVisible);
     const toggleConfirmVisibility = () => setIsConfirmVisible(!isConfirmVisible);
@@ -154,6 +167,91 @@ export default function SignUp() {
         setIsLoading(false);
     }
 };
+
+    const googleLogin = useGoogleLogin({
+        onSuccess: async (tokenResponse) => {
+            const loadingToast = toast.loading("Signing up with Google...");
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        access_token: tokenResponse.access_token,
+                        role: formData.role
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    login(data.token, data.user);
+                    toast.success("Authentication successful!", { id: loadingToast });
+                    switch (data.user.role) {
+                        case 'admin':
+                            navigate('/admin/dashboard');
+                            break;
+                        case 'organizer':
+                            navigate('/organizer/dashboard');
+                            break;
+                        default:
+                            navigate('/customer/dashboard');
+                    }
+                } else {
+                    toast.error(data.message || 'Signup failed', { id: loadingToast });
+                }
+            } catch (error) {
+                console.error("Google signup error", error);
+                toast.error("Something went wrong", { id: loadingToast });
+            }
+        },
+        onError: errorResponse => {
+            console.error("Google signup failed", errorResponse);
+            toast.error("Google sign-up was cancelled or failed.");
+        }
+    });
+
+    const handleGithubCallback = async (code) => {
+        const loadingToast = toast.loading("Signing up with GitHub...");
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/github`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    code,
+                    role: formData.role
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                login(data.token, data.user);
+                toast.success("Authentication successful!", { id: loadingToast });
+                switch (data.user.role) {
+                    case 'admin':
+                        navigate('/admin/dashboard');
+                        break;
+                    case 'organizer':
+                        navigate('/organizer/dashboard');
+                        break;
+                    default:
+                        navigate('/customer/dashboard');
+                }
+            } else {
+                toast.error(data.message || 'Signup failed', { id: loadingToast });
+                navigate('/signup');
+            }
+        } catch (error) {
+            console.error("GitHub signup error", error);
+            toast.error("Something went wrong", { id: loadingToast });
+            navigate('/signup');
+        }
+    };
+
+    const githubLogin = () => {
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+        if (!clientId) {
+            toast.error("GitHub Client ID is not configured");
+            return;
+        }
+        window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=user:email`;
+    };
 
     return (
         <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
@@ -322,6 +420,37 @@ export default function SignUp() {
                                 )}
                             </button>
                         </form>
+
+                        {/* Divider */}
+                        <div className="relative my-6 z-10">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white/40 text-gray-600 rounded-full">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => googleLogin()}
+                            disabled={isLoading}
+                            className="w-full flex items-center justify-center space-x-3 py-3 px-4 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md relative z-10 mb-4"
+                        >
+                            <FcGoogle className="h-6 w-6" />
+                            <span className="font-semibold">Continue with Google</span>
+                        </button>
+                        
+                        {/* GitHub Sign Up Button */}
+                        <button
+                            type="button"
+                            onClick={githubLogin}
+                            disabled={isLoading}
+                            className="w-full flex items-center justify-center space-x-3 py-3 px-4 bg-[#24292F] hover:bg-[#24292F]/90 text-white border border-gray-300 rounded-lg transition-all duration-300 shadow-sm hover:shadow-md relative z-10 mb-6"
+                        >
+                            <FaGithub className="h-6 w-6" />
+                            <span className="font-semibold">Continue with GitHub</span>
+                        </button>
 
                         {/* Sign In Link */}
                         <div className="mt-8 text-center text-sm relative z-10">
