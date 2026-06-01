@@ -6,14 +6,7 @@ import { LegalModal } from "../ui/legal-modal";
 import { legalContent } from "../../data/legalContent";
 import toast from "react-hot-toast";
 
-import {
-  Github,
-  Linkedin,
-  Twitter,
-  MessageCircle,
-  Zap,
-  Heart,
-} from "lucide-react";
+import { Github, Linkedin, Twitter, MessageCircle, Zap } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
@@ -103,14 +96,12 @@ export default function FooterStandard() {
                 <div className="absolute -top-1 -right-1 h-3 w-3 animate-pulse rounded-full bg-green-400"></div>
               </div>
 
-              <span className="text-xl font-semibold">
-                Event.One
-              </span>
+              <span className="text-xl font-semibold">Event.One</span>
             </a>
 
             <p className="text-muted-foreground max-w-md">
-              Building innovative solutions for modern businesses.
-              Fast, reliable, and scalable.
+              Building innovative solutions for modern businesses. Fast,
+              reliable, and scalable.
             </p>
 
             {/* Social Icons */}
@@ -137,10 +128,7 @@ export default function FooterStandard() {
               onSubmit={handleSubscribe}
               className="w-full max-w-md space-y-3"
             >
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium"
-              >
+              <label htmlFor="email" className="block text-sm font-medium">
                 Subscribe to our newsletter
               </label>
 
@@ -210,9 +198,7 @@ export default function FooterStandard() {
         <div className="animate-rotate-3d via-primary h-px w-full bg-gradient-to-r from-transparent to-transparent" />
 
         <div className="text-muted-foreground container m-auto flex flex-col items-center justify-between gap-4 p-4 text-xs md:flex-row md:px-0 md:text-sm">
-          <p>
-            &copy; {currentYear} Event.One | All rights reserved
-          </p>
+          <p>&copy; {currentYear} Event.One | All rights reserved</p>
 
           <div className="flex items-center gap-4">
             {data().bottomLinks.map(({ href, label }) => (

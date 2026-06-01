@@ -60,9 +60,9 @@ const App = () => {
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    if(darkMode){
+    if (darkMode) {
       document.documentElement.classList.add("dark");
-    }else{
+    } else {
       document.documentElement.classList.remove("dark");
     } 
   },[darkMode]);
@@ -112,7 +112,7 @@ const App = () => {
 
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
+        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />
 
         <main className="flex-grow">
           <Routes>
