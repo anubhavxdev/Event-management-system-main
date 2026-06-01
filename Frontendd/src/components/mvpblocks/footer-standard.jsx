@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { LegalModal } from "../ui/legal-modal";
 import { legalContent } from "../../data/legalContent";
 import toast from "react-hot-toast";
-
 import {
   Github,
   Linkedin,

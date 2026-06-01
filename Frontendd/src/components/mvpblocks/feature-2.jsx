@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Rocket, Code, Paintbrush } from "lucide-react";
+import Feature3 from "./feature-3";
 const features = [
   {
     step: "Step 1",
@@ -56,7 +57,7 @@ export default function FeatureSteps() {
     return () => clearInterval(timer);
   }, [progress]);
   return (
-    <div className={"p-8 md:p-12"}>
+    <div id = "features" className={"p-8 md:p-12"}>
       <div className="mx-auto w-full max-w-7xl">
         <div className="relative mx-auto mb-12 max-w-2xl sm:text-center">
           <div className="relative z-10">
@@ -148,6 +149,7 @@ export default function FeatureSteps() {
           </div>
         </div>
       </div>
+      <Feature3/>
     </div>
   );
 }

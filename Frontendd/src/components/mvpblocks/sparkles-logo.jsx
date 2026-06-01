@@ -8,7 +8,7 @@ import gdg from "../../assets/logos/gdg.jpg";
 
 export default function SparklesLogo() {
   return (
-    <div className="w-full overflow-hidden bg-white pt-32 pb-16">
+    <div className="w-full overflow-hidden bg-white pt-32 pb-16 ">
       <div className="relative z-20 mx-auto w-full max-w-4xl px-4">
         <div className="text-center text-4xl md:text-5xl font-bold text-black">
           <span className="text-rose-600">Trusted by experts.</span>

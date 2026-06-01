@@ -132,7 +132,7 @@ export default function Faq3() {
 
   ];
   return (
-    <section className="bg-background relative w-full overflow-hidden py-16">
+    <section id="fq" className="bg-background relative w-full overflow-hidden py-16">
       {/* Decorative elements */}
       <div className="bg-primary/5 absolute top-20 -left-20 h-64 w-64 rounded-full blur-3xl" />
       <div className="bg-primary/5 absolute -right-20 bottom-20 h-64 w-64 rounded-full blur-3xl" />
@@ -186,7 +186,7 @@ export default function Faq3() {
   <div className="bg-primary/20 mx-auto mt-8 h-1 w-24 rounded-full" />
 </motion.div>
 
-        <div className="mx-auto max-w-2xl space-y-2">
+        <div id = "contact" className="mx-auto max-w-2xl space-y-2">
           {faqs.map((faq, index) => (
             <FAQItem key={index} {...faq} index={index} />
           ))}

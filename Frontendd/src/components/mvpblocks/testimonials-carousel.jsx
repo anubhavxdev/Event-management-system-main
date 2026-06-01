@@ -66,7 +66,7 @@ export default function TestimonialsCarousel({
   const duplicatedTestimonials = [...testimonials, ...testimonials];
 
   return (
-    <section
+    <section id = "testimonials"
       className={cn(
         "relative py-24 bg-black border-t border-zinc-800 overflow-hidden",
         className
