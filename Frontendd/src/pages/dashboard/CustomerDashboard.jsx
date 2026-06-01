@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Ticket, X, Download, Search, Heart, Calendar, MapPin, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Ticket, X, Download, Search, Heart } from 'lucide-react';
 import { io } from 'socket.io-client';
 import  {Calendar as BigCalendar,momentLocalizer,} from 'react-big-calendar';
 import moment from 'moment';
@@ -47,7 +47,7 @@ export default function CustomerDashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
-  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+
   const [highlightedEvents, setHighlightedEvents] = useState({});
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
@@ -109,26 +109,26 @@ export default function CustomerDashboard() {
     setSearchParams,
   ]);
 
-  const fetchAvailableEvents = useCallback(async () => {
-    const tags = searchParams.get('tags');
-    try {
-      if (mountedRef.current) setLoading(true);
-      let url = `${API_BASE_URL}/api/events?status=approved`;
-      if (tags) url += `&tags=${tags}`;
-      const res = await fetch(url);
-      if (res.ok && mountedRef.current) {
-        const data = await res.json();
-        const upcoming = (data.events || []).filter(
-          (evt) => new Date(evt.date) >= new Date()
-        );
-        setAvailableEvents(upcoming);
-      }
-    } catch (error) {
-      console.error('Failed to fetch events', error);
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [searchParams]);
+  // const fetchAvailableEvents = useCallback(async () => {
+  //   const tags = searchParams.get('tags');
+  //   try {
+  //     if (mountedRef.current) setLoading(true);
+  //     let url = `${API_BASE_URL}/api/events?status=approved`;
+  //     if (tags) url += `&tags=${tags}`;
+  //     const res = await fetch(url);
+  //     if (res.ok && mountedRef.current) {
+  //       const data = await res.json();
+  //       const upcoming = (data.events || []).filter(
+  //         (evt) => new Date(evt.date) >= new Date()
+  //       );
+  //       setAvailableEvents(upcoming);
+  //     }
+  //   } catch (error) {
+  //     console.error('Failed to fetch events', error);
+  //   } finally {
+  //     if (mountedRef.current) setLoading(false);
+  //   }
+  // }, [searchParams]);
 
   const fetchAvailableEvents = useCallback(async () => {
     try {
