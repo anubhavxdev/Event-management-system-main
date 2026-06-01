@@ -57,3 +57,24 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== Global Responsive Safety Fixes ===== */
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+img, video, svg, canvas {
+  max-width: 100%;
+  height: auto;
+}
+
+a, button {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
