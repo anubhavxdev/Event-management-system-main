@@ -16,11 +16,19 @@ export const signupValidation = [
     .withMessage('Please provide a valid email'),
 
   body('password')
-    .notEmpty()
-    .withMessage('Password is required')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
-
+  .trim()
+  .notEmpty()
+  .withMessage('Password is required')
+  .isStrongPassword({
+    minLength: 8,
+    minLowercase: 1,
+    minUppercase: 1,
+    minNumbers: 1,
+    minSymbols: 1,
+  })
+  .withMessage(
+    'Password must contain at least 8 characters, including uppercase, lowercase, number, and special character'
+  ),
   body('role')
     .notEmpty()
     .withMessage('Role is required')

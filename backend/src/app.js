@@ -61,9 +61,14 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Error:', err);
 
-  res.status(err.status || 500).json({
-    message: err.message || 'Server error'
-  });
+  const statusCode = err.status || 500;
+
+  res.status(statusCode).json({
+      message:
+      statusCode >= 500
+      ? 'Internal server error'
+      : err.message,
+    });
 });
 
 export default app;
