@@ -34,7 +34,7 @@ const ScrollToTop = () => {
         <button
           onClick={scrollToTop}
           className="fixed bottom-5 right-5 bg-black text-white px-4 py-2 rounded-full shadow-lg hover:bg-gray-800 transition-all duration-300 z-50"
-        >
+         aria-label="button">
           <FaArrowUp />
         </button>
       )}

@@ -552,7 +552,7 @@ export default function CustomerDashboard() {
             ].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                onClick={() = aria-label="button"> setActiveTab(tab)}
                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${
                   activeTab === tab
                     ? "text-orange-500"
@@ -842,7 +842,7 @@ export default function CustomerDashboard() {
 
       {searchQuery && (
         <button
-          onClick={() => setSearchQuery("")}
+          onClick={() = aria-label="button"> setSearchQuery("")}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
         >
           <X className="w-4 h-4" />
@@ -867,7 +867,7 @@ export default function CustomerDashboard() {
 
   <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setSelectedCategory("")}
+                    onClick={() = aria-label="button"> setSelectedCategory("")}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       selectedCategory === ""
                         ? "bg-rose-500 text-white border-rose-500"
@@ -879,7 +879,7 @@ export default function CustomerDashboard() {
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat}
-                      onClick={() =>
+                      onClick={() = aria-label="button">
                         setSelectedCategory(selectedCategory === cat ? "" : cat)
                       }
                       className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -1007,7 +1007,7 @@ export default function CustomerDashboard() {
                                   <div className="flex items-center gap-3">
                                     {/* Wishlist Button */}
                                     <button
-                                      onClick={() => handleToggleSave(evt._id)}
+                                      onClick={() = aria-label="button"> handleToggleSave(evt._id)}
                                       className="flex items-center gap-1 text-xs transition-transform hover:scale-105"
                                     >
                                       {savedEvents.some(
@@ -1141,7 +1141,7 @@ export default function CustomerDashboard() {
 
                             {/* Saved Button */}
                             <button
-                              onClick={() => handleToggleSave(evt._id)}
+                              onClick={() = aria-label="button"> handleToggleSave(evt._id)}
                               className="flex items-center gap-2 text-sm text-rose-500 hover:scale-105 transition-transform"
                             >
                               <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
@@ -1206,7 +1206,7 @@ export default function CustomerDashboard() {
             >
               <div className="h-2 bg-gradient-to-r from-rose-500 to-orange-500" />
               <button
-                onClick={() => setSelectedTicket(null)}
+                onClick={() = aria-label="button"> setSelectedTicket(null)}
                 className="absolute top-4 right-4 text-zinc-400 hover:text-zinc-900 transition-colors p-1 hover:bg-zinc-100 rounded-full"
               >
                 <X className="w-5 h-5" />

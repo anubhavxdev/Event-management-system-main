@@ -26,7 +26,7 @@ const ConfirmationModal = ({
             <button
               onClick={onClose}
               className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 transition"
-            >
+             aria-label="Close">
               Cancel
             </button>
   
@@ -35,7 +35,7 @@ const ConfirmationModal = ({
                 <button
               onClick={onConfirm}
               className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-            >
+             aria-label="button">
               Confirm
             </button>
               ) : (null)

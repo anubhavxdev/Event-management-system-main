@@ -179,7 +179,7 @@ export default function SignUp() {
                     >
                         {/* Close Button */}
                         <button
-                           onClick={() => navigate(-1)}
+                           onClick={() = aria-label="button"> navigate(-1)}
                            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 hover:text-white transition-all duration-200 z-20"
                            type="button">
                             ✕
@@ -249,7 +249,7 @@ export default function SignUp() {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors p-1"
                                         type="button"
                                         onClick={toggleVisibility}
-                                    >
+                                     aria-label="button">
                                         {isVisible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                     </button>
                                 </div>
@@ -275,7 +275,7 @@ export default function SignUp() {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors p-1"
                                         type="button"
                                         onClick={toggleConfirmVisibility}
-                                    >
+                                     aria-label="button">
                                         {isConfirmVisible ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                                     </button>
                                 </div>
@@ -295,7 +295,7 @@ export default function SignUp() {
                                     I agree to the{" "}
                                     <button
                                         type="button"
-                                        onClick={(e) => {
+                                        onClick={(e) = aria-label="button"> {
                                             e.preventDefault();
                                             setActiveModal('terms');
                                         }}
@@ -311,7 +311,7 @@ export default function SignUp() {
                                 type="submit"
                                 disabled={!isFormValid || isLoading}
                                 className="w-full mt-8 py-3.5 px-4 bg-gradient-to-r from-[#e63946] to-[#d62839] hover:from-[#d62839] hover:to-[#c1121f] text-white font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-600/20 hover:shadow-red-600/30 transform hover:-translate-y-0.5"
-                            >
+                             aria-label="Submit">
                                 {isLoading ? (
                                     <div className="flex items-center justify-center space-x-2">
                                         <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

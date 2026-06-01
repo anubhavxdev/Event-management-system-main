@@ -61,7 +61,7 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
             onClick={addCoOrg}
             disabled={loading || !email}
             className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50 transition-colors"
-          >
+           aria-label="button">
             <UserPlus size={15} /> Invite
           </button>
         </div>
@@ -80,7 +80,7 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
               <span className="text-gray-400 ml-1">({u.email})</span>
             </div>
             {isOwner && (
-              <button onClick={() => removeCoOrg(u._id)} className="text-red-400 hover:text-red-600 ml-2 transition-colors">
+              <button onClick={() = aria-label="button"> removeCoOrg(u._id)} className="text-red-400 hover:text-red-600 ml-2 transition-colors">
                 <X size={15} />
               </button>
             )}

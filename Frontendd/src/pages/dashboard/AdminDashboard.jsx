@@ -377,7 +377,7 @@ export default function AdminDashboard() {
                         {['Pending Reviews', 'All Events & Management', 'User Management'].map((tab) => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab)}
+                                onClick={() = aria-label="button"> setActiveTab(tab)}
                                 className={`pb-4 text-sm font-medium transition-colors relative whitespace-nowrap ${activeTab === tab
                                     ? 'text-orange-500' // Orange text
                                     : 'text-muted-foreground hover:text-foreground'
@@ -762,7 +762,7 @@ export default function AdminDashboard() {
                                         <p className="text-zinc-500 text-sm mt-1">This reason will be applied to all {selectedCount} selected event{selectedCount > 1 ? 's' : ''}.</p>
                                     </div>
                                     <button
-                                        onClick={() => {
+                                        onClick={() = aria-label="button"> {
                                             if (bulkLoading) return;
                                             setBulkRejectOpen(false);
                                             setBulkRejectReason('');
@@ -829,7 +829,7 @@ export default function AdminDashboard() {
                                         <h3 className="text-2xl font-bold text-zinc-900">{selectedEvent.title}</h3>
                                         <p className="text-zinc-500 text-sm mt-1">{selectedEvent.organizer?.name}</p>
                                     </div>
-                                    <button onClick={() => setSelectedEvent(null)} className="text-zinc-400 hover:text-zinc-900">
+                                    <button onClick={() = aria-label="button"> setSelectedEvent(null)} className="text-zinc-400 hover:text-zinc-900">
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
@@ -899,7 +899,7 @@ export default function AdminDashboard() {
                                         <p className="text-zinc-500 text-sm mt-1">{rejectingEvent.title}</p>
                                     </div>
                                     <button
-                                        onClick={() => {
+                                        onClick={() = aria-label="button"> {
                                             if (rejectLoading) return;
                                             setRejectingEvent(null);
                                             setRejectReason('');

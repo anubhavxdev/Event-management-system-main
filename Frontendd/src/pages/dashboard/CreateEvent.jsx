@@ -363,7 +363,7 @@ const removeTag = (tagToRemove) => {
 
                                         <button
                                             type="button"
-                                            onClick={() =>
+                                            onClick={() = aria-label="button">
                                                 removeTag(tag)
                                             }
                                             className="text-xs hover:text-red-500"

@@ -130,7 +130,7 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        onClick={() = aria-label="button"> setIsDropdownOpen(!isDropdownOpen)}
         className="relative p-2 text-foreground/80 hover:text-foreground transition-colors rounded-full hover:bg-muted/50"
         aria-label="Notifications"
       >
@@ -154,7 +154,7 @@ export default function NotificationBell() {
                   ? 'text-muted-foreground cursor-not-allowed opacity-50' 
                   : 'text-indigo-500 hover:text-indigo-600'
               }`}
-            >
+             aria-label="button">
               <CheckCircle2 className="h-3 w-3" />
               Mark all as read
             </button>

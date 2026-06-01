@@ -90,10 +90,10 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-primary text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-200 hover:bg-primary/90">
+              <button className="bg-primary text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-200 hover:bg-primary/90" aria-label="button">
                 Start Creating
               </button>
-              {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white">
+              {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white" aria-label="button">
                 Learn More
               </button> */}
             </div>
@@ -243,10 +243,10 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90">
+              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90" aria-label="button">
                 Scale Your Brand
               </button>
-              {/* <button className="w-full rounded-full border-2 border-white px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white hover:text-black">
+              {/* <button className="w-full rounded-full border-2 border-white px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white hover:text-black" aria-label="button">
                 Book Demo
               </button> */}
             </div>
@@ -418,10 +418,10 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90">
+              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90" aria-label="button">
                 Get Custom Quote
               </button>
-              {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white">
+              {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white" aria-label="button">
                 Enterprise Demo
               </button> */}
             </div>
