@@ -64,6 +64,19 @@ const userSchema = new mongoose.Schema(
         }
       ],
       default: []
+    },
+
+    // Privacy settings for friends feature
+    privacySettings: {
+      showAttendanceToFriends: {
+        type: Boolean,
+        default: true
+      },
+      allowFriendRequests: {
+        type: String,
+        enum: ['everyone', 'mutual_events', 'none'],
+        default: 'everyone'
+      }
     }
   },
   {

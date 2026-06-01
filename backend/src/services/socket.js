@@ -36,6 +36,8 @@ export function initSocket(server, clientOrigin) {
       }
 
       socket.leave(getEventRoom(eventId));
+    });
+
     socket.on('user:join', (payload = {}) => {
       const userId = payload?.userId;
       if (!userId) {
@@ -65,4 +67,3 @@ export function emitNotification(userId, notificationData) {
   }
   ioInstance.to(`user_${userId}`).emit('notification:new', notificationData);
 }
-

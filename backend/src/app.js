@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/friends', friendRoutes);
 
 // 404 handler
 app.use((req, res) => {

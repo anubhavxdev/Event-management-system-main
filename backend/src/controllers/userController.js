@@ -46,3 +46,62 @@ export const getSavedEvents = async (req, res) => {
     }
 };
 
+// Update Privacy Settings
+export const updatePrivacySettings = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user._id;
+        const { showAttendanceToFriends, allowFriendRequests } = req.body;
+
+        // Validate allowFriendRequests if provided
+        if (allowFriendRequests && !['everyone', 'mutual_events', 'none'].includes(allowFriendRequests)) {
+            return res.status(400).json({
+                message: "Invalid allowFriendRequests value. Must be 'everyone', 'mutual_events', or 'none'"
+            });
+        }
+
+        // Validate showAttendanceToFriends if provided
+        if (showAttendanceToFriends !== undefined && typeof showAttendanceToFriends !== 'boolean') {
+            return res.status(400).json({
+                message: "showAttendanceToFriends must be a boolean"
+            });
+        }
+
+        // Build update object with only provided fields
+        const updateData = {};
+        if (showAttendanceToFriends !== undefined) {
+            updateData['privacySettings.showAttendanceToFriends'] = showAttendanceToFriends;
+        }
+        if (allowFriendRequests !== undefined) {
+            updateData['privacySettings.allowFriendRequests'] = allowFriendRequests;
+        }
+
+        // If no valid fields to update
+        if (Object.keys(updateData).length === 0) {
+            return res.status(400).json({
+                message: "No valid privacy settings provided"
+            });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        res.status(200).json({
+            message: "Privacy settings updated successfully",
+            privacySettings: updatedUser.privacySettings
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: error.message || "Internal server error"
+        });
+    }
+};
+
