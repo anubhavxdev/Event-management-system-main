@@ -164,7 +164,6 @@ export default function Header2() {
                   item.href,
                 );
                 const isHovered = hoveredItem === item.name;
-                const showIndicator = isActive || isHovered;
 
                 return (
                   <motion.div
@@ -173,29 +172,25 @@ export default function Header2() {
                     className="relative"
                     onMouseEnter={() => setHoveredItem(item.name)}
                     onMouseLeave={() => setHoveredItem(null)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
                   >
                     <Link
                       to={item.href}
                       aria-current={isActive ? "page" : undefined}
+                      title={item.name}
                       className={`relative block rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                         isActive
                           ? "text-foreground"
                           : "text-foreground/70 hover:text-foreground"
                       }`}
                     >
-                      {showIndicator && (
+                      {/* Active background — separate layoutId so it never conflicts with hover */}
+                      {isActive && (
                         <motion.div
-                          className={`absolute inset-0 rounded-full ${
-                            isActive
-                              ? "bg-indigo-500/15 ring-1 ring-indigo-500/30"
-                              : "bg-muted/80"
-                          }`}
-                          layoutId={
-                            isActive ? "navbar-active" : "navbar-hover"
-                          }
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 rounded-full bg-indigo-500/15 ring-1 ring-indigo-500/30"
+                          layoutId="navbar-active"
                           transition={{
                             type: "spring",
                             stiffness: 400,
@@ -203,6 +198,23 @@ export default function Header2() {
                           }}
                         />
                       )}
+                      {/* Hover background — only shown when not active, with enter/exit animation */}
+                      <AnimatePresence>
+                        {isHovered && !isActive && (
+                          <motion.div
+                            className="absolute inset-0 rounded-full bg-muted/80"
+                            layoutId="navbar-hover"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            transition={{
+                              type: "spring",
+                              stiffness: 500,
+                              damping: 30,
+                            }}
+                          />
+                        )}
+                      </AnimatePresence>
                       <span
                         className={`relative z-10 ${
                           isActive ? "font-semibold" : ""
