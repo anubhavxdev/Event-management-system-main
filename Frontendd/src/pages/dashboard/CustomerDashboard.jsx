@@ -30,7 +30,6 @@ const categoryColors = {
 
 const getEventDate = (registration) => {
   if (!registration?.event?.date) return null;
-
   const eventDate = new Date(registration.event.date);
   return Number.isNaN(eventDate.getTime()) ? null : eventDate;
 };
@@ -48,12 +47,12 @@ export default function CustomerDashboard() {
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const [availableEvents, setAvailableEvents] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
+  const [registrationsError, setRegistrationsError] = useState('');
 
   useEffect(() => {
     mountedRef.current = true;
@@ -80,33 +79,6 @@ export default function CustomerDashboard() {
       console.error('Failed to fetch events', error);
     } finally {
       if (mountedRef.current) setLoading(false);
-    }
-  }, [searchParams]);
-
-  const fetchAvailableEvents = useCallback(async () => {
-    try {
-      if (mountedRef.current) setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok && mountedRef.current) {
-        const data = await res.json();
-
-        const upcoming = (data.events || []).filter(
-            (evt) => new Date(evt.date) >= new Date()
-        );
-
-      if (mountedRef.current) {
-        setAvailableEvents(upcoming);
-      }
-    } catch (error) {
-      console.error('Failed to fetch events:', error);
-    } finally {
-      if (mountedRef.current) {
-        setIsFetching(false);
-        setLoading(false);
-      }
     }
   }, [searchParams]);
 
@@ -138,7 +110,12 @@ export default function CustomerDashboard() {
     }
   }, []);
 
-const handleRegister = async (eventId) => {
+  useEffect(() => {
+    fetchRegistrations();
+    fetchAvailableEvents();
+  }, [fetchRegistrations, fetchAvailableEvents]);
+
+  const handleRegister = async (eventId) => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch(
@@ -157,7 +134,7 @@ const handleRegister = async (eventId) => {
         setActiveTab('Upcoming Tickets');
         fetchRegistrations();
       } else {
-        toast.error(data.message || 'Registration failed');
+        alert(data.message || 'Registration failed');
       }
     } catch (err) {
       console.error(err);
@@ -722,7 +699,7 @@ const handleRegister = async (eventId) => {
                 )}
               </div>
             )}
-        </AnimatePresence>
+          </AnimatePresence>
 
           <div className="mt-6">
             <ConfirmationModal
