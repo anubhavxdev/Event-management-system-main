@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ChevronRight, Github, Lock, Search } from 'lucide-react';
+import { ArrowRight, ChevronRight, Lock, Search } from 'lucide-react';
 import { Button } from '../ui/button.jsx';
 import { Link } from 'react-router-dom';
+import dashboardPreview from '../../assets/dashboard-preview.svg';
 
 const PLACEHOLDERS = [
   "Search for events...",
@@ -13,6 +14,7 @@ const PLACEHOLDERS = [
 export default function GradientHero() {
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [inputValue, setInputValue] = useState("");
+  const [previewFailed, setPreviewFailed] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -128,11 +130,24 @@ export default function GradientHero() {
                 </div>
               </div>
               <div className="relative overflow-hidden rounded-b-2xl">
-                <img
-                  src="https://media.licdn.com/dms/image/v2/D4D22AQGQg2icfwXVIg/feedshare-shrink_800/feedshare-shrink_800/0/1720784648784?e=2147483647&v=beta&t=e0WuYddqklXYs6OZQZ0COm4VKHasJhsL9jpAjF9XgOo"
-                  alt="Dashboard Preview"
-                  className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
-                />
+                {previewFailed ? (
+                  <div className="flex aspect-[5/3] w-full flex-col items-center justify-center gap-3 bg-slate-50 px-6 text-center">
+                    <div className="rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                      EventOne Dashboard
+                    </div>
+                    <p className="max-w-md text-sm text-muted-foreground">
+                      Live event analytics, registrations, ticketing, and check-ins in one reliable workspace.
+                    </p>
+                  </div>
+                ) : (
+                  <img
+                    src={dashboardPreview}
+                    alt="Dashboard Preview"
+                    className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                    loading="eager"
+                    onError={() => setPreviewFailed(true)}
+                  />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/5 to-transparent"></div>
               </div>
             </div>

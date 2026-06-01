@@ -1,0 +1,49 @@
+<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">EventOne dashboard preview</title>
+  <desc id="desc">A dashboard preview showing event statistics, attendee analytics, upcoming events, and ticket activity.</desc>
+  <rect width="1200" height="720" rx="24" fill="#F8FAFC"/>
+  <rect x="32" y="32" width="244" height="656" rx="22" fill="#111827"/>
+  <circle cx="76" cy="82" r="18" fill="#22C55E"/>
+  <rect x="108" y="68" width="106" height="14" rx="7" fill="#F9FAFB"/>
+  <rect x="108" y="92" width="70" height="10" rx="5" fill="#94A3B8"/>
+  <rect x="64" y="154" width="168" height="42" rx="12" fill="#2563EB"/>
+  <rect x="64" y="222" width="148" height="14" rx="7" fill="#CBD5E1" opacity="0.9"/>
+  <rect x="64" y="268" width="132" height="14" rx="7" fill="#CBD5E1" opacity="0.75"/>
+  <rect x="64" y="314" width="156" height="14" rx="7" fill="#CBD5E1" opacity="0.75"/>
+  <rect x="64" y="360" width="116" height="14" rx="7" fill="#CBD5E1" opacity="0.75"/>
+  <rect x="64" y="584" width="160" height="58" rx="16" fill="#1F2937"/>
+  <rect x="306" y="56" width="838" height="64" rx="18" fill="#FFFFFF"/>
+  <rect x="336" y="78" width="230" height="20" rx="10" fill="#111827"/>
+  <rect x="968" y="74" width="144" height="28" rx="14" fill="#DBEAFE"/>
+  <rect x="306" y="152" width="184" height="132" rx="20" fill="#FFFFFF"/>
+  <rect x="526" y="152" width="184" height="132" rx="20" fill="#FFFFFF"/>
+  <rect x="746" y="152" width="184" height="132" rx="20" fill="#FFFFFF"/>
+  <rect x="966" y="152" width="178" height="132" rx="20" fill="#FFFFFF"/>
+  <rect x="336" y="184" width="66" height="14" rx="7" fill="#64748B"/>
+  <rect x="336" y="220" width="96" height="30" rx="15" fill="#111827"/>
+  <rect x="556" y="184" width="78" height="14" rx="7" fill="#64748B"/>
+  <rect x="556" y="220" width="74" height="30" rx="15" fill="#16A34A"/>
+  <rect x="776" y="184" width="88" height="14" rx="7" fill="#64748B"/>
+  <rect x="776" y="220" width="94" height="30" rx="15" fill="#EA580C"/>
+  <rect x="996" y="184" width="70" height="14" rx="7" fill="#64748B"/>
+  <rect x="996" y="220" width="82" height="30" rx="15" fill="#2563EB"/>
+  <rect x="306" y="320" width="520" height="308" rx="22" fill="#FFFFFF"/>
+  <rect x="336" y="352" width="186" height="18" rx="9" fill="#111827"/>
+  <rect x="336" y="404" width="28" height="156" rx="14" fill="#DBEAFE"/>
+  <rect x="386" y="452" width="28" height="108" rx="14" fill="#BFDBFE"/>
+  <rect x="436" y="384" width="28" height="176" rx="14" fill="#60A5FA"/>
+  <rect x="486" y="430" width="28" height="130" rx="14" fill="#93C5FD"/>
+  <rect x="536" y="376" width="28" height="184" rx="14" fill="#2563EB"/>
+  <rect x="586" y="420" width="28" height="140" rx="14" fill="#38BDF8"/>
+  <rect x="636" y="398" width="28" height="162" rx="14" fill="#0EA5E9"/>
+  <path d="M336 588H760" stroke="#E2E8F0" stroke-width="4" stroke-linecap="round"/>
+  <rect x="858" y="320" width="286" height="308" rx="22" fill="#FFFFFF"/>
+  <rect x="890" y="352" width="154" height="18" rx="9" fill="#111827"/>
+  <circle cx="1002" cy="474" r="86" stroke="#DBEAFE" stroke-width="28"/>
+  <path d="M1002 388A86 86 0 0 1 1085 452" stroke="#2563EB" stroke-width="28" stroke-linecap="round"/>
+  <path d="M1085 452A86 86 0 0 1 962 551" stroke="#22C55E" stroke-width="28" stroke-linecap="round"/>
+  <rect x="912" y="584" width="54" height="12" rx="6" fill="#2563EB"/>
+  <rect x="988" y="584" width="54" height="12" rx="6" fill="#22C55E"/>
+  <rect x="1064" y="584" width="44" height="12" rx="6" fill="#DBEAFE"/>
+  <rect x="306" y="656" width="838" height="32" rx="16" fill="#E2E8F0"/>
+</svg>
