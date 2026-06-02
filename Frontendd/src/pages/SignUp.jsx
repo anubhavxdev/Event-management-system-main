@@ -268,6 +268,10 @@ export default function SignUp() {
                                         required
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
+                                        onPaste={(e) => {
+                                            e.preventDefault(); // Blocks the paste action
+                                            toast.error("Pasting is not allowed. Please type your password manually for security."); // Shows the notification
+                                        }}
                                         className={`w-full bg-white/50 border rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base backdrop-blur-sm shadow-sm ${errors.confirmPassword ? 'border-red-500' : 'border-white/50'}`}
                                         placeholder="••••••••"
                                     />
