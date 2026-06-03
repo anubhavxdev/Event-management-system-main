@@ -805,45 +805,46 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            <div className="space-y-6">
-  <div className="flex gap-3 items-center">
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            {activeTab === 'Browse Events' && (
+              <div className="space-y-6">
+                <div className="flex gap-3 items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
 
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search events by title or description..."
-        className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
-      />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search events by title or description..."
+                      className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
+                    />
 
-      {searchQuery && (
-        <button
-          onClick={() => setSearchQuery("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
 
-    <Button
-      variant={viewMode === "grid" ? "default" : "outline"}
-      onClick={() => setViewMode("grid")}
-    >
-      Grid
-    </Button>
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    Grid
+                  </Button>
 
-    <Button
-      variant={viewMode === "calendar" ? "default" : "outline"}
-      onClick={() => setViewMode("calendar")}
-    >
-      Calendar
-    </Button>
-  </div>
+                  <Button
+                    variant={viewMode === "calendar" ? "default" : "outline"}
+                    onClick={() => setViewMode("calendar")}
+                  >
+                    Calendar
+                  </Button>
+                </div>
 
-  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedCategory("")}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -1071,6 +1072,7 @@ export default function CustomerDashboard() {
                   </div>
                 )}
               </div>
+            )}
             
 
             {activeTab === "Saved Events" && (
