@@ -3,6 +3,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 import "./index.css";
@@ -33,6 +34,7 @@ import QRScanner from "./pages/dashboard/QRScanner";
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -46,10 +48,16 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  const hasAccess = !allowedRoles || allowedRoles.some(r => {
+    if (r === 'customer' && user.role === 'attendee') return true;
+    if (r === 'attendee' && user.role === 'customer') return true;
+    return r === user.role;
+  });
+
+  if (!hasAccess) {
     return <Navigate to="/" replace />;
   }
 
