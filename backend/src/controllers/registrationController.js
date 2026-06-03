@@ -8,7 +8,7 @@ import { sendEmail } from '../utils/email.js';
 import path from 'path';
 import { calculateRefund } from '../utils/refundPolicy.js';
 import { createObjectCsvWriter } from 'csv-writer';
-import { emitRegistrationCount, emitAttendeeUpdate, emitNewRegistration } from '../services/socket.js';
+import { emitRegistrationCount, emitAttendeeUpdate, emitNewRegistration, emitEventAnalyticsUpdate } from '../services/socket.js';
 import { createNotification } from './notificationController.js';
 import { logActivity } from '../services/activityLogger.js';
 
@@ -84,6 +84,7 @@ export const registerForEvent = async (req, res) => {
 
     // Emit new registration count to socket rooms
     emitRegistrationCount(updatedEvent._id, updatedEvent.registeredCount);
+    emitEventAnalyticsUpdate(updatedEvent._id);
 
     // Broadcast the new registration to the event room in real time
     try {
@@ -260,6 +261,7 @@ export const checkInParticipant = async (req, res) => {
 
     // Broadcast check-in update to event room
     emitAttendeeUpdate(registration.event._id, registration);
+    emitEventAnalyticsUpdate(registration.event._id);
 
     return res.json({
       message: 'Check-in updated',
@@ -420,6 +422,7 @@ export const cancelRegistration = async (req, res) => {
     // Broadcast cancelled status to organizer
     await registration.populate('user', 'name email');
     emitAttendeeUpdate(registration.event._id, registration);
+    emitEventAnalyticsUpdate(registration.event._id);
 
     res.status(200).json({ message: 'Registration cancelled successfully', registration });
   } catch (error) {

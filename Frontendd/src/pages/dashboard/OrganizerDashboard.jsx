@@ -11,10 +11,124 @@ import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
 import { useSocket } from '../../context/SocketContext';
+import EventAnalyticsPanel from '../../components/ui/EventAnalyticsPanel';
 
 import { API_BASE_URL } from '../../config';
 // Manual Check-In: helper debounce delay
 const SEARCH_DEBOUNCE_MS = 150;
+
+function OrganizerAnalyticsView({ events }) {
+    const [summary, setSummary] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedEventId, setSelectedEventId] = useState('');
+
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE_URL}/api/analytics/organizer/summary`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setSummary(data);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSummary();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-20">
+                <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-purple-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20 text-purple-500">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Managed</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.totalEvents || 0}
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20 text-blue-500">
+                        <Ticket className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Registrations</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.totalRegistrations || 0}
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-500">
+                        <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Attendance Rate</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.attendanceRate || 0}%
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-rose-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 text-rose-500">
+                        <IndianRupee className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Revenue</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        ₹{summary?.totalRevenue || 0}
+                    </h4>
+                </div>
+            </div>
+
+            {/* Event specific analytics selector */}
+            <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-foreground">Event Drilldown Analytics</h3>
+                        <p className="text-xs text-muted-foreground mt-1">Select an event to view its detailed timeline metrics and real-time attendance flow.</p>
+                    </div>
+                    <select
+                        value={selectedEventId}
+                        onChange={(e) => setSelectedEventId(e.target.value)}
+                        className="bg-[#1c1c1f] border border-[#27272a] text-sm rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer min-w-[200px]"
+                    >
+                        <option value="">Select an Event...</option>
+                        {events.map((evt) => (
+                            <option key={evt._id} value={evt._id}>
+                                {evt.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {selectedEventId ? (
+                    <div className="border-t border-[#27272a] pt-6">
+                        <EventAnalyticsPanel eventId={selectedEventId} />
+                    </div>
+                ) : (
+                    <div className="border-t border-[#27272a] pt-12 pb-8 text-center text-muted-foreground text-sm italic">
+                        Choose an event from the dropdown list to load real-time analytics.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default function OrganizerDashboard() {
     const { user } = useAuth();
@@ -1071,77 +1185,7 @@ const handleCreateSubmit = async (e) => {
 
                         {/* ANALYTICS TAB */}
                         {activeTab === 'Analytics' && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="space-y-8"
-                            >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Total Events</h3>
-                                            <Calendar className="w-4 h-4 text-purple-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold">{stats.totalEvents}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Approved</h3>
-                                            <CheckCircle className="w-4 h-4 text-green-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-green-500">{stats.approved}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
-                                            <Clock className="w-4 h-4 text-yellow-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Rejected</h3>
-                                            <XCircle className="w-4 h-4 text-red-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Total Registrations</h3>
-                                            <Users className="w-4 h-4 text-blue-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold">{stats.totalRegistrations}</div>
-                                    </div>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <h3 className="font-semibold mb-6 flex items-center gap-2">
-                                            <Tag className="w-4 h-4 text-purple-500" />
-                                            Events by Category
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {Object.entries(stats.byCategory).map(([cat, count]) => (
-                                                <div key={cat} className="flex items-center justify-between">
-                                                    <span className="text-sm text-muted-foreground">{cat}</span>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-2 w-32 bg-secondary rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-purple-500"
-                                                                style={{ width: `${(count / stats.totalEvents) * 100}%` }}
-                                                            />
-                                                        </div>
-                                                        <span className="text-sm font-medium w-6 text-right">{count}</span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                            {Object.keys(stats.byCategory).length === 0 && (
-                                                <p className="text-muted-foreground text-sm italic">No data available yet.</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </motion.div>
+                            <OrganizerAnalyticsView events={events} />
                         )}
 
                         {activeTab === 'Activity Log' && (
