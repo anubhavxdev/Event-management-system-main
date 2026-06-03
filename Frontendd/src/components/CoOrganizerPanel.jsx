@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { UserPlus, X } from 'lucide-react';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5050';
 
@@ -9,17 +9,23 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
   const [msg, setMsg] = useState({ text: '', ok: true });
   const token = localStorage.getItem('token');
 
-  const fetchCoOrgs = async () => {
+  const fetchCoOrgs = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
       setCoOrgs(data.event?.coOrganizers || []);
-    } catch (_) {}
-  };
+    } catch (err) {
+      console.error(err);
+    }
+  }, [eventId, token]);
 
-  useEffect(() => { fetchCoOrgs(); }, [eventId]);
+  useEffect(() => {
+    queueMicrotask(() => {
+      fetchCoOrgs();
+    });
+  }, [fetchCoOrgs]);
 
   const addCoOrg = async () => {
     setLoading(true); setMsg({ text: '', ok: true });

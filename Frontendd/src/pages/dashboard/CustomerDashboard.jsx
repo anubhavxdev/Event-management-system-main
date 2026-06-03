@@ -7,6 +7,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
@@ -25,6 +26,8 @@ const categoryColors = {
   Workshop: '#ea580c',
   Business: '#dc2626',
 };
+
+const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Business'];
 
 const getEventDate = (registration) => {
   if (!registration?.event?.date) return null;
@@ -56,6 +59,9 @@ export default function CustomerDashboard() {
   const [savedEvents, setSavedEvents] = useState([]);
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
+  const socketRef = useRef(null);
+  const joinedEventIdsRef = useRef([]);
+  const highlightTimeoutsRef = useRef({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -389,9 +395,9 @@ export default function CustomerDashboard() {
         },
       );
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error(data.message || "Failed to cancel registration");
       }
 

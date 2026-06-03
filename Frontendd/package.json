@@ -54,6 +54,7 @@
     "globals": "^16.5.0",
     "ms": "^2.1.3",
     "postcss": "^8.4.47",
+    "react-refresh": "^0.18.0",
     "vite": "^6.0.0",
     "vite-plugin-pwa": "^1.3.0"
   }

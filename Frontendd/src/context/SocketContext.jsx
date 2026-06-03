@@ -17,6 +17,10 @@ export const SocketProvider = ({ children }) => {
 
   useEffect(() => {
     let newSocket;
+    let handleConnect;
+    let handleDisconnect;
+    let handleConnectError;
+
     if (user) {
       newSocket = io(API_BASE_URL, {
         withCredentials: true,
@@ -28,18 +32,18 @@ export const SocketProvider = ({ children }) => {
         timeout: 20000,
       });
 
-      const handleConnect = () => {
+      handleConnect = () => {
         setIsConnected(true);
         setConnectionError(null);
         newSocket.emit('user:join', { userId: user._id || user.id });
       };
 
-      const handleDisconnect = (reason) => {
+      handleDisconnect = (reason) => {
         setIsConnected(false);
         console.warn('[SocketContext] Disconnected:', reason);
       };
 
-      const handleConnectError = (error) => {
+      handleConnectError = (error) => {
         setIsConnected(false);
         setConnectionError(error.message);
         console.error('[SocketContext] Connection Error:', error);
@@ -49,22 +53,25 @@ export const SocketProvider = ({ children }) => {
       newSocket.on('disconnect', handleDisconnect);
       newSocket.on('connect_error', handleConnectError);
 
-      if (newSocket.connected) {
-        setIsConnected(true);
-      }
-
-      setSocket(newSocket);
+      queueMicrotask(() => {
+        if (newSocket.connected) {
+          setIsConnected(true);
+        }
+        setSocket(newSocket);
+      });
     } else {
-      setIsConnected(false);
-      setConnectionError(null);
-      setSocket(null);
+      queueMicrotask(() => {
+        setIsConnected(false);
+        setConnectionError(null);
+        setSocket(null);
+      });
     }
 
     return () => {
       if (newSocket) {
-        newSocket.off('connect', handleConnect);
-        newSocket.off('disconnect', handleDisconnect);
-        newSocket.off('connect_error', handleConnectError);
+        if (handleConnect) newSocket.off('connect', handleConnect);
+        if (handleDisconnect) newSocket.off('disconnect', handleDisconnect);
+        if (handleConnectError) newSocket.off('connect_error', handleConnectError);
         newSocket.disconnect();
       }
     };
