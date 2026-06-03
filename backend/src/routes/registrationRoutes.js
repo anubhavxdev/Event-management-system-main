@@ -13,6 +13,7 @@ import {
   checkRefundStatus,
   checkRefundPolicy,
 } from '../controllers/registrationController.js';
+import { checkInValidation, validate } from '../middleware/validationMiddleware.js';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.post(
 router.get('/me', authenticate, myRegistrations);
 router.get('/:id/status', authenticate, checkRegistrationStatus);
 router.get('/:id/participants', authenticate, authorizeRoles('customer', 'organizer', 'admin'), participantsForEvent);
-router.post('/:id/checkin', authenticate, authorizeRoles('customer', 'organizer', 'admin'), checkInParticipant);
+router.post('/:id/checkin', authenticate, authorizeRoles('customer', 'organizer', 'admin'), checkInValidation, validate, checkInParticipant);
 router.get('/:id/participants.csv', authenticate, authorizeRoles('customer', 'organizer', 'admin'), exportParticipantsCsv);
 
 // End point to cancel registration

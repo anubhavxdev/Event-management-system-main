@@ -31,7 +31,7 @@ app.use(cookieParser());
 app.use(compression());
 
 // Basic rate limit
-app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));
+app.use('/api', rateLimit({ windowMs: 60 * 1000, max: process.env.NODE_ENV === 'test' ? Infinity : 120 }));
 
 // Static posters
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));

@@ -211,6 +211,15 @@ export const checkInParticipant = async (req, res) => {
       return res.status(404).json({ message: 'Registration not found' });
     }
 
+    // Prevent duplicate scan entries
+    if (registration.status === 'attended' && status === 'attended') {
+      await registration.populate('user', 'name email');
+      return res.status(400).json({
+        message: 'Attendee already checked in',
+        attendeeName: registration.user?.name,
+      });
+    }
+
     // Ownership check: organizer, co-organizers, or admin only
     const isOrganizer =
       registration.event?.organizer?.toString() === req.user.id ||
@@ -224,6 +233,9 @@ export const checkInParticipant = async (req, res) => {
     }
 
     registration.status = status;
+    if (status === 'attended') {
+      registration.checkedInAt = new Date();
+    }
     await registration.save();
 
     // Populate user info for socket updates and scanner response

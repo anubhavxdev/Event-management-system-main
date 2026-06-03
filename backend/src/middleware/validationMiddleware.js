@@ -106,6 +106,18 @@ export const coOrganizerValidation = [
     .withMessage('Please provide a valid email'),
 ];
 
+export const checkInValidation = [
+  body('userId')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid User ID format'),
+  body('status')
+    .optional()
+    .trim()
+    .isIn(['attended', 'cancelled', 'no-show'])
+    .withMessage('Status must be one of: attended, cancelled, no-show'),
+];
+
 export const validate = (req, res, next) => {
   const errors = validationResult(req);
 
