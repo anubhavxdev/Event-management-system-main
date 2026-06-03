@@ -14,4 +14,6 @@ export function authenticate(req, res, next) {
   }
 }
 
+export const protect = authenticate;
+
 

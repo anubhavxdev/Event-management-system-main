@@ -13,7 +13,8 @@
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
-    "compression": "^1.8.1"
+    "compression": "^1.8.1",
+    "node": "^26.3.0"
   },
   "keywords": [
     "events",

@@ -23,7 +23,19 @@ const app = express();
 
 // Security & utils
 app.use(helmet());
-app.use(cors({ origin: env.clientUrl, credentials: true }));
+const allowedOrigins = env.clientUrls;
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
