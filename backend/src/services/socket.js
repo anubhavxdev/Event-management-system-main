@@ -1,4 +1,5 @@
 import { Server } from 'socket.io';
+import Notification from '../models/Notification.js';
 
 let ioInstance;
 
@@ -80,4 +81,17 @@ export function emitNewRegistration(eventId, registration) {
   }
   ioInstance.to(getEventRoom(eventId)).emit('registration:new', registration);
 }
+
+export async function emitUnreadCount(userId) {
+  if (!ioInstance || !userId) {
+    return;
+  }
+  try {
+    const unreadCount = await Notification.countDocuments({ user: userId, isRead: false });
+    ioInstance.to(`user_${userId}`).emit('notification:unread_count', { unreadCount });
+  } catch (error) {
+    console.error('Error emitting unread count:', error);
+  }
+}
+
 

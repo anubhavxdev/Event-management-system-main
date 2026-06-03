@@ -10,6 +10,7 @@ import { calculateRefund } from '../utils/refundPolicy.js';
 import { createObjectCsvWriter } from 'csv-writer';
 import { emitRegistrationCount, emitAttendeeUpdate, emitNewRegistration } from '../services/socket.js';
 import { createNotification } from './notificationController.js';
+import { logActivity } from '../services/activityLogger.js';
 
 // Register for an event (handles capacity and waitlist status)
 export const registerForEvent = async (req, res) => {
@@ -122,6 +123,14 @@ export const registerForEvent = async (req, res) => {
     } catch (notifErr) {
       console.error('Failed to create notification:', notifErr);
     }
+
+    // Log registration activity
+    await logActivity({
+      actorId: req.user.id || req.user._id,
+      action: 'registration_created',
+      eventId: event._id,
+      description: `User "${req.user.name || 'Attendee'}" registered for event "${event.title}".`
+    });
 
     res.status(201).json({
       registration,
@@ -240,6 +249,14 @@ export const checkInParticipant = async (req, res) => {
 
     // Populate user info for socket updates and scanner response
     await registration.populate('user', 'name email');
+
+    // Log ticket scan activity
+    await logActivity({
+      actorId: req.user.id || req.user._id,
+      action: 'ticket_scanned',
+      eventId: registration.event._id,
+      description: `Ticket scanned for attendee "${registration.user?.name || 'Attendee'}" (status: ${status}).`
+    });
 
     // Broadcast check-in update to event room
     emitAttendeeUpdate(registration.event._id, registration);

@@ -11,7 +11,8 @@ import {
   sendEventReminders,
   getPopularTags,
   addCoOrganizer,
-removeCoOrganizer
+  removeCoOrganizer,
+  getOrganizerActivities
 } from '../controllers/eventController.js';
 import { eventValidation, coOrganizerValidation, validate } from '../middleware/validationMiddleware.js';
 
@@ -19,6 +20,7 @@ const router = Router();
 
 router.get('/', listEvents);
 router.get('/tags/popular', getPopularTags);
+router.get('/activities/organizer', authenticate, getOrganizerActivities);
 router.get('/:id', getEvent);
 router.post('/', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), eventValidation, validate, createEvent);
 router.post('/:id/remind', authenticate, authorizeRoles('organizer'), sendEventReminders);

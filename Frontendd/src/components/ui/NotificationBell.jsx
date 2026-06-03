@@ -6,6 +6,7 @@ import { getRelativeTime } from '../../utils/timeHelper';
 import { API_BASE_URL } from '../../config';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
@@ -56,15 +57,18 @@ export default function NotificationBell() {
         return newNotifications;
       });
       setUnreadCount((prev) => prev + 1);
-      
-      // Optional: show a toast for new notification
-      // toast(notification.message, { icon: '🔔' });
+    };
+
+    const handleUnreadCountUpdate = ({ unreadCount }) => {
+      setUnreadCount(unreadCount);
     };
 
     socket.on('notification:new', handleNewNotification);
+    socket.on('notification:unread_count', handleUnreadCountUpdate);
 
     return () => {
       socket.off('notification:new', handleNewNotification);
+      socket.off('notification:unread_count', handleUnreadCountUpdate);
     };
   }, [socket]);
 
@@ -142,76 +146,84 @@ export default function NotificationBell() {
         )}
       </button>
 
-      {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl border border-border/50 bg-background shadow-xl overflow-hidden z-50">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-            <h3 className="font-semibold text-foreground">Notifications</h3>
-            <button
-              onClick={markAllAsRead}
-              disabled={unreadCount === 0}
-              className={`text-xs flex items-center gap-1 transition-colors ${
-                unreadCount === 0 
-                  ? 'text-muted-foreground cursor-not-allowed opacity-50' 
-                  : 'text-indigo-500 hover:text-indigo-600'
-              }`}
-            >
-              <CheckCircle2 className="h-3 w-3" />
-              Mark all as read
-            </button>
-          </div>
+      <AnimatePresence>
+        {isDropdownOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl border border-border/50 bg-background shadow-xl overflow-hidden z-50"
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
+              <h3 className="font-semibold text-foreground">Notifications</h3>
+              <button
+                onClick={markAllAsRead}
+                disabled={unreadCount === 0}
+                className={`text-xs flex items-center gap-1 transition-colors ${
+                  unreadCount === 0 
+                    ? 'text-muted-foreground cursor-not-allowed opacity-50' 
+                    : 'text-indigo-500 hover:text-indigo-600'
+                }`}
+              >
+                <CheckCircle2 className="h-3 w-3" />
+                Mark all as read
+              </button>
+            </div>
 
-          <div className="max-h-[400px] overflow-y-auto">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-8">
-                <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                No notifications
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {notifications.map((notification) => (
-                  <div
-                    key={notification._id}
-                    onClick={() => markAsRead(notification._id, notification.isRead)}
-                    className={`px-4 py-3 border-b border-border/10 cursor-pointer transition-colors hover:bg-muted/50 ${
-                      !notification.isRead ? 'bg-indigo-500/5' : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      {!notification.isRead && (
-                        <div className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
-                      )}
-                      <div className={`flex flex-col gap-1 ${notification.isRead ? 'opacity-70' : ''}`}>
-                        {notification.link ? (
-                          <Link 
-                            to={notification.link} 
-                            onClick={(e) => {
-                              // If they click the link, it also marks as read
-                              // e.stopPropagation() is not needed because we want the outer div to trigger markAsRead
-                            }}
-                            className={`text-sm ${!notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'} hover:underline line-clamp-2`}
-                          >
-                            {notification.message}
-                          </Link>
-                        ) : (
-                          <p className={`text-sm ${!notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'} line-clamp-2`}>
-                            {notification.message}
-                          </p>
+            <div className="max-h-[400px] overflow-y-auto">
+              {isLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">
+                  No notifications
+                </div>
+              ) : (
+                <div className="flex flex-col">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification._id}
+                      onClick={() => markAsRead(notification._id, notification.isRead)}
+                      className={`px-4 py-3 border-b border-border/10 cursor-pointer transition-colors hover:bg-muted/50 ${
+                        !notification.isRead ? 'bg-indigo-500/5' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {!notification.isRead && (
+                          <div className="mt-1.5 h-2 w-2 rounded-full bg-indigo-500 shrink-0" />
                         )}
-                        <span className="text-xs text-muted-foreground">
-                          {getRelativeTime(notification.createdAt)}
-                        </span>
+                        <div className={`flex flex-col gap-1 ${notification.isRead ? 'opacity-70' : ''}`}>
+                          {notification.link ? (
+                            <Link 
+                              to={notification.link} 
+                              onClick={(e) => {
+                                // If they click the link, it also marks as read
+                                // e.stopPropagation() is not needed because we want the outer div to trigger markAsRead
+                              }}
+                              className={`text-sm ${!notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'} hover:underline line-clamp-2`}
+                            >
+                              {notification.message}
+                            </Link>
+                          ) : (
+                            <p className={`text-sm ${!notification.isRead ? 'font-medium text-foreground' : 'text-foreground/80'} line-clamp-2`}>
+                              {notification.message}
+                            </p>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {getRelativeTime(notification.createdAt)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
