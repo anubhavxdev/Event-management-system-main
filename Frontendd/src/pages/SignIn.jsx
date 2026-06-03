@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +14,7 @@ export default function SignIn() {
     const [password, setPassword] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const toggleVisibility = () => setIsVisible(!isVisible);
 
@@ -39,7 +40,9 @@ const handleSubmit = async (e) => {
                 id: loadingToast,
             });
 
-            navigate('/');
+            const from = location.state?.from?.pathname || '/';
+            navigate(from, { replace: true });
+
         } else {
             toast.error(data.message || 'Login failed', {
                 id: loadingToast,
