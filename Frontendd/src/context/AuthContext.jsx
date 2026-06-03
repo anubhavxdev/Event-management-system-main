@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useRef } from 'react';
 import { API_BASE_URL } from '../config';
+import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
@@ -18,24 +19,23 @@ export const AuthProvider = ({ children }) => {
             if (response.ok && mountedRef.current) {
                 const userData = await response.json();
                 setUser(userData.user);
-            } else if (!response.ok) {
+            } else if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('token');
                 if (mountedRef.current) {
                     setUser(null);
                 }
+                toast.error('Session expired. Please log in again.');
             }
         } catch (error) {
-            console.error('Failed to fetch user', error);
-            localStorage.removeItem('token');
-            if (mountedRef.current) {
-                setUser(null);
-            }
+            console.error('Failed to fetch user due to network issue', error);
+            // Do not delete token on network error to allow reconnection
         } finally {
             if (mountedRef.current) {
                 setLoading(false);
             }
         }
     };
+
 
     useEffect(() => {
         let mounted = true;
