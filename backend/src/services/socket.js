@@ -20,22 +20,20 @@ export function initSocket(server, clientOrigin) {
 
     socket.on('event:join', (payload = {}) => {
       const eventId = payload?.eventId;
-
       if (!eventId) {
         return;
       }
-
       socket.join(getEventRoom(eventId));
     });
 
     socket.on('event:leave', (payload = {}) => {
       const eventId = payload?.eventId;
-
       if (!eventId) {
         return;
       }
-
       socket.leave(getEventRoom(eventId));
+    });
+
     socket.on('user:join', (payload = {}) => {
       const userId = payload?.userId;
       if (!userId) {
@@ -64,5 +62,22 @@ export function emitNotification(userId, notificationData) {
     return;
   }
   ioInstance.to(`user_${userId}`).emit('notification:new', notificationData);
+}
+
+export function emitAttendeeUpdate(eventId, registration) {
+  if (!ioInstance || !eventId) {
+    return;
+  }
+  ioInstance.to(getEventRoom(eventId)).emit('attendee:update', {
+    eventId: String(eventId),
+    registration,
+  });
+}
+
+export function emitNewRegistration(eventId, registration) {
+  if (!ioInstance || !eventId) {
+    return;
+  }
+  ioInstance.to(getEventRoom(eventId)).emit('registration:new', registration);
 }
 
