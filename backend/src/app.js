@@ -18,6 +18,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
 
@@ -31,7 +32,7 @@ app.use(cookieParser());
 app.use(compression());
 
 // Basic rate limit
-app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));
+app.use('/api', rateLimit({ windowMs: 60 * 1000, max: process.env.NODE_ENV === 'test' ? Infinity : 120 }));
 
 // Static posters
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
@@ -51,19 +52,26 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({
+    success: false,
+    message: 'Route not found',
+  });
 });
 
 // Global error handler
 app.use((err, req, res, next) => {
   console.error('Error:', err);
 
-  res.status(err.status || 500).json({
-    message: err.message || 'Server error'
+  const statusCode = err.statusCode || err.status || 500;
+  res.status(statusCode).json({
+    success: false,
+    message: err.message || 'Server error',
   });
 });
+
 
 export default app;

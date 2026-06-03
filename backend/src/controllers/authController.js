@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import { generateJwtToken } from '../utils/generateToken.js';
+import { logActivity } from '../services/activityLogger.js';
 
 const handleAuthError = (res, err) => {
   console.error('ERROR:', err);
@@ -31,6 +32,14 @@ export const signup = async (req, res) => {
     if (existing) return res.status(400).json({ message: 'Email already in use' });
     const user = await User.create({ name, email, password, role });
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
+    
+    // Log user signup activity
+    await logActivity({
+      actorId: user._id,
+      action: 'user_signup',
+      description: `User ${user.name} (${user.role}) signed up.`
+    });
+
     res.status(201).json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
     return handleAuthError(res, err);
@@ -46,6 +55,14 @@ export const login = async (req, res) => {
     const valid = await user.comparePassword(password);
     if (!valid) return res.status(400).json({ message: 'Invalid credentials' });
     const token = generateJwtToken({ id: user._id, role: user.role, name: user.name });
+
+    // Log user login activity
+    await logActivity({
+      actorId: user._id,
+      action: 'user_login',
+      description: `User ${user.name} logged in.`
+    });
+
     res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
   } catch (err) {
     return handleAuthError(res, err);

@@ -22,11 +22,10 @@ export const authLimiter = rateLimit({
     15 * 60 * 1000
   ),
 
-  max: parseEnvInt(
+  max: process.env.NODE_ENV === 'test' ? Infinity : parseEnvInt(
     process.env.AUTH_RATE_LIMIT_MAX,
     10
   ),
-
 
   message: {
     message:
@@ -44,7 +43,7 @@ export const registrationLimiter = rateLimit({
     60 * 1000
   ),
 
-  max: parseEnvInt(
+  max: process.env.NODE_ENV === 'test' ? Infinity : parseEnvInt(
     process.env.REGISTRATION_RATE_LIMIT_MAX,
     5
   ),
@@ -60,3 +59,4 @@ export const registrationLimiter = rateLimit({
 // Backward compatibility exports
 export const authRateLimiter = authLimiter;
 export const registrationRateLimiter = registrationLimiter;
+

@@ -4,6 +4,8 @@ import { uploadOnCloudinary, deleteFromCloudinary } from '../config/cloudinary.j
 import { sendTicketEmail } from '../utils/email.js';
 import { generateQRCodeDataUrl } from '../utils/qrcode.js';
 import User from "../models/User.js";
+import ActivityLog from '../models/ActivityLog.js';
+import { logActivity } from '../services/activityLogger.js';
 
 export const addCoOrganizer = async (req, res) => {
   try {
@@ -45,6 +47,13 @@ export const addCoOrganizer = async (req, res) => {
 
     await event.save();
 
+    await logActivity({
+      actorId: req.user._id || req.user.id,
+      action: 'co_organizer_added',
+      eventId: event._id,
+      description: `Co-organizer ${user.name} was added to event "${event.title}".`
+    });
+
     res.status(200).json({
       message: "Co-organizer added successfully",
       coOrganizers: event.coOrganizers,
@@ -79,6 +88,14 @@ export const removeCoOrganizer = async (req, res) => {
 
     await event.save();
 
+    const coUser = await User.findById(req.params.userId);
+    await logActivity({
+      actorId: req.user._id || req.user.id,
+      action: 'co_organizer_removed',
+      eventId: event._id,
+      description: `Co-organizer ${coUser ? coUser.name : req.params.userId} was removed from event "${event.title}".`
+    });
+
     res.status(200).json({
       message: "Co-organizer removed successfully",
       coOrganizers: event.coOrganizers,
@@ -106,8 +123,15 @@ export const createEvent = async (req, res) => {
 
     const event = await Event.create({
       ...req.body,
-      organizer: req.user.id,
+      organizer: req.user.id || req.user._id,
       posterUrl,
+    });
+
+    await logActivity({
+      actorId: req.user.id || req.user._id,
+      action: 'event_created',
+      eventId: event._id,
+      description: `Event "${event.title}" was created.`
     });
 
     res.status(201).json({ event });
@@ -155,7 +179,7 @@ export const updateEvent = async (req, res) => {
     const event = await Event.findOneAndUpdate(
       {
         _id: req.params.id,
-        organizer: req.user.id,
+        organizer: req.user.id || req.user._id,
       },
       update,
       { new: true }
@@ -163,6 +187,15 @@ export const updateEvent = async (req, res) => {
 
     if (update.posterUrl && oldEvent.posterUrl) {
       await deleteFromCloudinary(oldEvent.posterUrl);
+    }
+
+    if (event) {
+      await logActivity({
+        actorId: req.user.id || req.user._id,
+        action: 'event_updated',
+        eventId: event._id,
+        description: `Event "${event.title}" details were updated.`
+      });
     }
 
     res.json({ event });
@@ -382,6 +415,13 @@ if (!isOwner && !isCoOrganizer) {
       }
     }
 
+    await logActivity({
+      actorId: req.user.id || req.user._id,
+      action: 'event_reminders_sent',
+      eventId: event._id,
+      description: `Reminders were sent to ${sentCount} participants for event "${event.title}".`
+    });
+
     res.json({
       message: `Sent reminders to ${sentCount} participants`,
     });
@@ -390,5 +430,29 @@ if (!isOwner && !isCoOrganizer) {
     res.status(500).json({
       message: err.message,
     });
+  }
+};
+
+export const getOrganizerActivities = async (req, res) => {
+  try {
+    const events = await Event.find({
+      $or: [
+        { organizer: req.user.id || req.user._id },
+        { coOrganizers: req.user.id || req.user._id }
+      ]
+    });
+
+    const eventIds = events.map(e => e._id);
+
+    const activities = await ActivityLog.find({ event: { $in: eventIds } })
+      .populate('actor', 'name email role')
+      .populate('event', 'title')
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    res.status(200).json({ activities });
+  } catch (err) {
+    console.error('Error fetching organizer activities:', err);
+    res.status(500).json({ message: err.message });
   }
 };

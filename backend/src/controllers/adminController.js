@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import { sendEventRejectionEmail } from '../utils/email.js';
 import { createNotification } from './notificationController.js';
 import { deleteFromCloudinary } from '../config/cloudinary.js';
+import { logActivity } from '../services/activityLogger.js';
 
 export const approveEvent = async (req, res) => {
   try {
@@ -26,6 +27,13 @@ export const approveEvent = async (req, res) => {
         console.error('Failed to create event approval notification:', notifErr);
       }
     }
+
+    await logActivity({
+      actorId: req.user?.id || req.user?._id || null,
+      action: 'event_approved',
+      eventId: event._id,
+      description: `Event "${event.title}" was approved by admin.`
+    });
 
     res.json({ event });
   } catch (err) {
@@ -84,6 +92,13 @@ export const rejectEvent = async (req, res) => {
         console.error('Failed to create event rejection notification:', notifErr);
       }
     }
+
+    await logActivity({
+      actorId: req.user?.id || req.user?._id || null,
+      action: 'event_rejected',
+      eventId: event._id,
+      description: `Event "${event.title}" was rejected by admin.`
+    });
 
     res.json({ message: 'Event rejected', event });
   } catch (err) {
@@ -217,6 +232,13 @@ export const bulkApproveEvents = async (req, res) => {
             console.error('Failed to create bulk approval notification:', notifErr);
           }
         }
+
+        await logActivity({
+          actorId: req.user?.id || req.user?._id || null,
+          action: 'event_approved',
+          eventId: event._id,
+          description: `Event "${event.title}" was approved by admin (bulk).`
+        });
       })
     );
 
@@ -284,6 +306,13 @@ export const bulkRejectEvents = async (req, res) => {
             console.error('Failed to create bulk rejection notification:', notifErr);
           }
         }
+
+        await logActivity({
+          actorId: req.user?.id || req.user?._id || null,
+          action: 'event_rejected',
+          eventId: event._id,
+          description: `Event "${event.title}" was rejected by admin (bulk).`
+        });
       })
     );
 

@@ -1,5 +1,5 @@
 import Notification from '../models/Notification.js';
-import { emitNotification } from '../services/socket.js';
+import { emitNotification, emitUnreadCount } from '../services/socket.js';
 
 export const getNotifications = async (req, res) => {
   try {
@@ -29,6 +29,8 @@ export const markNotificationAsRead = async (req, res) => {
       return res.status(404).json({ message: 'Notification not found' });
     }
 
+    emitUnreadCount(req.user.id);
+
     res.status(200).json({ notification });
   } catch (error) {
     console.error('Error marking notification as read:', error);
@@ -42,6 +44,8 @@ export const markAllNotificationsAsRead = async (req, res) => {
       { user: req.user.id, isRead: false },
       { isRead: true }
     );
+
+    emitUnreadCount(req.user.id);
 
     res.status(200).json({ modifiedCount: result.modifiedCount });
   } catch (error) {
@@ -78,6 +82,7 @@ export const createNotification = async (userId, type, message, link = null) => 
     const notification = await Notification.createNotification(userId, type, message, link);
     if (notification) {
       emitNotification(userId, notification);
+      emitUnreadCount(userId);
     }
     return notification;
   } catch (error) {
@@ -93,6 +98,7 @@ export const deleteNotification = async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ message: 'Notification not found' });
     }
+    emitUnreadCount(req.user.id);
     res.status(200).json({ message: 'Notification deleted' });
   } catch (error) {
     console.error('Error deleting notification:', error);

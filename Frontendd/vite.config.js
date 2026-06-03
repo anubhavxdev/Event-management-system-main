@@ -37,6 +37,7 @@ export default defineConfig({
         ]
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 4000000,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
         runtimeCaching: [
           {
@@ -74,12 +75,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5050',
+        target: 'http://localhost:5051',
         changeOrigin: true,
         secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:5050',
+        target: 'http://localhost:5051',
         changeOrigin: true,
         secure: false,
       },

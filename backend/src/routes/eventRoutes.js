@@ -11,19 +11,24 @@ import {
   sendEventReminders,
   getPopularTags,
   addCoOrganizer,
-removeCoOrganizer
+  removeCoOrganizer,
+  getOrganizerActivities
 } from '../controllers/eventController.js';
+import { eventValidation, coOrganizerValidation, validate } from '../middleware/validationMiddleware.js';
 
 const router = Router();
 
 router.get('/', listEvents);
 router.get('/tags/popular', getPopularTags);
+router.get('/activities/organizer', authenticate, getOrganizerActivities);
 router.get('/:id', getEvent);
-router.post('/', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), createEvent);
+router.post('/', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), eventValidation, validate, createEvent);
 router.post('/:id/remind', authenticate, authorizeRoles('organizer'), sendEventReminders);
 router.post(
   "/:id/co-organizers",
   authenticate,
+  coOrganizerValidation,
+  validate,
   addCoOrganizer
 );
 
@@ -32,9 +37,7 @@ router.delete(
   authenticate,
   removeCoOrganizer
 );
-router.put('/:id', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), updateEvent);
+router.put('/:id', authenticate, authorizeRoles('organizer', 'admin'), upload.single('poster'), eventValidation, validate, updateEvent);
 router.delete('/:id', authenticate, authorizeRoles('organizer', 'admin'), deleteEvent);
 
 export default router;
-
-

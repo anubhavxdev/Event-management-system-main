@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import CountdownTimer from '../../components/CountdownTimer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, UserPlus } from 'lucide-react';
+import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, UserPlus, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CoOrganizerPanel from '../../components/CoOrganizerPanel';
@@ -10,10 +10,125 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import toast from "react-hot-toast";
+import { useSocket } from '../../context/SocketContext';
+import EventAnalyticsPanel from '../../components/ui/EventAnalyticsPanel';
 
 import { API_BASE_URL } from '../../config';
 // Manual Check-In: helper debounce delay
 const SEARCH_DEBOUNCE_MS = 150;
+
+function OrganizerAnalyticsView({ events }) {
+    const [summary, setSummary] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [selectedEventId, setSelectedEventId] = useState('');
+
+    useEffect(() => {
+        const fetchSummary = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE_URL}/api/analytics/organizer/summary`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setSummary(data);
+                }
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchSummary();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-20">
+                <div className="w-8 h-8 border-2 border-rose-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-8">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-purple-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-purple-500/10 p-2.5 rounded-xl border border-purple-500/20 text-purple-500">
+                        <Users className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Managed</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.totalEvents || 0}
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-blue-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-blue-500/10 p-2.5 rounded-xl border border-blue-500/20 text-blue-500">
+                        <Ticket className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Registrations</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.totalRegistrations || 0}
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-emerald-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20 text-emerald-500">
+                        <TrendingUp className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Attendance Rate</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        {summary?.attendanceRate || 0}%
+                    </h4>
+                </div>
+
+                <div className="bg-[#121214] border border-[#27272a] rounded-2xl p-5 relative overflow-hidden group hover:border-rose-500/30 transition-all">
+                    <div className="absolute top-4 right-4 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 text-rose-500">
+                        <IndianRupee className="w-5 h-5" />
+                    </div>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Total Revenue</span>
+                    <h4 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-2 group-hover:scale-105 transition-transform origin-left">
+                        ₹{summary?.totalRevenue || 0}
+                    </h4>
+                </div>
+            </div>
+
+            {/* Event specific analytics selector */}
+            <div className="bg-[#121214] border border-[#27272a] rounded-3xl p-6 shadow-sm space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h3 className="text-lg font-bold text-foreground">Event Drilldown Analytics</h3>
+                        <p className="text-xs text-muted-foreground mt-1">Select an event to view its detailed timeline metrics and real-time attendance flow.</p>
+                    </div>
+                    <select
+                        value={selectedEventId}
+                        onChange={(e) => setSelectedEventId(e.target.value)}
+                        className="bg-[#1c1c1f] border border-[#27272a] text-sm rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer min-w-[200px]"
+                    >
+                        <option value="">Select an Event...</option>
+                        {events.map((evt) => (
+                            <option key={evt._id} value={evt._id}>
+                                {evt.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {selectedEventId ? (
+                    <div className="border-t border-[#27272a] pt-6">
+                        <EventAnalyticsPanel eventId={selectedEventId} />
+                    </div>
+                ) : (
+                    <div className="border-t border-[#27272a] pt-12 pb-8 text-center text-muted-foreground text-sm italic">
+                        Choose an event from the dropdown list to load real-time analytics.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 
 export default function OrganizerDashboard() {
     const { user } = useAuth();
@@ -24,13 +139,10 @@ export default function OrganizerDashboard() {
     const [activeTab, setActiveTab] = useState('My Events');
     const [selectedEvent, setSelectedEvent] = useState(null);
     const [editingEventId, setEditingEventId] = useState(null);
+    const { socket, isConnected } = useSocket();
     // Manual Check-In states
     const [participants, setParticipants] = useState([]);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [debouncedQuery, setDebouncedQuery] = useState('');
-    const [filterMode, setFilterMode] = useState('all'); // all | checked | pending
     const [loadingId, setLoadingId] = useState(null);
-    const [manualOpen, setManualOpen] = useState(true);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -53,6 +165,9 @@ export default function OrganizerDashboard() {
         byCategory: {}
     });
 
+    const [activities, setActivities] = useState([]);
+    const [loadingActivities, setLoadingActivities] = useState(false);
+
     const mountedRef = useRef(true);
 
     useEffect(() => {
@@ -61,11 +176,140 @@ export default function OrganizerDashboard() {
         };
     }, []);
 
-    // Debounce searchQuery -> debouncedQuery
+    // Fetch activities for all events managed by organizer
     useEffect(() => {
-        const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), SEARCH_DEBOUNCE_MS);
-        return () => clearTimeout(t);
-    }, [searchQuery]);
+        if (activeTab !== 'Activity Log') return;
+
+        let active = true;
+        const fetchActivities = async () => {
+            setLoadingActivities(true);
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE_URL}/api/events/activities/organizer`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok && active) {
+                    const data = await res.json();
+                    setActivities(data.activities || []);
+                }
+            } catch (err) {
+                console.error('Failed to fetch organizer activities', err);
+            } finally {
+                if (active) setLoadingActivities(false);
+            }
+        };
+
+        fetchActivities();
+        return () => {
+            active = false;
+        };
+    }, [activeTab]);
+
+    // Realtime Socket.IO synchronization for new activities
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleNewActivity = (activity) => {
+            setActivities((prev) => {
+                if (prev.some(act => act._id === activity._id)) return prev;
+                return [activity, ...prev].slice(0, 100);
+            });
+        };
+
+        socket.on('activity:new', handleNewActivity);
+
+        return () => {
+            socket.off('activity:new', handleNewActivity);
+        };
+    }, [socket]);
+
+    // Realtime Socket.IO synchronization for organizer events
+    useEffect(() => {
+        if (!socket || events.length === 0) return;
+
+        const joinEventRooms = () => {
+            events.forEach((event) => {
+                socket.emit('event:join', { eventId: event._id });
+            });
+        };
+
+        if (socket.connected) {
+            joinEventRooms();
+        }
+
+        socket.on('connect', joinEventRooms);
+
+        const handleRegistrationCountUpdate = ({ eventId, count }) => {
+            setEvents((prev) =>
+                prev.map((evt) =>
+                    evt._id === eventId ? { ...evt, registrations: count } : evt
+                )
+            );
+        };
+
+        socket.on('registration:count', handleRegistrationCountUpdate);
+
+        return () => {
+            events.forEach((event) => {
+                socket.emit('event:leave', { eventId: event._id });
+            });
+            socket.off('connect', joinEventRooms);
+            socket.off('registration:count', handleRegistrationCountUpdate);
+        };
+    }, [socket, events.length]);
+
+    // Realtime Socket.IO synchronization for the currently managed event
+    useEffect(() => {
+        if (!socket || !selectedEvent) return;
+
+        const joinSelectedRoom = () => {
+            socket.emit('event:join', { eventId: selectedEvent._id });
+        };
+
+        if (socket.connected) {
+            joinSelectedRoom();
+        }
+
+        socket.on('connect', joinSelectedRoom);
+
+        const handleAttendeeUpdate = ({ eventId, registration }) => {
+            if (eventId !== selectedEvent._id) return;
+            setParticipants((prev) =>
+                prev.map((p) =>
+                    p._id === registration._id
+                        ? {
+                              ...p,
+                              status: registration.status,
+                              checkedIn: registration.status === 'attended',
+                              checkinTime:
+                                  registration.status === 'attended'
+                                      ? registration.updatedAt
+                                      : null,
+                          }
+                        : p
+                )
+            );
+        };
+
+        const handleNewRegistration = (newReg) => {
+            setParticipants((prev) => {
+                if (prev.some((p) => p._id === newReg._id)) {
+                    return prev;
+                }
+                return [...prev, newReg];
+            });
+        };
+
+        socket.on('attendee:update', handleAttendeeUpdate);
+        socket.on('registration:new', handleNewRegistration);
+
+        return () => {
+            socket.emit('event:leave', { eventId: selectedEvent._id });
+            socket.off('connect', joinSelectedRoom);
+            socket.off('attendee:update', handleAttendeeUpdate);
+            socket.off('registration:new', handleNewRegistration);
+        };
+    }, [socket, selectedEvent]);
 
     // Fetch participants when selectedEvent changes
     useEffect(() => {
@@ -115,28 +359,22 @@ export default function OrganizerDashboard() {
             });
             if (res.ok && mountedRef.current) {
                 const data = await res.json();
+                const allEvents = data.events || [];
+
                 // Filter events where the organizer matches the current user
-                // Adjust logic based on how your backend returns data (populated organizer object vs id)
-                const myEvents = (data.events || []).filter(
+                const myEvents = allEvents.filter(
                     e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
                 );
 
-                setEvents(myEvents);
-                calculateStats(myEvents);
-                // Fetch co-organized events
-                try {
-                    const coRes = await fetch(`${API_BASE_URL}/api/events`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (coRes.ok) {
-                        const coData = await coRes.json();
-                        const coEvents = (coData.events || []).filter(
-                            e => e.organizer?._id !== user?.id && e.organizer !== user?.id &&
-                            (e.coOrganizers || []).some(co => co._id === user?.id || co === user?.id)
-                        ).map(e => ({ ...e, _isCoOrganized: true }));
-                        if (coEvents.length > 0) setEvents(prev => [...prev, ...coEvents]);
-                    }
-                } catch (_) {}
+                // Filter co-organized events
+                const coEvents = allEvents.filter(
+                    e => e.organizer?._id !== user?.id && e.organizer !== user?.id &&
+                    (e.coOrganizers || []).some(co => co._id === user?.id || co === user?.id)
+                ).map(e => ({ ...e, _isCoOrganized: true }));
+
+                const combinedEvents = [...myEvents, ...coEvents];
+                setEvents(combinedEvents);
+                calculateStats(combinedEvents);
             }
         } catch (error) {
             console.error("Failed to fetch events", error);
@@ -405,7 +643,19 @@ const handleCreateSubmit = async (e) => {
                             Access your dashboard to manage your events and view analytics.
                         </p>
                     </div>
-                    <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                        {/* Realtime Connection Status Pill */}
+                        {isConnected ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-500 text-xs font-medium">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                Realtime Sync
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-500 text-xs font-medium">
+                                <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                                Reconnecting...
+                            </span>
+                        )}
                         <span className="inline-flex items-center justify-center px-4 py-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-500 text-xs font-semibold tracking-wider uppercase">
                             Organizer Dashboard
                         </span>
@@ -415,7 +665,7 @@ const handleCreateSubmit = async (e) => {
                 {/* Navigation Tabs */}
                 <div className="mb-8 border-b border-border">
                     <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-                        {['My Events', 'Past Events', 'Create New Event', 'Analytics'].map((tab) => (
+                        {['My Events', 'Past Events', 'Create New Event', 'Analytics', 'Activity Log'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -445,6 +695,7 @@ const handleCreateSubmit = async (e) => {
                             {activeTab === 'Past Events' && 'Past Events History'}
                             {activeTab === 'Create New Event' && 'Create a New Event'}
                             {activeTab === 'Analytics' && 'Performance Overview'}
+                            {activeTab === 'Activity Log' && 'Operational Activity Timeline'}
                         </h2>
                         {activeTab === 'My Events' && (
                             <div className="flex gap-2">
@@ -934,76 +1185,90 @@ const handleCreateSubmit = async (e) => {
 
                         {/* ANALYTICS TAB */}
                         {activeTab === 'Analytics' && (
+                            <OrganizerAnalyticsView events={events} />
+                        )}
+
+                        {activeTab === 'Activity Log' && (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
-                                className="space-y-8"
+                                exit={{ opacity: 0 }}
+                                className="space-y-6"
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Total Events</h3>
-                                            <Calendar className="w-4 h-4 text-purple-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold">{stats.totalEvents}</div>
+                                {loadingActivities ? (
+                                    <div className="flex justify-center items-center py-12">
+                                        <div className="h-8 w-8 rounded-full border-4 border-orange-500 border-t-transparent animate-spin" />
                                     </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Approved</h3>
-                                            <CheckCircle className="w-4 h-4 text-green-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-green-500">{stats.approved}</div>
+                                ) : activities.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-border rounded-2xl bg-card/25">
+                                        <Clock className="w-8 h-8 text-muted-foreground mb-3 animate-pulse" />
+                                        <p className="text-sm font-medium text-muted-foreground">No activities recorded yet</p>
+                                        <p className="text-xs text-muted-foreground/70 mt-1">Activities will show up here as actions occur on your events.</p>
                                     </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Pending</h3>
-                                            <Clock className="w-4 h-4 text-yellow-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Rejected</h3>
-                                            <XCircle className="w-4 h-4 text-red-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
-                                    </div>
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h3 className="text-sm font-medium text-muted-foreground">Total Registrations</h3>
-                                            <Users className="w-4 h-4 text-blue-500" />
-                                        </div>
-                                        <div className="text-2xl font-bold">{stats.totalRegistrations}</div>
-                                    </div>
-                                </div>
+                                ) : (
+                                    <div className="relative border-l border-border/70 pl-6 ml-4 space-y-8">
+                                        {activities.map((act, idx) => (
+                                            <motion.div
+                                                key={act._id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.02, duration: 0.2 }}
+                                                className="relative group"
+                                            >
+                                                {/* Timeline node icon */}
+                                                <div className={`absolute -left-[42px] top-0.5 flex items-center justify-center w-8 h-8 rounded-full border bg-background shadow-sm group-hover:scale-110 transition-transform duration-200 ${
+                                                    act.action === 'event_created' ? 'bg-blue-500/10 border-blue-500/20' :
+                                                    act.action === 'event_updated' ? 'bg-orange-500/10 border-orange-500/20' :
+                                                    act.action === 'event_approved' ? 'bg-green-500/10 border-green-500/20' :
+                                                    act.action === 'event_rejected' ? 'bg-red-500/10 border-red-500/20' :
+                                                    act.action === 'co_organizer_added' ? 'bg-purple-500/10 border-purple-500/20' :
+                                                    act.action === 'co_organizer_removed' ? 'bg-gray-500/10 border-gray-500/20' :
+                                                    act.action === 'event_reminders_sent' ? 'bg-indigo-500/10 border-indigo-500/20' :
+                                                    act.action === 'registration_created' ? 'bg-teal-500/10 border-teal-500/20' :
+                                                    act.action === 'ticket_scanned' ? 'bg-emerald-500/10 border-emerald-500/20' :
+                                                    'bg-muted border-border'
+                                                }`}>
+                                                    {
+                                                        act.action === 'event_created' ? <Plus className="w-4 h-4 text-blue-500" /> :
+                                                        act.action === 'event_updated' ? <Clock className="w-4 h-4 text-orange-500" /> :
+                                                        act.action === 'event_approved' ? <CheckCircle className="w-4 h-4 text-green-500" /> :
+                                                        act.action === 'event_rejected' ? <XCircle className="w-4 h-4 text-red-500" /> :
+                                                        act.action === 'co_organizer_added' ? <UserPlus className="w-4 h-4 text-purple-500" /> :
+                                                        act.action === 'co_organizer_removed' ? <Trash2 className="w-4 h-4 text-gray-500" /> :
+                                                        act.action === 'event_reminders_sent' ? <Calendar className="w-4 h-4 text-indigo-500" /> :
+                                                        act.action === 'registration_created' ? <Users className="w-4 h-4 text-teal-500" /> :
+                                                        act.action === 'ticket_scanned' ? <TrendingUp className="w-4 h-4 text-emerald-500" /> :
+                                                        <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                                                    }
+                                                </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    <div className="bg-card border border-border rounded-xl p-6">
-                                        <h3 className="font-semibold mb-6 flex items-center gap-2">
-                                            <Tag className="w-4 h-4 text-purple-500" />
-                                            Events by Category
-                                        </h3>
-                                        <div className="space-y-4">
-                                            {Object.entries(stats.byCategory).map(([cat, count]) => (
-                                                <div key={cat} className="flex items-center justify-between">
-                                                    <span className="text-sm text-muted-foreground">{cat}</span>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-2 w-32 bg-secondary rounded-full overflow-hidden">
-                                                            <div
-                                                                className="h-full bg-purple-500"
-                                                                style={{ width: `${(count / stats.totalEvents) * 100}%` }}
-                                                            />
+                                                {/* Timeline content box */}
+                                                <div className="bg-card/50 hover:bg-card border border-border hover:border-purple-500/30 rounded-2xl p-4 transition-all duration-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                                    <div className="space-y-1">
+                                                        <div className="text-sm font-semibold text-foreground leading-snug">
+                                                            {act.description}
                                                         </div>
-                                                        <span className="text-sm font-medium w-6 text-right">{count}</span>
+                                                        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                                                            <span className="flex items-center gap-1">
+                                                                <User className="w-3.5 h-3.5" />
+                                                                By {act.actor?.name || 'System'} ({act.actor?.role || 'user'})
+                                                            </span>
+                                                            {act.event && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Calendar className="w-3.5 h-3.5" />
+                                                                    Event: {act.event?.title || 'Unknown'}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xs font-medium text-muted-foreground whitespace-nowrap self-end sm:self-center bg-secondary/50 border border-border/40 px-2.5 py-1 rounded-full shrink-0">
+                                                        {new Date(act.createdAt).toLocaleString()}
                                                     </div>
                                                 </div>
-                                            ))}
-                                            {Object.keys(stats.byCategory).length === 0 && (
-                                                <p className="text-muted-foreground text-sm italic">No data available yet.</p>
-                                            )}
-                                        </div>
+                                            </motion.div>
+                                        ))}
                                     </div>
-                                </div>
+                                )}
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -1098,111 +1363,13 @@ const handleCreateSubmit = async (e) => {
                                     <div className="flex items-center justify-between p-3 bg-red-500/5 rounded-lg border border-red-500/10">
 
                                                                             {/* Manual Check-In Panel */}
-                                                                            <div className="mt-4 p-4 bg-secondary/10 rounded-lg border border-border/50">
-                                                                                <div className="flex items-center justify-between mb-3">
-                                                                                    <div className="flex items-center gap-3">
-                                                                                        <h4 className="font-semibold">Manual Check-In</h4>
-                                                                                        <span className="text-xs text-muted-foreground">Fallback if QR fails</span>
-                                                                                    </div>
-                                                                                    <div className="flex items-center gap-3">
-                                                                                        <div className="text-sm text-muted-foreground">{participants.filter(p=>p.checkedIn).length} / {participants.length} checked in</div>
-                                                                                        <button
-                                                                                            className="text-sm text-muted-foreground hover:text-foreground"
-                                                                                            onClick={() => setManualOpen(!manualOpen)}
-                                                                                        >
-                                                                                            {manualOpen ? 'Hide' : 'Show'}
-                                                                                        </button>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                {manualOpen && (
-                                                                                    <div>
-                                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                                                                                            <div className="md:col-span-2">
-                                                                                                <Input
-                                                                                                    placeholder="Search by name or email..."
-                                                                                                    value={searchQuery}
-                                                                                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                                                                                    aria-label="Search participants"
-                                                                                                />
-                                                                                            </div>
-                                                                                            <div className="flex items-center gap-2">
-                                                                                                <button
-                                                                                                    className={`px-3 py-1 rounded ${filterMode==='all'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('all')}
-                                                                                                >All</button>
-                                                                                                <button
-                                                                                                    className={`px-3 py-1 rounded ${filterMode==='checked'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('checked')}
-                                                                                                >Checked In</button>
-                                                                                                <button
-                                                                                                    className={`px-3 py-1 rounded ${filterMode==='pending'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
-                                                                                                    onClick={() => setFilterMode('pending')}
-                                                                                                >Pending</button>
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        {/* Participant list */}
-                                                                                        <div className="max-h-64 overflow-auto border border-border rounded-lg">
-                                                                                            <table className="w-full text-sm">
-                                                                                                <thead className="bg-secondary/30 sticky top-0">
-                                                                                                    <tr>
-                                                                                                        <th className="text-left px-3 py-2">Name</th>
-                                                                                                        <th className="text-left px-3 py-2">Email</th>
-                                                                                                        <th className="text-left px-3 py-2">Status</th>
-                                                                                                        <th className="text-left px-3 py-2">Check-In</th>
-                                                                                                        <th className="text-left px-3 py-2">Action</th>
-                                                                                                    </tr>
-                                                                                                </thead>
-                                                                                                <tbody>
-                                                                                                    {(() => {
-                                                                                                        const q = debouncedQuery;
-                                                                                                        let list = participants || [];
-                                                                                                        if (q) {
-                                                                                                            list = list.filter(p => ((p.name||'').toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q)));
-                                                                                                        }
-                                                                                                        if (filterMode === 'checked') list = list.filter(p => p.checkedIn === true);
-                                                                                                        if (filterMode === 'pending') list = list.filter(p => !p.checkedIn);
-                                                                                                        if (list.length === 0) {
-                                                                                                            return (
-                                                                                                                <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No participants</td></tr>
-                                                                                                            );
-                                                                                                        }
-                                                                                                        return list.map(p => (
-                                                                                                            <tr key={p._id} className="border-t border-border/50">
-                                                                                                                <td className="px-3 py-2">{p.name}</td>
-                                                                                                                <td className="px-3 py-2">{p.email}</td>
-                                                                                                                <td className="px-3 py-2">{p.status || 'Registered'}</td>
-                                                                                                                <td className="px-3 py-2">
-                                                                                                                    {p.checkedIn ? (
-                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-green-700 bg-green-100">✓ Checked In{p.checkinTime?` (${new Date(p.checkinTime).toLocaleTimeString()})`:''}</span>
-                                                                                                                    ) : (
-                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-yellow-800 bg-yellow-100">Pending</span>
-                                                                                                                    )}
-                                                                                                                </td>
-                                                                                                                <td className="px-3 py-2">
-                                                                                                                    {!p.checkedIn ? (
-                                                                                                                        <Button
-                                                                                                                            size="sm"
-                                                                                                                            onClick={() => handleCheckin(p)}
-                                                                                                                            disabled={loadingId === p._id || !(selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id))}
-                                                                                                                        >
-                                                                                                                            {loadingId === p._id ? (<span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin inline-block mr-2" />) : null}
-                                                                                                                            Check In
-                                                                                                                        </Button>
-                                                                                                                    ) : (
-                                                                                                                        <span className="text-sm text-muted-foreground">—</span>
-                                                                                                                    )}
-                                                                                                                </td>
-                                                                                                            </tr>
-                                                                                                        ));
-                                                                                                    })()}
-                                                                                                </tbody>
-                                                                                            </table>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                )}
-                                                                            </div>
+                                                                            <ManualCheckInPanel
+                                                                                participants={participants}
+                                                                                handleCheckin={handleCheckin}
+                                                                                loadingId={loadingId}
+                                                                                selectedEvent={selectedEvent}
+                                                                                user={user}
+                                                                            />
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-red-500/10 rounded-full text-red-500">
                                                 <Trash2 className="w-4 h-4" />
@@ -1229,3 +1396,123 @@ const handleCreateSubmit = async (e) => {
         </div >
     );
 }
+
+const ManualCheckInPanel = React.memo(({ participants, handleCheckin, loadingId, selectedEvent, user }) => {
+    const [manualOpen, setManualOpen] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [filterMode, setFilterMode] = useState('all');
+
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), 150);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
+
+    return (
+        <div className="mt-4 p-4 bg-secondary/10 rounded-lg border border-border/50">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                    <h4 className="font-semibold">Manual Check-In</h4>
+                    <span className="text-xs text-muted-foreground">Fallback if QR fails</span>
+                </div>
+                <div className="flex items-center gap-3">
+                    <div className="text-sm text-muted-foreground">{participants.filter(p=>p.checkedIn).length} / {participants.length} checked in</div>
+                    <button
+                        className="text-sm text-muted-foreground hover:text-foreground"
+                        onClick={() => setManualOpen(!manualOpen)}
+                    >
+                        {manualOpen ? 'Hide' : 'Show'}
+                    </button>
+                </div>
+            </div>
+
+            {manualOpen && (
+                <div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        <div className="md:col-span-2">
+                            <Input
+                                placeholder="Search by name or email..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                aria-label="Search participants"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button
+                                className={`px-3 py-1 rounded ${filterMode==='all'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                onClick={() => setFilterMode('all')}
+                            >All</button>
+                            <button
+                                className={`px-3 py-1 rounded ${filterMode==='checked'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                onClick={() => setFilterMode('checked')}
+                            >Checked In</button>
+                            <button
+                                className={`px-3 py-1 rounded ${filterMode==='pending'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                onClick={() => setFilterMode('pending')}
+                            >Pending</button>
+                        </div>
+                    </div>
+
+                    <div className="max-h-64 overflow-auto border border-border rounded-lg">
+                        <table className="w-full text-sm">
+                            <thead className="bg-secondary/30 sticky top-0">
+                                <tr>
+                                    <th className="text-left px-3 py-2">Name</th>
+                                    <th className="text-left px-3 py-2">Email</th>
+                                    <th className="text-left px-3 py-2">Status</th>
+                                    <th className="text-left px-3 py-2">Check-In</th>
+                                    <th className="text-left px-3 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(() => {
+                                    const q = debouncedQuery;
+                                    let list = participants || [];
+                                    if (q) {
+                                        list = list.filter(p => ((p.name||'').toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q)));
+                                    }
+                                    if (filterMode === 'checked') list = list.filter(p => p.checkedIn === true);
+                                    if (filterMode === 'pending') list = list.filter(p => !p.checkedIn);
+                                    if (list.length === 0) {
+                                        return (
+                                            <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No participants</td></tr>
+                                        );
+                                    }
+                                    return list.map(p => (
+                                        <tr key={p._id} className="border-t border-border/50">
+                                            <td className="px-3 py-2">{p.name}</td>
+                                            <td className="px-3 py-2">{p.email}</td>
+                                            <td className="px-3 py-2">{p.status || 'Registered'}</td>
+                                            <td className="px-3 py-2">
+                                                {p.checkedIn ? (
+                                                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-green-700 bg-green-100">✓ Checked In{p.checkinTime?` (${new Date(p.checkinTime).toLocaleTimeString()})`:''}</span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-yellow-800 bg-yellow-100">Pending</span>
+                                                )}
+                                            </td>
+                                            <td className="px-3 py-2">
+                                                {!p.checkedIn ? (
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => handleCheckin(p)}
+                                                        disabled={loadingId === p._id || !(selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id))}
+                                                    >
+                                                        {loadingId === p._id ? (<span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin inline-block mr-2" />) : null}
+                                                        Check In
+                                                    </Button>
+                                                ) : (
+                                                    <span className="text-sm text-muted-foreground">—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ));
+                                })()}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+});
+ManualCheckInPanel.displayName = 'ManualCheckInPanel';

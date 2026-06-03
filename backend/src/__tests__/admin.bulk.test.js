@@ -24,7 +24,7 @@ jest.unstable_mockModule('../utils/email.js', () => ({
   sendEventRejectionEmail: mockSendEventRejectionEmail,
 }));
 
-jest.unstable_mockModule('./notificationController.js', () => ({
+jest.unstable_mockModule('../controllers/notificationController.js', () => ({
   createNotification: mockCreateNotification,
 }));
 

@@ -1,12 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Ticket, X, Download, Search, Heart, Calendar, MapPin, Ticket } from 'lucide-react';
+import { Calendar, MapPin, Ticket, X, Download, Search, Heart } from 'lucide-react';
 import { io } from 'socket.io-client';
 import  {Calendar as BigCalendar,momentLocalizer,} from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Button } from '../../components/ui/button';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE_URL } from '../../config';
@@ -25,6 +26,8 @@ const categoryColors = {
   Workshop: '#ea580c',
   Business: '#dc2626',
 };
+
+const CATEGORIES = ['Tech', 'Sports', 'Cultural', 'Workshop', 'Business'];
 
 const getEventDate = (registration) => {
   if (!registration?.event?.date) return null;
@@ -47,15 +50,18 @@ export default function CustomerDashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
-  const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
   const [highlightedEvents, setHighlightedEvents] = useState({});
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '');
+  const debouncedSearch = useDebounce(searchQuery, 500);
   const [selectedCategory, setSelectedCategory] = useState(() => searchParams.get('category') || '');
   const [isFetching, setIsFetching] = useState(false);
   const [registrationsError, setRegistrationsError] = useState('');
   const [savedEvents, setSavedEvents] = useState([]);
   const ticketRef = useRef(null);
   const mountedRef = useRef(true);
+  const socketRef = useRef(null);
+  const joinedEventIdsRef = useRef([]);
+  const highlightTimeoutsRef = useRef({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -127,34 +133,6 @@ export default function CustomerDashboard() {
       console.error('Failed to fetch events', error);
     } finally {
       if (mountedRef.current) setLoading(false);
-    }
-  }, [searchParams]);
-
-  const fetchAvailableEvents = useCallback(async () => {
-    try {
-      if (mountedRef.current) setLoading(true);
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE_URL}/api/registrations/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok && mountedRef.current) {
-        const data = await res.json();
-
-        const upcoming = (data.events || []).filter(
-            (evt) => new Date(evt.date) >= new Date()
-        );
-
-      if (mountedRef.current) {
-        setAvailableEvents(upcoming);
-      }
-    }
-    } catch (error) {
-      console.error("Failed to fetch events:", error);
-    } finally {
-      if (mountedRef.current) {
-        setIsFetching(false);
-        setLoading(false);
-      }
     }
   }, [searchParams]);
 
@@ -417,9 +395,9 @@ export default function CustomerDashboard() {
         },
       );
 
-      const data = await response.json();
+      const data = await res.json();
 
-      if (!response.ok) {
+      if (!res.ok) {
         throw new Error(data.message || "Failed to cancel registration");
       }
 
@@ -827,45 +805,46 @@ export default function CustomerDashboard() {
               </div>
             )}
 
-            <div className="space-y-6">
-  <div className="flex gap-3 items-center">
-    <div className="relative flex-1">
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            {activeTab === 'Browse Events' && (
+              <div className="space-y-6">
+                <div className="flex gap-3 items-center">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
 
-      <input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Search events by title or description..."
-        className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
-      />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search events by title or description..."
+                      className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-rose-500 transition"
+                    />
 
-      {searchQuery && (
-        <button
-          onClick={() => setSearchQuery("")}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      )}
-    </div>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
 
-    <Button
-      variant={viewMode === "grid" ? "default" : "outline"}
-      onClick={() => setViewMode("grid")}
-    >
-      Grid
-    </Button>
+                  <Button
+                    variant={viewMode === "grid" ? "default" : "outline"}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    Grid
+                  </Button>
 
-    <Button
-      variant={viewMode === "calendar" ? "default" : "outline"}
-      onClick={() => setViewMode("calendar")}
-    >
-      Calendar
-    </Button>
-  </div>
+                  <Button
+                    variant={viewMode === "calendar" ? "default" : "outline"}
+                    onClick={() => setViewMode("calendar")}
+                  >
+                    Calendar
+                  </Button>
+                </div>
 
-  <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setSelectedCategory("")}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -1093,6 +1072,7 @@ export default function CustomerDashboard() {
                   </div>
                 )}
               </div>
+            )}
             
 
             {activeTab === "Saved Events" && (

@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import AdminAnalyticsPanel from '../../components/ui/AdminAnalyticsPanel';
 
 
 import { API_BASE_URL } from '../../config';
@@ -374,7 +375,7 @@ export default function AdminDashboard() {
                 {/* Navigation Tabs */}
                 <div className="mb-8 border-b border-border">
                     <div className="flex space-x-8 overflow-x-auto no-scrollbar">
-                        {['Pending Reviews', 'All Events & Management', 'User Management'].map((tab) => (
+                        {['Pending Reviews', 'All Events & Management', 'User Management', 'System Health & Platform Analytics'].map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -403,6 +404,7 @@ export default function AdminDashboard() {
                             {activeTab === 'Pending Reviews' && 'Pending Events'}
                             {activeTab === 'All Events & Management' && 'All Events'}
                             {activeTab === 'User Management' && 'User Management'}
+                            {activeTab === 'System Health & Platform Analytics' && 'System Health & Telemetry'}
                         </h2>
                         {activeTab === 'Pending Reviews' && (
                             <span className="px-3 py-1 bg-yellow-500/10 text-yellow-500 text-xs font-medium rounded-full border border-yellow-500/20">
@@ -417,6 +419,11 @@ export default function AdminDashboard() {
                         {activeTab === 'User Management' && (
                             <span className="px-3 py-1 bg-blue-500/10 text-blue-500 text-xs font-medium rounded-full border border-blue-500/20">
                                 {allUsers.length} Users
+                            </span>
+                        )}
+                        {activeTab === 'System Health & Platform Analytics' && (
+                            <span className="px-3 py-1 bg-orange-500/10 text-orange-500 text-xs font-medium rounded-full border border-orange-500/20 flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" /> Live Telemetry
                             </span>
                         )}
                     </div>
@@ -675,6 +682,11 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+                        )}
+
+                        {/* SYSTEM OBSERVABILITY TAB */}
+                        {activeTab === 'System Health & Platform Analytics' && (
+                            <AdminAnalyticsPanel />
                         )}
                     </AnimatePresence>
                 </div>
