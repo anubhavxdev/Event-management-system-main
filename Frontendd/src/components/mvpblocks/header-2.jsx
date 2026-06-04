@@ -327,7 +327,7 @@ export default function Header2() {
                               setIsProfileMenuOpen(false);
                               logout(navigate);
                             }}
-                            className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                            className="flex items-center space-x-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 hover:text-red-600 rounded-lg transition-colors"
                           >
                             <LogOut className="h-4 w-4" />
                             <span>Logout</span>
@@ -390,7 +390,7 @@ export default function Header2() {
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <motion.div
-              className="fixed top-16 right-4 z-50 w-[88%] max-w-sm overflow-hidden rounded-3xl border border-white/20 bg-white/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(15,23,42,0.18)] supports-[backdrop-filter]:bg-white/55 lg:hidden"
+              className="fixed top-16 right-4 z-50 w-[88%] max-w-sm overflow-hidden rounded-3xl border border-border/20 bg-background/70 backdrop-blur-2xl shadow-[0_8px_32px_rgba(0,0,0,0.18)] supports-[backdrop-filter]:bg-background/55 lg:hidden"
               variants={mobileMenuVariants}
               initial="closed"
               animate="open"
@@ -413,7 +413,7 @@ export default function Header2() {
                           className={`block rounded-xl px-4 py-3 font-medium transition-all duration-200 active:scale-[0.98] ${
                             isActive
                               ? "bg-indigo-500/15 text-foreground ring-1 ring-indigo-500/25"
-                              : "text-foreground/90 hover:bg-white/40 hover:text-foreground"
+                              : "text-foreground/90 hover:bg-muted/40 hover:text-foreground"
                           }`}
                           onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -473,7 +473,7 @@ export default function Header2() {
                           setIsMobileMenuOpen(false);
                           logout(navigate);
                         }}
-                        className="flex items-center space-x-2 w-full px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-lg font-medium transition-colors duration-200"
+                        className="flex items-center space-x-2 w-full px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 rounded-lg font-medium transition-colors duration-200"
                       >
                         <LogOut className="h-4 w-4" />
                         <span>Logout</span>

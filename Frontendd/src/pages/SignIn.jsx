@@ -72,7 +72,7 @@ const handleSubmit = async (e) => {
                 >
                     {/* Form Container with Dot Pattern */}
                     <div
-                        className="bg-white/40 border border-white/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md"
+                        className="bg-background/40 border border-border/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-md"
                         style={{
                             backgroundImage: `radial-gradient(circle, rgba(0,0,0,0.05) 1px, transparent 1px)`,
                             backgroundSize: '24px 24px'
@@ -81,22 +81,22 @@ const handleSubmit = async (e) => {
                       {/* Close Button */}
                         <button
                            onClick={() => navigate(-1)}
-                           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-gray-400 hover:text-white transition-all duration-200 z-20"
+                           className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200 z-20"
                            type="button">
                            ✕
                         </button>
                         {/* Title */}
                         <div className="text-center mb-10 relative z-10">
-                            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+                            <h1 className="text-3xl font-bold text-foreground tracking-tight">
                                 Welcome Back
                             </h1>
-                            <p className="text-gray-600 text-sm mt-2">Sign in to access your account</p>
+                            <p className="text-muted-foreground text-sm mt-2">Sign in to access your account</p>
                         </div>
 
                         <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
                             {/* Email Field */}
                             <div className="space-y-2 group">
-                                <label className="text-xs font-medium text-gray-600 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="email">
+                                <label className="text-xs font-medium text-muted-foreground group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="email">
                                     Email
                                 </label>
                                 <input
@@ -105,14 +105,14 @@ const handleSubmit = async (e) => {
                                     required
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full bg-white/50 border border-white/50 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base backdrop-blur-sm shadow-sm"
+                                    className="w-full bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base backdrop-blur-sm shadow-sm"
                                     placeholder="name@example.com"
                                 />
                             </div>
 
                             {/* Password Field */}
                             <div className="space-y-2 group">
-                                <label className="text-xs font-medium text-gray-600 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="password">
+                                <label className="text-xs font-medium text-muted-foreground group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider" htmlFor="password">
                                     Password
                                 </label>
                                 <div className="relative">
@@ -122,11 +122,11 @@ const handleSubmit = async (e) => {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full bg-white/50 border border-white/50 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base backdrop-blur-sm shadow-sm"
+                                        className="w-full bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 pr-10 text-base backdrop-blur-sm shadow-sm"
                                         placeholder="••••••••"
                                     />
                                     <button
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 transition-colors p-1"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
                                         type="button"
                                         onClick={toggleVisibility}
                                     >
@@ -170,7 +170,7 @@ const handleSubmit = async (e) => {
 
                         {/* Sign Up Link */}
                         <div className="mt-8 text-center text-sm relative z-10">
-                            <span className="text-gray-600">Don't have an account? </span>
+                            <span className="text-muted-foreground">Don't have an account? </span>
                             <Link
                                 to="/signup"
                                 className="font-semibold text-[#e63946] hover:text-[#ff4d5a] transition-colors"

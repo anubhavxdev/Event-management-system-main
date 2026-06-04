@@ -177,7 +177,7 @@ export default function FooterStandard() {
           <div className="grid w-full grid-cols-2 items-start justify-between gap-8 px-5 lg:col-span-3">
             {["product", "company", "resources", "legal"].map((section) => (
               <div key={section} className="space-y-3">
-                <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wide">
+                <h4 className="text-xs font-semibold text-foreground uppercase tracking-wide">
                   {section === "product" && "Product"}
                   {section === "company" && "Company"}
                   {section === "resources" && "Resources"}
@@ -194,7 +194,7 @@ export default function FooterStandard() {
                             handleLegalClick(e, item.href);
                           }
                         }}
-                        className="text-xs text-slate-600 hover:text-rose-600 transition-colors cursor-pointer"
+                        className="text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer"
                       >
                         {item.name}
                       </Link>
@@ -220,7 +220,7 @@ export default function FooterStandard() {
                 key={label}
                 href={href}
                 onClick={(e) => handleLegalClick(e, href)}
-                className="hover:text-rose-600 transition-colors cursor-pointer"
+                className="hover:text-primary transition-colors cursor-pointer"
               >
                 {label}
               </a>
