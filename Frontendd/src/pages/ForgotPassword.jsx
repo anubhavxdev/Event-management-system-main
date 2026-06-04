@@ -104,7 +104,7 @@ export default function ForgotPassword() {
           className="w-full max-w-md z-10"
         >
           <div
-            className="bg-[#0a0a0a] border border-gray-800/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm"
+            className="bg-card border border-border/50 rounded-2xl p-8 md:p-10 shadow-2xl relative overflow-hidden backdrop-blur-sm"
             style={{
               backgroundImage:
                 "radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)",
@@ -112,10 +112,10 @@ export default function ForgotPassword() {
             }}
           >
             <div className="text-center mb-8 relative z-10">
-              <h1 className="text-3xl font-bold text-white tracking-tight">
+              <h1 className="text-3xl font-bold text-card-foreground tracking-tight">
                 Forgot Password
               </h1>
-              <p className="text-gray-400 text-sm mt-2">
+              <p className="text-muted-foreground text-sm mt-2">
                 Enter your email and we will send a reset link.
               </p>
             </div>
@@ -123,7 +123,7 @@ export default function ForgotPassword() {
             <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
               <div className="space-y-2 group">
                 <label
-                  className="text-xs font-medium text-gray-400 group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider"
+                  className="text-xs font-medium text-muted-foreground group-focus-within:text-[#e63946] transition-colors uppercase tracking-wider"
                   htmlFor="email"
                 >
                   Email
@@ -136,8 +136,8 @@ export default function ForgotPassword() {
                   onBlur={(event) =>
                     setError(validateEmail(event.target.value))
                   }
-                  className={`w-full bg-zinc-900/50 border rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base ${
-                    error ? "border-red-500" : "border-gray-700"
+                  className={`w-full bg-background/50 border rounded-lg px-4 py-3 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#e63946] focus:border-transparent transition-all duration-300 text-base ${
+                    error ? "border-red-500" : "border-border"
                   }`}
                   placeholder="name@example.com"
                 />
@@ -161,7 +161,7 @@ export default function ForgotPassword() {
             </form>
 
             <div className="mt-8 text-center text-sm relative z-10">
-              <span className="text-gray-500">Remember your password? </span>
+              <span className="text-muted-foreground">Remember your password? </span>
               <Link
                 to="/login"
                 className="font-semibold text-[#e63946] hover:text-[#ff4d5a] transition-colors"

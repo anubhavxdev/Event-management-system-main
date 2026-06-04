@@ -26,16 +26,16 @@ export function LegalModal({ isOpen, onClose, title, content }) {
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
                             transition={{ duration: 0.2 }}
-                            className="relative w-full max-w-2xl max-h-[85vh] flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden border border-zinc-200"
+                            className="relative w-full max-w-2xl max-h-[85vh] flex flex-col bg-card rounded-2xl shadow-2xl overflow-hidden border border-border"
                         >
                             {/* Header */}
-                            <div className="flex items-center justify-between p-6 border-b border-zinc-200 bg-white sticky top-0 z-10">
-                                <h2 className="text-2xl font-bold text-zinc-900">{title}</h2>
+                            <div className="flex items-center justify-between p-6 border-b border-border bg-card sticky top-0 z-10">
+                                <h2 className="text-2xl font-bold text-card-foreground">{title}</h2>
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={onClose}
-                                    className="rounded-full hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900"
+                                    className="rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
                                 >
                                     <X className="h-5 w-5" />
                                 </Button>
@@ -45,16 +45,16 @@ export function LegalModal({ isOpen, onClose, title, content }) {
                             <div className="flex-1 overflow-y-auto p-6">
                                 <div
                                     className="prose prose-zinc max-w-none 
-                    prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-6 prose-h2:mb-4 prose-h2:text-zinc-900
-                    prose-p:text-zinc-600 prose-p:leading-relaxed
-                    prose-ul:list-disc prose-ul:pl-6 prose-li:text-zinc-600"
+                    prose-h2:text-xl prose-h2:font-semibold prose-h2:mt-6 prose-h2:mb-4 prose-h2:text-foreground
+                    prose-p:text-muted-foreground prose-p:leading-relaxed
+                    prose-ul:list-disc prose-ul:pl-6 prose-li:text-muted-foreground"
                                     dangerouslySetInnerHTML={{ __html: content }}
                                 />
                             </div>
 
                             {/* Footer */}
-                            <div className="p-6 border-t border-zinc-200 bg-zinc-50 flex justify-end">
-                                <Button onClick={onClose} className="bg-zinc-900 text-white hover:bg-zinc-800">
+                            <div className="p-6 border-t border-border bg-muted flex justify-end">
+                                <Button onClick={onClose} className="bg-foreground text-background hover:bg-foreground/90">
                                     Close
                                 </Button>
                             </div>
