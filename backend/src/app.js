@@ -6,6 +6,7 @@ import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import { secureUploads } from './middleware/secureUploads.js';
 
 import { env } from './config/env.js';
 
@@ -15,6 +16,8 @@ import registrationRoutes from './routes/registrationRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import statsRoutes from './routes/statsRoutes.js';
+import userRoutes from './routes/userRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 const app = express();
 
@@ -34,7 +37,11 @@ app.use('/api', rateLimit({ windowMs: 60 * 1000, max: 120 }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Routes
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.use(
+  '/uploads',
+  secureUploads,
+  express.static(path.join(process.cwd(), 'uploads'))
+);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
@@ -42,6 +49,8 @@ app.use('/api/registrations', registrationRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // 404 handler
 app.use((req, res) => {

@@ -1,48 +1,55 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/utils";
+
 const VARIANTS = {
   emerald: {
-    accent: "rose-500",
-    gradient: "from-rose-500/20 to-rose-500/0",
-    shine:
-      "205deg, transparent 0deg, hsl(160deg 95% 39%) 20deg, hsl(160deg 100% 85% / 0.3) 280deg",
-    border: "rose-500/20",
-    color: "rgb(244 63 94)",
+    accent: "emerald-500",
+    iconBg: "bg-emerald-500/15",
+    iconText: "text-emerald-500",
+    gradient: "from-emerald-500/25 to-emerald-500/5",
+    border: "border-emerald-500/25",
+    color: "rgb(16 185 129)",
+    glow: "group-hover:shadow-emerald-500/20",
   },
   blue: {
     accent: "blue-500",
-    gradient: "from-blue-500/20 to-blue-500/0",
-    shine:
-      "205deg, transparent 0deg, hsl(220deg 95% 39%) 20deg, hsl(220deg 100% 85% / 0.3) 280deg",
-    border: "blue-500/20",
-    color: "rgb(244 63 94)",
+    iconBg: "bg-blue-500/15",
+    iconText: "text-blue-500",
+    gradient: "from-blue-500/25 to-blue-500/5",
+    border: "border-blue-500/25",
+    color: "rgb(59 130 246)",
+    glow: "group-hover:shadow-blue-500/20",
   },
   purple: {
     accent: "purple-500",
-    gradient: "from-purple-500/20 to-purple-500/0",
-    shine:
-      "205deg, transparent 0deg, hsl(280deg 95% 39%) 20deg, hsl(280deg 100% 85% / 0.3) 280deg",
-    border: "purple-500/20",
-    color: "rgb(244 63 94)",
+    iconBg: "bg-purple-500/15",
+    iconText: "text-purple-500",
+    gradient: "from-purple-500/25 to-purple-500/5",
+    border: "border-purple-500/25",
+    color: "rgb(168 85 247)",
+    glow: "group-hover:shadow-purple-500/20",
   },
   amber: {
     accent: "amber-500",
-    gradient: "from-amber-500/20 to-amber-500/0",
-    shine:
-      "205deg, transparent 0deg, hsl(40deg 95% 39%) 20deg, hsl(40deg 100% 85% / 0.3) 280deg",
-    border: "amber-500/20",
-    color: "rgb(244 63 94)",
+    iconBg: "bg-amber-500/15",
+    iconText: "text-amber-500",
+    gradient: "from-amber-500/25 to-amber-500/5",
+    border: "border-amber-500/25",
+    color: "rgb(245 158 11)",
+    glow: "group-hover:shadow-amber-500/20",
   },
   rose: {
     accent: "rose-500",
-    gradient: "from-rose-500/20 to-rose-500/0",
-    shine:
-      "205deg, transparent 0deg, hsl(340deg 95% 39%) 20deg, hsl(340deg 100% 85% / 0.3) 280deg",
-    border: "rose-500/20",
+    iconBg: "bg-rose-500/15",
+    iconText: "text-rose-500",
+    gradient: "from-rose-500/25 to-rose-500/5",
+    border: "border-rose-500/25",
     color: "rgb(244 63 94)",
+    glow: "group-hover:shadow-rose-500/20",
   },
 };
+
 const SIZES = {
   sm: {
     padding: "p-6 pt-12",
@@ -63,6 +70,7 @@ const SIZES = {
     descSize: "text-base",
   },
 };
+
 export function CardHoverEffect({
   icon,
   title,
@@ -74,108 +82,114 @@ export function CardHoverEffect({
   hoverScale = 1.02,
   interactive = true,
 }) {
-  const variantConfig = VARIANTS[variant];
+  const variantConfig = VARIANTS[variant] ?? VARIANTS.emerald;
   const sizeConfig = SIZES[size];
   const Div = interactive ? motion.div : "div";
   const IconWrapper = interactive ? motion.span : "span";
+
   return (
     <Div
-      whileHover={interactive ? { scale: hoverScale } : undefined}
-      transition={{ duration: 0.3, ease: "easeInOut", type: "keyframes" }}
+      whileHover={
+        interactive
+          ? { scale: hoverScale, y: -6 }
+          : undefined
+      }
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "group relative z-30 w-full cursor-pointer overflow-hidden rounded-2xl",
+        "group relative z-30 w-full cursor-pointer overflow-hidden rounded-2xl border",
         sizeConfig.padding,
-        // Light mode styles
-        "bg-white/80 before:bg-linear-to-b before:from-white/5 before:to-white/20 before:backdrop-blur-3xl",
-        "after:bg-linear-to-b after:from-transparent after:via-transparent after:to-white/20",
-        // Dark mode styles
-        "dark:bg-black/5 dark:before:bg-linear-to-b dark:before:from-black/5 dark:before:to-black/20",
-        "dark:after:to-black/20",
-        // Common styles
+        "border-border/60 bg-card/90 backdrop-blur-md",
+        "dark:border-border dark:bg-card/70",
+        `bg-gradient-to-br ${variantConfig.gradient}`,
+        variantConfig.border,
+        glowEffect && variantConfig.glow,
+        "shadow-lg transition-shadow duration-300",
+        "hover:shadow-xl",
         "before:absolute before:inset-0 before:rounded-[inherit] before:content-['']",
-        "after:absolute after:inset-0 after:rounded-[inherit] after:content-['']",
-        glowEffect && `hover:before:bg-${variantConfig.accent}/10`,
-        // Shadows
-        "shadow-[0px_3px_8px_rgba(0,0,0,0.04),0px_12px_20px_rgba(0,0,0,0.08)]",
-        "hover:shadow-[0px_5px_15px_rgba(0,0,0,0.03),0px_25px_35px_rgba(0,0,0,0.2)]",
-        "dark:shadow-[0px_3px_8px_rgba(0,0,0,0.08),0px_12px_20px_rgba(0,0,0,0.15)]",
-        "dark:hover:shadow-[0px_5px_15px_rgba(0,0,0,0.06),0px_25px_35px_rgba(0,0,0,0.4)]",
+        "before:bg-gradient-to-b before:from-white/10 before:to-transparent",
+        "dark:before:from-white/5 dark:before:to-transparent",
         className,
       )}
-      style={{
-        "--card-color": variantConfig.color,
-      }}>
-      {/* Moving Border */}
+      style={{ "--card-color": variantConfig.color }}
+    >
+      {/* Animated border glow on hover */}
       <div
-        className="absolute inset-0 overflow-hidden rounded-[inherit]"
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] opacity-0 transition-opacity duration-500 group-hover:opacity-100"
         style={{
           mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
           maskComposite: "exclude",
-          padding: "2px",
-        }}>
+          WebkitMaskComposite: "xor",
+          padding: "1px",
+        }}
+      >
         <div
-          className="absolute inset-[-200%] opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          className="absolute inset-[-200%] animate-spin"
           style={{
-            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 340deg, var(--card-color) 360deg)`,
-            animation: "spin 4s linear infinite",
+            background: `conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 300deg, var(--card-color) 360deg)`,
+            animationDuration: "4s",
           }}
         />
       </div>
 
       {/* Icon */}
       <IconWrapper
-        className="relative z-50 table rounded-xl pb-2"
-        whileHover={interactive ? { scale: 1.1 } : undefined}
-        transition={{ duration: 0.3, ease: "easeInOut", type: "keyframes" }}>
+        className="relative z-50 mb-4 inline-flex rounded-xl"
+        whileHover={interactive ? { scale: 1.12, rotate: 5 } : undefined}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
         <span
           className={cn(
-            "absolute inset-[4.5px] rounded-[inherit]",
-            "bg-linear-to-b from-black/5 to-black/10 backdrop-blur-3xl",
-            "dark:from-white/10 dark:to-white/5",
-            "transition-all duration-300",
+            "flex h-12 w-12 items-center justify-center rounded-xl transition-all duration-300",
+            variantConfig.iconBg,
+            "group-hover:scale-105",
           )}
-        />
-        <span
-          className={cn(
-            "relative z-1 block transition-colors duration-300",
-            "text-black/60 group-hover:text-[var(--card-color)]",
-            "dark:text-black-400",
-            sizeConfig.iconSize,
-          )}>
-          {icon}
+        >
+          <span
+            className={cn(
+              "transition-colors duration-300",
+              variantConfig.iconText,
+              "group-hover:brightness-125",
+              sizeConfig.iconSize,
+            )}
+          >
+            {icon}
+          </span>
         </span>
       </IconWrapper>
 
       {/* Content */}
-      <div className="relative z-30 mt-2">
+      <div className="relative z-30">
         <h3
           className={cn(
-            "font-medium transition-colors duration-300",
-            "text-black group-hover:text-[var(--card-color)]",
-            "dark:text-black/80",
+            "font-semibold text-foreground transition-colors duration-300",
+            "group-hover:text-[var(--card-color)]",
             sizeConfig.titleSize,
-          )}>
+          )}
+        >
           {title}
         </h3>
         <p
           className={cn(
-            "mt-1 transition-colors duration-300",
-            "text-black",
-            "dark:text-black/90",
+            "mt-2 leading-relaxed text-muted-foreground transition-colors duration-300",
+            "group-hover:text-foreground/80",
             sizeConfig.descSize,
-          )}>
+          )}
+        >
           {description}
         </p>
       </div>
 
-      {/* Shine Effect */}
-      <div className="absolute inset-0 z-20 overflow-hidden rounded-[inherit] opacity-100 transition-all duration-500">
-        <div
-          className="absolute bottom-[55%] left-1/2 aspect-square w-[200%] -translate-x-1/2 rounded-[50%]"
+      {/* Ambient shine pulse */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden rounded-[inherit]">
+        <motion.div
+          className="absolute bottom-[45%] left-1/2 aspect-square w-[160%] -translate-x-1/2 rounded-[50%]"
           style={{
-            background: `conic-gradient(from ${variantConfig.shine}, transparent 360deg)`,
+            background: `radial-gradient(circle, var(--card-color) 0%, transparent 70%)`,
             filter: "blur(40px)",
+            opacity: 0.25,
           }}
+          animate={{ opacity: [0.2, 0.45, 0.2], scale: [1, 1.08, 1] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
     </Div>

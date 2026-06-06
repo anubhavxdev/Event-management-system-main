@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import CountdownTimer from '../../components/CountdownTimer';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Plus, Upload, Tag, Search, TrendingUp, IndianRupee, Clock, CheckCircle, XCircle, AlertCircle, Download, Trash2, UserPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import CoOrganizerPanel from '../../components/CoOrganizerPanel';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
-
+import toast from "react-hot-toast";
 
 import { API_BASE_URL } from '../../config';
+// Manual Check-In: helper debounce delay
+const SEARCH_DEBOUNCE_MS = 150;
 
 export default function OrganizerDashboard() {
     const { user } = useAuth();
@@ -19,6 +23,14 @@ export default function OrganizerDashboard() {
     const [creating, setCreating] = useState(false);
     const [activeTab, setActiveTab] = useState('My Events');
     const [selectedEvent, setSelectedEvent] = useState(null);
+    const [editingEventId, setEditingEventId] = useState(null);
+    // Manual Check-In states
+    const [participants, setParticipants] = useState([]);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [debouncedQuery, setDebouncedQuery] = useState('');
+    const [filterMode, setFilterMode] = useState('all'); // all | checked | pending
+    const [loadingId, setLoadingId] = useState(null);
+    const [manualOpen, setManualOpen] = useState(true);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -41,37 +53,40 @@ export default function OrganizerDashboard() {
         byCategory: {}
     });
 
+    const mountedRef = useRef(true);
+
     useEffect(() => {
-        document.title = 'Organizer Dashboard | Event.One';
-        if (user) {
-            fetchMyEvents();
-        }
-    }, [user]);
+        return () => {
+            mountedRef.current = false;
+        };
+    }, []);
 
-    const fetchMyEvents = async () => {
-        try {
-            const token = localStorage.getItem('token');
+    // Debounce searchQuery -> debouncedQuery
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().toLowerCase()), SEARCH_DEBOUNCE_MS);
+        return () => clearTimeout(t);
+    }, [searchQuery]);
 
-            const res = await fetch(`${API_BASE_URL}/api/events`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (res.ok) {
+    // Fetch participants when selectedEvent changes
+    useEffect(() => {
+        let cancelled = false;
+        const fetchParticipants = async () => {
+            if (!selectedEvent) return;
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_BASE_URL}/api/registrations/${selectedEvent._id}/participants`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) return;
                 const data = await res.json();
-                // Filter events where the organizer matches the current user
-                // Adjust logic based on how your backend returns data (populated organizer object vs id)
-                const myEvents = (data.events || []).filter(
-                    e => e.organizer?._id === user?.id || e.organizer === user?.id
-                );
-
-                setEvents(myEvents);
-                calculateStats(myEvents);
+                if (!cancelled) setParticipants(data.participants || data || []);
+            } catch (err) {
+                console.error('Failed to fetch participants', err);
             }
-        } catch (error) {
-            console.error("Failed to fetch events", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        fetchParticipants();
+        return () => { cancelled = true; };
+    }, [selectedEvent]);
 
     const calculateStats = (events) => {
         const newStats = {
@@ -86,8 +101,60 @@ export default function OrganizerDashboard() {
             const cat = e.category || 'Uncategorized';
             newStats.byCategory[cat] = (newStats.byCategory[cat] || 0) + 1;
         });
-        setStats(newStats);
+        if (mountedRef.current) {
+            setStats(newStats);
+        }
     };
+
+    const fetchMyEvents = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('token');
+
+            const res = await fetch(`${API_BASE_URL}/api/events`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok && mountedRef.current) {
+                const data = await res.json();
+                // Filter events where the organizer matches the current user
+                // Adjust logic based on how your backend returns data (populated organizer object vs id)
+                const myEvents = (data.events || []).filter(
+                    e => e.organizer?._id === user?.id || e.organizer === user?.id || e.organizerId === user?.id
+                );
+
+                setEvents(myEvents);
+                calculateStats(myEvents);
+                // Fetch co-organized events
+                try {
+                    const coRes = await fetch(`${API_BASE_URL}/api/events`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (coRes.ok) {
+                        const coData = await coRes.json();
+                        const coEvents = (coData.events || []).filter(
+                            e => e.organizer?._id !== user?.id && e.organizer !== user?.id &&
+                            (e.coOrganizers || []).some(co => co._id === user?.id || co === user?.id)
+                        ).map(e => ({ ...e, _isCoOrganized: true }));
+                        if (coEvents.length > 0) setEvents(prev => [...prev, ...coEvents]);
+                    }
+                } catch (_) {}
+            }
+        } catch (error) {
+            console.error("Failed to fetch events", error);
+        } finally {
+            if (mountedRef.current) {
+                setLoading(false);
+            }
+        }
+    }, [user]);
+
+    useEffect(() => {
+        document.title = 'Organizer Dashboard | Event.One';
+        if (user) {
+            (async () => {
+                await fetchMyEvents();
+            })();
+        }
+    }, [user, fetchMyEvents]);
 
     const handleDownloadCSV = (eventId) => {
         const token = localStorage.getItem('token');
@@ -107,34 +174,113 @@ export default function OrganizerDashboard() {
             .catch(err => console.error("Failed to download CSV", err));
     };
 
-    const handleDeleteEvent = async (eventId) => {
-        if (!confirm('Are you sure you want to delete this event? This action cannot be undone.')) return;
+const handleDeleteEvent = async (eventId) => {
+    const confirmDelete = window.confirm(
+        'Are you sure you want to delete this event? This action cannot be undone.'
+    );
+
+    if (!confirmDelete) return;
+
+    const loadingToast = toast.loading("Deleting event...");
+
+    try {
+        const token = localStorage.getItem('token');
+
+        const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (res.ok) {
+            setEvents(prev => prev.filter(e => e._id !== eventId));
+
+            setStats(curr => ({
+                ...curr,
+                totalEvents: curr.totalEvents - 1,
+            }));
+
+            setSelectedEvent(null);
+
+            toast.success('Event deleted successfully', {
+                id: loadingToast,
+            });
+
+            fetchMyEvents();
+        } else {
+            toast.error('Failed to delete event', {
+                id: loadingToast,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to delete event", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    }
+};
+
+    // Handle check-in with optimistic update
+    const handleCheckin = async (registrationObj) => {
+        // permission check: only organizer can checkin
+        const isOrganizer = selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id);
+        if (!isOrganizer) {
+            toast.error('You do not have permission to check in attendees for this event.');
+            return;
+        }
+
+        if (loadingId === registrationObj._id) return; // prevent duplicate
+
+        setLoadingId(registrationObj._id);
+
+        const original = participants.map(p => ({ ...p }));
+        const now = new Date();
+
+        // optimistic
+        setParticipants(prev => prev.map(p => p._id === registrationObj._id ? { ...p, checkedIn: true, checkinTime: now.toISOString() } : p));
 
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
-                method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await fetch(`${API_BASE_URL}/api/registrations/${registrationObj._id}/checkin`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
             });
 
-            if (res.ok) {
-                setEvents(prev => prev.filter(e => e._id !== eventId));
-                // Update stats locally
-                setStats(curr => ({
-                    ...curr,
-                    totalEvents: curr.totalEvents - 1,
-                    // Note: Ideally we re-calculate fully, but this is a quick update
-                }));
-                setSelectedEvent(null);
-                alert('Event deleted successfully');
-                // Re-fetch to ensure stats are perfectly synced
-                fetchMyEvents();
-            } else {
-                alert('Failed to delete event');
-            }
-        } catch (error) {
-            console.error("Failed to delete event", error);
+            if (!res.ok) throw new Error('Failed');
+
+            toast.success(`${registrationObj.name} checked in at ${now.toLocaleTimeString()}`);
+        } catch (err) {
+            // rollback
+            setParticipants(original);
+            console.error('Check-in failed', err);
+            toast.error(`Failed to check in ${registrationObj.name}. Please try again.`);
+        } finally {
+            setLoadingId(null);
         }
+    };
+
+    const resetForm = () => {
+        setEditingEventId(null);
+        setFormData({
+            title: '', description: '', date: '', time: '',
+            location: '', category: '', price: '', capacity: '', poster: null
+        });
+    };
+
+    const handleEditResubmit = (event) => {
+        setEditingEventId(event._id);
+        const eventDate = new Date(event.date);
+        setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            date: eventDate.toISOString().split('T')[0],
+            time: eventDate.toTimeString().slice(0, 5),
+            location: event.location || '',
+            category: event.category || '',
+            price: event.price || '',
+            capacity: event.capacity || '',
+            poster: null,
+        });
     };
 
     const handleInputChange = (e) => {
@@ -146,54 +292,77 @@ export default function OrganizerDashboard() {
         }
     };
 
-    const handleCreateSubmit = async (e) => {
-        e.preventDefault();
-        setCreating(true);
+const handleCreateSubmit = async (e) => {
+    e.preventDefault();
 
-        try {
-            const data = new FormData();
-            // Combine date and time
-            const fullDate = new Date(`${formData.date}T${formData.time}`);
+    setCreating(true);
 
-            data.append('title', formData.title);
-            data.append('description', formData.description);
-            data.append('date', fullDate.toISOString());
-            data.append('location', formData.location);
-            data.append('category', formData.category);
-            data.append('price', formData.price);
-            data.append('capacity', formData.capacity);
-            if (formData.poster) {
-                data.append('poster', formData.poster);
-            }
+    const loadingToast = toast.loading("Creating event...");
 
-            const token = localStorage.getItem('token');
-            const res = await fetch(`${API_BASE_URL}/api/events`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                body: data
+    try {
+        const data = new FormData();
+
+        const fullDate = new Date(`${formData.date}T${formData.time}`);
+
+        data.append('title', formData.title);
+        data.append('description', formData.description);
+        data.append('date', fullDate.toISOString());
+        data.append('location', formData.location);
+        data.append('category', formData.category);
+        data.append('price', formData.price);
+        data.append('capacity', formData.capacity);
+
+        if (formData.poster) {
+            data.append('poster', formData.poster);
+        }
+
+        const token = localStorage.getItem('token');
+
+        const res = await fetch(`${API_BASE_URL}/api/events`, {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${token}`
+            },
+            body: data
+        });
+
+        if (res.ok) {
+            setFormData({
+                title: '',
+                description: '',
+                date: '',
+                time: '',
+                location: '',
+                category: 'General',
+                price: '',
+                capacity: '',
+                poster: null
             });
 
-            if (res.ok) {
-                setFormData({
-                    title: '', description: '', date: '', time: '', location: '',
-                    category: 'General', price: '', capacity: '', poster: null
-                });
-                alert('Event Created Successfully!');
-                fetchMyEvents();
-                setActiveTab('My Events'); // Switch back to list view
-            } else {
-                const err = await res.json();
-                alert(`Error: ${err.message}`);
-            }
-        } catch (error) {
-            console.error("Failed to create event", error);
-            alert("Something went wrong");
-        } finally {
-            setCreating(false);
+            toast.success('Event created successfully!', {
+                id: loadingToast,
+            });
+
+            fetchMyEvents();
+
+            setActiveTab('My Events');
+        } else {
+            const err = await res.json();
+
+            toast.error(err.message || 'Failed to create event', {
+                id: loadingToast,
+            });
         }
-    };
+    } catch (error) {
+        console.error("Failed to create event", error);
+
+        toast.error("Something went wrong", {
+            id: loadingToast,
+        });
+    } finally {
+        setCreating(false);
+    }
+};
 
     if (loading) {
         return (
@@ -204,8 +373,14 @@ export default function OrganizerDashboard() {
     }
 
     const handleGenerateCertificate = (event) => {
-        alert(`Request to generate certificates for "${event.title}" received.\n\nNote: Automated certificate generation is coming soon!`);
-    };
+    toast.success(
+        `Certificate generation request received for "${event.title}"`
+    );
+
+    toast(
+        "Automated certificate generation feature coming soon!"
+    );
+};
 
     const upcomingEvents = events.filter(e => new Date(e.date) >= new Date());
     const pastEvents = events.filter(e => new Date(e.date) < new Date());
@@ -355,6 +530,9 @@ export default function OrganizerDashboard() {
                                                             <div className="flex justify-between items-start">
                                                                 <h3 className="text-lg font-semibold text-foreground group-hover:text-purple-500 transition-colors">
                                                                     {event.title}
+                                                                    {event._isCoOrganized && (
+                                                                        <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium align-middle">Co-organizing</span>
+                                                                    )}
                                                                 </h3>
                                                                 <span className="flex items-center text-xs text-muted-foreground bg-secondary px-2 py-1 rounded-full">
                                                                     <Tag className="w-3 h-3 mr-1" />
@@ -364,11 +542,17 @@ export default function OrganizerDashboard() {
                                                             <p className="text-muted-foreground text-sm mt-2 line-clamp-2 max-w-2xl">
                                                                 {event.description}
                                                             </p>
+                                                            {event.status === 'rejected' && event.rejectionReason && (
+                                                                <div className="mt-3 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-600">
+                                                                    Reason: {event.rejectionReason}
+                                                                </div>
+                                                            )}
                                                             <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-muted-foreground">
                                                                 <span className="flex items-center">
-                                                                    <Calendar className="w-3 h-3 mr-1.5" />
+                                                                   <Calendar className="w-3 h-3 mr-1.5" />
                                                                     {new Date(event.date).toLocaleDateString()}
                                                                 </span>
+                                                                <CountdownTimer eventDate={event.date} />
                                                                 <span className="flex items-center">
                                                                     <MapPin className="w-3 h-3 mr-1.5" />
                                                                     {event.location}
@@ -382,10 +566,58 @@ export default function OrganizerDashboard() {
                                                                     {event.price > 0 ? `₹${event.price}` : 'Free'}
                                                                 </span>
                                                             </div>
+                                                            {event.status === 'rejected' && (
+                                                                <div className="mt-3 flex items-start gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                                                                    <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
+                                                                    <div>
+                                                                        <p className="text-sm font-medium text-red-500">Event Rejected</p>
+                                                                        {event.rejectionReason ? (
+                                                                            <p className="text-xs text-red-400/80 mt-0.5">Reason: {event.rejectionReason}</p>
+                                                                        ) : (
+                                                                            <p className="text-xs text-red-400/80 mt-0.5">No specific reason was provided. Please contact the admin for more details.</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </div>
+                                                        {event.tags?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {event.tags.map((tag) => (
+                                                                    <button
+                                                                        key={tag}
+                                                                        type="button"
+                                                                        onClick={() => navigate(`/?tags=${tag}`)}
+                                                                        className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
+                                                                    >
+                                                                        #{tag}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
 
+                                                        
                                                         {/* Management Actions */}
-                                                        <div className="flex justify-end mt-4 pt-4 border-t border-border/50">
+                                                        <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
+                                                            {event.status === 'approved' && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                                                                    onClick={() => navigate(`/organizer/scan/${event._id}`)}
+                                                                >
+                                                                    Scan QR
+                                                                </Button>
+                                                            )}
+
+                                                            {event.status === 'rejected' && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    className="bg-red-600 text-white hover:bg-red-700"
+                                                                    onClick={() => handleEditResubmit(event)}
+                                                                >
+                                                                    Edit & Resubmit
+                                                                </Button>
+                                                            )}
+
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
@@ -395,6 +627,7 @@ export default function OrganizerDashboard() {
                                                                 Manage Event
                                                             </Button>
                                                         </div>
+
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -480,6 +713,20 @@ export default function OrganizerDashboard() {
                                                                 </span>
                                                             </div>
                                                         </div>
+                                                        {event.tags?.length > 0 && (
+                                                            <div className="flex flex-wrap gap-2 mt-3">
+                                                                {event.tags.map((tag) => (
+                                                                    <button
+                                                                        key={tag}
+                                                                        type="button"
+                                                                        onClick={() => navigate(`/?tags=${tag}`)}
+                                                                        className="text-xs bg-purple-500/10 text-purple-500 px-2 py-1 rounded-full hover:bg-purple-500/20 transition"
+                                                                    >
+                                                                        #{tag}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
 
                                                         {/* Past Actions */}
                                                         <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-border/50">
@@ -514,6 +761,22 @@ export default function OrganizerDashboard() {
                                 className="max-w-3xl mx-auto"
                             >
                                 <form onSubmit={handleCreateSubmit} className="space-y-8">
+                                    {editingEventId && (
+                                        <div className="flex items-center justify-between rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                                            <div>
+                                                <div className="text-sm font-semibold text-red-600">Editing rejected event</div>
+                                                <div className="text-xs text-red-500/80">Save changes to resubmit this event for admin review.</div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                className="border-red-500/30 text-red-600 hover:bg-red-500/10"
+                                                onClick={resetForm}
+                                            >
+                                                Cancel Edit
+                                            </Button>
+                                        </div>
+                                    )}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div className="space-y-4">
                                             <div className="space-y-2">
@@ -660,7 +923,7 @@ export default function OrganizerDashboard() {
                                             ) : (
                                                 <>
                                                     <Plus className="w-4 h-4 mr-2" />
-                                                    Publish Event
+                                                    {editingEventId ? 'Resubmit Event' : 'Publish Event'}
                                                 </>
                                             )}
                                         </Button>
@@ -676,7 +939,7 @@ export default function OrganizerDashboard() {
                                 animate={{ opacity: 1 }}
                                 className="space-y-8"
                             >
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                                     <div className="bg-card border border-border rounded-xl p-6">
                                         <div className="flex items-center justify-between mb-4">
                                             <h3 className="text-sm font-medium text-muted-foreground">Total Events</h3>
@@ -697,6 +960,13 @@ export default function OrganizerDashboard() {
                                             <Clock className="w-4 h-4 text-yellow-500" />
                                         </div>
                                         <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
+                                    </div>
+                                    <div className="bg-card border border-border rounded-xl p-6">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-sm font-medium text-muted-foreground">Rejected</h3>
+                                            <XCircle className="w-4 h-4 text-red-500" />
+                                        </div>
+                                        <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
                                     </div>
                                     <div className="bg-card border border-border rounded-xl p-6">
                                         <div className="flex items-center justify-between mb-4">
@@ -818,7 +1088,121 @@ export default function OrganizerDashboard() {
                                         </Button>
                                     </div>
 
+                                    <div className="p-3 bg-secondary/20 rounded-lg border border-border/50">
+                                        <CoOrganizerPanel
+                                            eventId={selectedEvent._id}
+                                            isOwner={selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id}
+                                        />
+                                    </div>
+
                                     <div className="flex items-center justify-between p-3 bg-red-500/5 rounded-lg border border-red-500/10">
+
+                                                                            {/* Manual Check-In Panel */}
+                                                                            <div className="mt-4 p-4 bg-secondary/10 rounded-lg border border-border/50">
+                                                                                <div className="flex items-center justify-between mb-3">
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <h4 className="font-semibold">Manual Check-In</h4>
+                                                                                        <span className="text-xs text-muted-foreground">Fallback if QR fails</span>
+                                                                                    </div>
+                                                                                    <div className="flex items-center gap-3">
+                                                                                        <div className="text-sm text-muted-foreground">{participants.filter(p=>p.checkedIn).length} / {participants.length} checked in</div>
+                                                                                        <button
+                                                                                            className="text-sm text-muted-foreground hover:text-foreground"
+                                                                                            onClick={() => setManualOpen(!manualOpen)}
+                                                                                        >
+                                                                                            {manualOpen ? 'Hide' : 'Show'}
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {manualOpen && (
+                                                                                    <div>
+                                                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                                                                            <div className="md:col-span-2">
+                                                                                                <Input
+                                                                                                    placeholder="Search by name or email..."
+                                                                                                    value={searchQuery}
+                                                                                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                                                                                    aria-label="Search participants"
+                                                                                                />
+                                                                                            </div>
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='all'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('all')}
+                                                                                                >All</button>
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='checked'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('checked')}
+                                                                                                >Checked In</button>
+                                                                                                <button
+                                                                                                    className={`px-3 py-1 rounded ${filterMode==='pending'?'bg-primary text-white':'bg-secondary/50 text-muted-foreground'}`}
+                                                                                                    onClick={() => setFilterMode('pending')}
+                                                                                                >Pending</button>
+                                                                                            </div>
+                                                                                        </div>
+
+                                                                                        {/* Participant list */}
+                                                                                        <div className="max-h-64 overflow-auto border border-border rounded-lg">
+                                                                                            <table className="w-full text-sm">
+                                                                                                <thead className="bg-secondary/30 sticky top-0">
+                                                                                                    <tr>
+                                                                                                        <th className="text-left px-3 py-2">Name</th>
+                                                                                                        <th className="text-left px-3 py-2">Email</th>
+                                                                                                        <th className="text-left px-3 py-2">Status</th>
+                                                                                                        <th className="text-left px-3 py-2">Check-In</th>
+                                                                                                        <th className="text-left px-3 py-2">Action</th>
+                                                                                                    </tr>
+                                                                                                </thead>
+                                                                                                <tbody>
+                                                                                                    {(() => {
+                                                                                                        const q = debouncedQuery;
+                                                                                                        let list = participants || [];
+                                                                                                        if (q) {
+                                                                                                            list = list.filter(p => ((p.name||'').toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q)));
+                                                                                                        }
+                                                                                                        if (filterMode === 'checked') list = list.filter(p => p.checkedIn === true);
+                                                                                                        if (filterMode === 'pending') list = list.filter(p => !p.checkedIn);
+                                                                                                        if (list.length === 0) {
+                                                                                                            return (
+                                                                                                                <tr><td colSpan={5} className="p-4 text-center text-muted-foreground">No participants</td></tr>
+                                                                                                            );
+                                                                                                        }
+                                                                                                        return list.map(p => (
+                                                                                                            <tr key={p._id} className="border-t border-border/50">
+                                                                                                                <td className="px-3 py-2">{p.name}</td>
+                                                                                                                <td className="px-3 py-2">{p.email}</td>
+                                                                                                                <td className="px-3 py-2">{p.status || 'Registered'}</td>
+                                                                                                                <td className="px-3 py-2">
+                                                                                                                    {p.checkedIn ? (
+                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-green-700 bg-green-100">✓ Checked In{p.checkinTime?` (${new Date(p.checkinTime).toLocaleTimeString()})`:''}</span>
+                                                                                                                    ) : (
+                                                                                                                        <span className="inline-flex items-center gap-2 px-2 py-1 rounded text-yellow-800 bg-yellow-100">Pending</span>
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                                <td className="px-3 py-2">
+                                                                                                                    {!p.checkedIn ? (
+                                                                                                                        <Button
+                                                                                                                            size="sm"
+                                                                                                                            onClick={() => handleCheckin(p)}
+                                                                                                                            disabled={loadingId === p._id || !(selectedEvent && (selectedEvent.organizer?._id === user?.id || selectedEvent.organizer === user?.id || selectedEvent.organizerId === user?.id))}
+                                                                                                                        >
+                                                                                                                            {loadingId === p._id ? (<span className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin inline-block mr-2" />) : null}
+                                                                                                                            Check In
+                                                                                                                        </Button>
+                                                                                                                    ) : (
+                                                                                                                        <span className="text-sm text-muted-foreground">—</span>
+                                                                                                                    )}
+                                                                                                                </td>
+                                                                                                            </tr>
+                                                                                                        ));
+                                                                                                    })()}
+                                                                                                </tbody>
+                                                                                            </table>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-red-500/10 rounded-full text-red-500">
                                                 <Trash2 className="w-4 h-4" />

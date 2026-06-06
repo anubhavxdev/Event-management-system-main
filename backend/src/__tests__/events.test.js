@@ -21,7 +21,8 @@ describe('Events API', () => {
         date: new Date(),
         location: 'Delhi',
         capacity: 100,
-        organizer: organizer._id
+        organizer: organizer._id,
+        status: 'approved'
       });
 
       const res = await request(app).get('/api/events');

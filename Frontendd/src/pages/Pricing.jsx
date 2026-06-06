@@ -4,12 +4,7 @@ import PricingBlock from "../components/mvpblocks/designer-pricing";
 
 const Pricing = () => {
     return (
-        <div className="pt-20">
-            <SEO 
-                title="Pricing"
-                description="Choose the perfect eventone plan for your needs. Flexible pricing for individual organizers and businesses of all sizes."
-                url="/pricing"
-            />
+        <div id="pricing" className="pt-20">
             <PricingBlock />
         </div>
     );

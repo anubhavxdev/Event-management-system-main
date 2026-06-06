@@ -61,8 +61,9 @@ export default function ContactUs1() {
                   isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
                 }
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="flex w-full flex-col items-center justify-center gap-2 relative">
-                <span className="text-primary relative z-10 w-full text-center text-4xl font-bold tracking-tight italic md:text-5xl text-black dark:text-black">
+                className="flex w-full flex-col items-center justify-center gap-2 relative"
+              >
+                <span className="text-primary relative z-10 w-full text-center text-4xl font-bold tracking-tight italic md:text-5xl">
                   Contact Us
                 </span>
                 <SparklesCore
@@ -83,13 +84,15 @@ export default function ContactUs1() {
                 }
                 transition={{ duration: 0.5, delay: 0.3 }}
                 onSubmit={handleSubmit}
-                className="mt-8 space-y-6">
+                className="mt-8 space-y-6"
+              >
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <motion.div
                     className="space-y-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.4 }}>
+                    transition={{ delay: 0.4 }}
+                  >
                     <Label htmlFor="name">Name</Label>
                     <Input
                       id="name"
@@ -104,7 +107,8 @@ export default function ContactUs1() {
                     className="space-y-2"
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}>
+                    transition={{ delay: 0.5 }}
+                  >
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -121,7 +125,8 @@ export default function ContactUs1() {
                   className="space-y-2"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}>
+                  transition={{ delay: 0.6 }}
+                >
                   <Label htmlFor="message">Message</Label>
                   <Textarea
                     id="message"
@@ -136,11 +141,13 @@ export default function ContactUs1() {
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full">
+                  className="w-full"
+                >
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full bg-gradient-to-b from-rose-500 to-rose-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]">
+                    className="w-full bg-gradient-to-b from-rose-500 to-rose-700 text-white shadow-[0px_2px_0px_0px_rgba(255,255,255,0.3)_inset]"
+                  >
                     {isSubmitting ? (
                       <span className="flex items-center justify-center">
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -163,7 +170,8 @@ export default function ContactUs1() {
               initial={{ opacity: 0, x: 20 }}
               animate={isInView ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
               transition={{ duration: 0.5, delay: 0.5 }}
-              className="relative my-8 flex items-center justify-center overflow-hidden pr-8">
+              className="relative my-8 flex items-center justify-center overflow-hidden pr-8"
+            >
               <div className="flex flex-col items-center justify-center overflow-hidden">
                 <article className="relative mx-auto h-[350px] min-h-60 max-w-[450px] overflow-hidden rounded-3xl border bg-gradient-to-b from-[#e60a64] to-[#e60a64]/5 p-6 text-3xl tracking-tight text-white md:h-[450px] md:min-h-80 md:p-8 md:text-4xl md:leading-[1.05] lg:text-5xl">
                   Presenting you with the best UI possible.
