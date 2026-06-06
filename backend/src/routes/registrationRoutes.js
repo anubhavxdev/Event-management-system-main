@@ -2,12 +2,9 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth.js';
 import { authorizeRoles } from '../middleware/roles.js';
 import { registrationRateLimiter } from '../middleware/rateLimiters.js';
+import { registrationLimiter } from '../middleware/rateLimiters.js';
+import { checkRefundStatus,checkRefundPolicy } from '../controllers/registrationController.js';
 import { registerForEvent, myRegistrations, participantsForEvent, checkInParticipant, exportParticipantsCsv, checkRegistrationStatus, cancelRegistration } from '../controllers/registrationController.js';
-
-
-
-
-
 
 const router = Router();
 
