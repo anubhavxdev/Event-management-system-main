@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 export default function DesignerPricing() {
+  const navigate = useNavigate();
   return (
     <div className="bg-background text-foreground relative min-h-full w-full overflow-hidden antialiased">
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -22,7 +25,8 @@ export default function DesignerPricing() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8 xl:grid-cols-3">
-          <article className="relative flex flex-col rounded-3xl border border-border/50 bg-background/70 p-8 shadow-lg shadow-black/5 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10 lg:p-10">
+          <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border/50 bg-background/70 p-8 shadow-lg shadow-black/5 backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20 lg:p-10">
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
             <div className="mb-8 flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <svg
@@ -79,7 +83,7 @@ export default function DesignerPricing() {
 
             <div className="mb-8">
               <div className="mb-2 flex items-end gap-2">
-                <span className="text-4xl font-bold tracking-tight lg:text-5xl">
+                <span className="text-4xl font-bold tracking-tight transition-all duration-300 group-hover:scale-110 group-hover:text-primary lg:text-5xl">
                   ₹999
                 </span>
                 <span className="text-muted-foreground mb-1">/event</span>
@@ -90,7 +94,12 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-primary text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-200 hover:bg-primary/90">
+              <button
+                onClick={() =>
+                  navigate("/organizer/create-event?plan=professional")
+                }
+                className="bg-primary text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:bg-primary/90"
+              >
                 Start Creating
               </button>
               {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white">
@@ -188,9 +197,11 @@ export default function DesignerPricing() {
             </ul>
           </article>
 
-          <article className="relative z-10 flex flex-col rounded-3xl border border-primary/40 bg-primary/10 p-8 shadow-xl shadow-primary/10 backdrop-blur-sm transition-all duration-300 lg:scale-105 lg:p-10">
+          <article className="group relative z-10 flex flex-col  rounded-3xl border-2 border-primary/50 bg-primary/10 p-8 shadow-xl shadow-primary/15 backdrop-blur-sm transition-all duration-500 ease-out lg:scale-105 lg:p-10 hover:-translate-y-3 hover:scale-[1.02] hover:border-primary hover:shadow-2xl hover:shadow-primary/30">
+            <div className="pointer-events-none absolute inset-0 rounded-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
+
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 transform">
-              <div className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-bold uppercase">
+              <div className="bg-primary text-primary-foreground rounded-full px-4 py-2 text-xs font-bold uppercase shadow-lg shadow-primary/30 transition-all duration-300 group-hover:scale-110">
                 Most Popular
               </div>
             </div>
@@ -232,7 +243,7 @@ export default function DesignerPricing() {
 
             <div className="mb-8">
               <div className="mb-2 flex items-end gap-2">
-                <span className="text-4xl font-bold tracking-tight lg:text-5xl">
+                <span className="text-4xl font-bold tracking-tight transition-all duration-300 group-hover:scale-110 group-hover:text-primary lg:text-5xl">
                   ₹1999
                 </span>
                 <span className="text-muted-foreground mb-1">/event</span>
@@ -243,7 +254,12 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90">
+              <button
+                onClick={() =>
+                  navigate("/organizer/create-event?plan=professional")
+                }
+                className="bg-foreground  text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:bg-primary/90"
+              >
                 Scale Your Brand
               </button>
               {/* <button className="w-full rounded-full border-2 border-white px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:bg-white hover:text-black">
@@ -364,7 +380,8 @@ export default function DesignerPricing() {
             </ul>
           </article>
 
-          <article className="relative flex flex-col rounded-3xl border border-border/50 bg-background/70 p-8 shadow-lg shadow-black/5 backdrop-blur-sm transition-all duration-300 hover:border-primary/50 hover:shadow-primary/10 lg:col-span-2 lg:p-10 xl:col-span-1">
+          <article className="group relative flex flex-col overflow-hidden rounded-3xl border border-border/50 bg-background/70 p-8 shadow-lg shadow-black/5 backdrop-blur-sm transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/20 lg:p-10">
+            <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
             <div className="mb-8 flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <svg
@@ -408,7 +425,7 @@ export default function DesignerPricing() {
 
             <div className="mb-8">
               <div className="mb-2 flex items-end gap-2">
-                <span className="text-4xl font-bold tracking-tight lg:text-5xl">
+                <span className="text-4xl font-bold tracking-tight transition-all duration-300 group-hover:scale-110 group-hover:text-primary lg:text-5xl">
                   Custom
                 </span>
               </div>
@@ -418,7 +435,10 @@ export default function DesignerPricing() {
             </div>
 
             <div className="mb-8 flex flex-col gap-3">
-              <button className="bg-foreground text-background w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-black/20 transition-all duration-200 hover:bg-foreground/90">
+              <button
+                onClick={() => navigate("/inquiry?plan=enterprise")}
+                className="bg-primary text-primary-foreground w-full rounded-full px-6 py-3 text-sm font-semibold shadow-sm shadow-primary/20 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-primary/30 active:scale-95 hover:bg-primary/90"
+              >
                 Get Custom Quote
               </button>
               {/* <button className="w-full rounded-full border-2 border-black px-6 py-3 text-sm font-medium text-black transition-all duration-200 hover:bg-black hover:text-white">

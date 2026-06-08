@@ -25,6 +25,7 @@ import DashboardLayout from "./components/DashboardLayout";
 import CustomerDashboard from "./pages/dashboard/CustomerDashboard";
 import OrganizerDashboard from "./pages/dashboard/OrganizerDashboard";
 import CreateEvent from "./pages/dashboard/CreateEvent";
+import Inquiry from "./pages/Inquiry";
 import AdminDashboard from "./pages/dashboard/AdminDashboard";
 import ThankYou from "./pages/ThankYou";
 import { useAuth } from "./context/AuthContext";
@@ -120,6 +121,8 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<Pricing />} />
+            {/* Inquiry page for custom pricing (public acess) */}
+            <Route path="/inquiry" element={<Inquiry />}/>
             <Route path="/contact" element={<Contact />} />
             <Route path="/support" element={<Support />} />
             <Route path="/about-us" element={<About />} />
