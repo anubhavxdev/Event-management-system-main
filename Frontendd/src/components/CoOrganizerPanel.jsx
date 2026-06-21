@@ -44,7 +44,7 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+      <h3 className="font-semibold text-foreground flex items-center gap-2">
         <UserPlus className="w-4 h-4 text-purple-500" /> Co-organizers
       </h3>
       {isOwner && (
@@ -55,7 +55,7 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
             value={email}
             onChange={e => setEmail(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && email && addCoOrg()}
-            className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+            className="flex-1 border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-purple-400"
           />
           <button
             onClick={addCoOrg}
@@ -71,13 +71,13 @@ export default function CoOrganizerPanel({ eventId, isOwner }) {
       )}
       <ul className="space-y-2">
         {coOrgs.length === 0 && (
-          <li className="text-sm text-gray-400 text-center py-3">No co-organizers added yet.</li>
+          <li className="text-sm text-muted-foreground text-center py-3">No co-organizers added yet.</li>
         )}
         {coOrgs.map(u => (
-          <li key={u._id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2 text-sm">
+          <li key={u._id} className="flex items-center justify-between bg-muted rounded-lg px-3 py-2 text-sm">
             <div>
               <span className="font-medium">{u.name}</span>
-              <span className="text-gray-400 ml-1">({u.email})</span>
+              <span className="text-muted-foreground ml-1">({u.email})</span>
             </div>
             {isOwner && (
               <button onClick={() => removeCoOrg(u._id)} className="text-red-400 hover:text-red-600 ml-2 transition-colors">
