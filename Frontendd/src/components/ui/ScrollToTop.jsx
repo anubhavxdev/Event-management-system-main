@@ -1,9 +1,17 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { FaArrowUp } from "react-icons/fa";
+
 const ScrollToTop = () => {
+  const { pathname } = useLocation();
   const [isVisible, setIsVisible] = useState(false);
 
-  // Show button after scrolling down
+  // FIX: Automatically scroll to top on every page/route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  // Existing floating button visibility toggle
   const toggleVisibility = () => {
     if (window.pageYOffset > 300) {
       setIsVisible(true);
@@ -12,7 +20,6 @@ const ScrollToTop = () => {
     }
   };
 
-  // Smooth scroll to top
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
@@ -22,7 +29,6 @@ const ScrollToTop = () => {
 
   useEffect(() => {
     window.addEventListener("scroll", toggleVisibility);
-
     return () => {
       window.removeEventListener("scroll", toggleVisibility);
     };
