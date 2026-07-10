@@ -208,8 +208,10 @@ export const listEvents = async (req, res) => {
     const filter = {};
 
     if (q) {
+      // Escape regex special chars to prevent NoSQL/ReDoS injection (CWE-943)
+      const escapedQ = String(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.title = {
-        $regex: q,
+        $regex: escapedQ,
         $options: 'i',
       };
     }
