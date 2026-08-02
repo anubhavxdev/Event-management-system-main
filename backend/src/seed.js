@@ -117,7 +117,7 @@
 
 //   console.log('--- SEEDED CREDENTIALS ---');
 //   users.forEach(u => {
-//     console.log(`Role: ${u.role.padEnd(10)} | Email: ${u.email.padEnd(25)} | Password: password`);
+//     console.log(`Role: ${u.role.padEnd(10, " ")} | Email: ${u.email.padEnd(25, " ")} | Password: password`);
 //   });
 //   console.log('--------------------------');
 //   console.log('Seeded events:', events.map(e => ({ title: e.title, status: e.status })));
