@@ -60,7 +60,7 @@ const deleteFromCloudinary = async (cloudinaryUrl) => {
     if (
       parts[publicIdStartIndex] &&
       parts[publicIdStartIndex].startsWith('v') &&
-      !isNaN(parts[publicIdStartIndex].substring(1))
+      !Number.isNaN(parts[publicIdStartIndex].substring(1))
     ) {
       publicIdStartIndex++;
     }
