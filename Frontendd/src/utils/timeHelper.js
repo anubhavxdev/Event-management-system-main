@@ -2,7 +2,7 @@ export function getRelativeTime(dateInput) {
   if (!dateInput) return '';
 
   const date = new Date(dateInput);
-  if (isNaN(date.getTime())) return '';
+  if (Number.isNaN(date.getTime())) return '';
 
   const now = new Date();
   const seconds = Math.round((now.getTime() - date.getTime()) / 1000);
