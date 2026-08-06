@@ -1,6 +1,8 @@
 export function getRelativeTime(dateInput) {
   if (!dateInput) return '';
 
+
+  // New date input
   const date = new Date(dateInput);
   if (isNaN(date.getTime())) return '';
 
@@ -11,7 +13,7 @@ export function getRelativeTime(dateInput) {
   if (seconds < 60) return 'just now';
 
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`; //Idk what this
 
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
@@ -23,5 +25,5 @@ export function getRelativeTime(dateInput) {
   if (months < 12) return `${months} month${months === 1 ? '' : 's'} ago`;
 
   const years = Math.floor(days / 365);
-  return `${years} year${years === 1 ? '' : 's'} ago`;
+  return `${years} year${years === 1 ? '' : 's'} ago`; // NEW CHANGE
 }
