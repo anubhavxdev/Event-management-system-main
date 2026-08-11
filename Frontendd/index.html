@@ -12,6 +12,19 @@
       href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
       rel="stylesheet"
     />
+    <script>
+      (function() {
+        try {
+          var storedTheme = localStorage.getItem('eventone-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

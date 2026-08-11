@@ -57,16 +57,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 const App = () => {
-  const [darkMode, setDarkMode] = useState(false);
-
-  useEffect(() => {
-    if(darkMode){
-      document.documentElement.classList.add("dark");
-    }else{
-      document.documentElement.classList.remove("dark");
-    } 
-  },[darkMode]);
-
   useEffect(() => {
     const handleOnline = () => toast.success("You are back online!");
     const handleOffline = () => toast.error("You are offline. Viewing cached data.");
@@ -112,7 +102,7 @@ const App = () => {
 
       <div className="min-h-screen flex flex-col">
         {/* Header */}
-        <Header2 darkMode={darkMode} setDarkMode={setDarkMode} />  
+        <Header2 />  
 
         <main className="flex-grow">
           <Routes>
