@@ -124,7 +124,26 @@ export const updateEvent = async (req, res) => {
       req.body.tags = JSON.parse(req.body.tags);
     }
 
-    const update = { ...req.body };
+    // Only allow organizers to edit non-privileged event fields.
+    // Fields such as status, organizer and coOrganizers are managed
+    // server-side and must never be set from the request body.
+    const EDITABLE_FIELDS = [
+      "title",
+      "description",
+      "category",
+      "date",
+      "location",
+      "capacity",
+      "tags",
+      "price",
+      "isFree",
+    ];
+    const update = {};
+    for (const field of EDITABLE_FIELDS) {
+      if (req.body[field] !== undefined) {
+        update[field] = req.body[field];
+      }
+    }
 
     if (req.file) {
       // Upload new poster to Cloudinary
